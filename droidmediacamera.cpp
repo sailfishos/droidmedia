@@ -40,13 +40,34 @@ public:
 
 class Listener : public android::BufferQueue::ConsumerListener {
 public:
-    void onFrameAvailable() {
+    Listener() :
+        m_cam(0)
+    {
+
+    }
+
+    void onFrameAvailable()
+    {
+        fprintf(stderr, "%s\n", __FUNCTION__);
+        android::BufferQueue::BufferItem buffer;
+        if (m_cam->m_queue->acquireBuffer(&buffer) != android::OK) {
+            ALOGE("DroidMediaCamera: Failed to acquire buffer from the queue");
+        } else {
+            m_cam->m_queue->releaseBuffer(buffer.mBuf, NULL, NULL);
+        }
+    }
+
+    void onBuffersReleased()
+    {
         fprintf(stderr, "%s\n", __FUNCTION__);
     }
 
-    void onBuffersReleased() {
-        fprintf(stderr, "%s\n", __FUNCTION__);
+    void setCamera(DroidMediaCamera *cam) {
+        m_cam = cam;
     }
+
+private:
+    DroidMediaCamera *m_cam;
 };
 
 void droid_media_camera_init()
@@ -137,6 +158,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
         return NULL;
     }
 
+    static_cast<Listener *>(listener.get())->setCamera(cam);
     cam->m_listener = listener;
     cam->m_proxy = proxy;
 
