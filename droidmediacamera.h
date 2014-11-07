@@ -11,7 +11,12 @@ extern "C" {
 #endif
 
 struct DroidMediaCamera;
-
+  /*
+typedef struct {
+  void *data;
+  size_t size;
+} DroidMediaCameraMemory;
+  */
 typedef struct {
   int facing;
   int orientation;
@@ -19,10 +24,9 @@ typedef struct {
 
 typedef struct {
   void *data;
-
+  void (* notify)(void *data, int32_t msgType, int32_t ext1, int32_t ext2);
   /*
 // TODO:
-    virtual void notify(int32_t msgType, int32_t ext1, int32_t ext2) = 0;                                          
     virtual void postData(int32_t msgType, const sp<IMemory>& dataPtr,                                             
                           camera_frame_metadata_t *metadata) = 0;                                                  
     virtual void postDataTimestamp(nsecs_t timestamp, int32_t msgType, const sp<IMemory>& dataPtr) = 0;            

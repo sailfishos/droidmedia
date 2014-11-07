@@ -23,13 +23,12 @@ public:
 
     android::sp<android::Camera> m_camera;
     android::sp<android::BufferQueue> m_queue;
-    android::sp<android::BufferQueue::ConsumerListener> m_listener;
     DroidMediaCameraCallbacks *m_cb;
 };
 
-class Listener : public android::BufferQueue::ConsumerListener {
+class BufferQueueListener : public android::BufferQueue::ConsumerListener {
 public:
-    Listener() :
+    BufferQueueListener() :
         m_cam(0)
     {
 
@@ -37,6 +36,7 @@ public:
 
     void onFrameAvailable()
     {
+        // TODO:
         fprintf(stderr, "%s\n", __FUNCTION__);
         android::BufferQueue::BufferItem buffer;
         if (m_cam->m_queue->acquireBuffer(&buffer) != android::OK) {
@@ -48,11 +48,41 @@ public:
 
     void onBuffersReleased()
     {
+// TODO:
         fprintf(stderr, "%s\n", __FUNCTION__);
     }
 
     void setCamera(DroidMediaCamera *cam) {
         m_cam = cam;
+    }
+
+private:
+    DroidMediaCamera *m_cam;
+};
+
+class CameraListener : public android::CameraListener {
+public:
+    CameraListener(DroidMediaCamera *cam) :
+        m_cam(cam) {
+
+    }
+
+    void notify(int32_t msgType, int32_t ext1, int32_t ext2)
+    {
+        if (m_cam->m_cb && m_cam->m_cb->notify) {
+            m_cam->m_cb->notify(m_cam->m_cb->data, msgType, ext1, ext2);
+        }
+    }
+
+    void postData(int32_t msgType, const android::sp<android::IMemory>& dataPtr,
+                  camera_frame_metadata_t *metadata)
+    {
+        // TODO:
+    }
+
+    void postDataTimestamp(nsecs_t timestamp, int32_t msgType, const android::sp<android::IMemory>& dataPtr)
+    {
+        // TODO:
     }
 
 private:
@@ -103,7 +133,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
     queue->setSynchronousMode(false);
 
-    android::sp<android::BufferQueue::ConsumerListener> listener = new Listener;
+    android::sp<BufferQueueListener> listener = new BufferQueueListener;
 
     if (queue->consumerConnect(listener) != android::NO_ERROR) {
         ALOGE("Failed to set buffer consumer");
@@ -116,8 +146,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
         return NULL;
     }
 
-    static_cast<Listener *>(listener.get())->setCamera(cam);
-    cam->m_listener = listener;
+    listener->setCamera(cam);
 
     cam->m_camera = android::Camera::connect(camera_number);
     if (cam->m_camera.get() == NULL) {
@@ -130,7 +159,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 
     cam->m_camera->setPreviewTexture(cam->m_queue);
 
-    cam->m_camera->sendCommand(CAMERA_CMD_START_FACE_DETECTION, 1, 1);
+    cam->m_camera->setListener(new CameraListener(cam));
 
     return cam;
 }
