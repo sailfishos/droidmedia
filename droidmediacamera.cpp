@@ -16,9 +16,15 @@ extern "C" {
 class DroidMediaCamera
 {
 public:
+    DroidMediaCamera() :
+        m_cb(0) {
+
+    }
+
     android::sp<android::Camera> m_camera;
     android::sp<android::BufferQueue> m_queue;
     android::sp<android::BufferQueue::ConsumerListener> m_listener;
+    DroidMediaCameraCallbacks *m_cb;
 };
 
 class Listener : public android::BufferQueue::ConsumerListener {
@@ -176,6 +182,68 @@ void droid_media_camera_stop_recording(DroidMediaCamera *camera)
 bool droid_media_camera_is_recording_enabled(DroidMediaCamera *camera)
 {
     return camera->m_camera->recordingEnabled();
+}
+
+bool droid_media_camera_start_auto_focus(DroidMediaCamera *camera)
+{
+    return camera->m_camera->autoFocus() == android::NO_ERROR;
+}
+
+bool droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera)
+{
+    return camera->m_camera->cancelAutoFocus() == android::NO_ERROR;
+}
+
+void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb)
+{
+    camera->m_cb = cb;
+}
+
+bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2)
+{
+    return camera->m_camera->sendCommand(cmd, arg1, arg2) == android::NO_ERROR;
+}
+
+bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, bool enabled)
+{
+    return camera->m_camera->storeMetaDataInBuffers(enabled) == android::NO_ERROR;
+}
+
+void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera, int preview_callback_flag)
+{
+    camera->m_camera->setPreviewCallbackFlags(preview_callback_flag);
+}
+
+bool droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *params)
+{
+    return camera->m_camera->setParameters(android::String8(params)) == android::NO_ERROR;
+}
+
+char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
+{
+    android::String8 p = camera->m_camera->getParameters();
+    if (p.isEmpty()) {
+        ALOGE("Failed to get camera parameters");
+        return NULL;
+    }
+
+    size_t len = p.length();
+
+    char *params = (char *)malloc(len + 1);
+    if (!params) {
+        ALOGE("Failed to allocate enough memory for camera parameters");
+        return NULL;
+    }
+
+    memcpy(params, p.string(), len);
+    params[len] = '\0';
+
+    return params;
+}
+
+bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType)
+{
+    return camera->m_camera->takePicture(msgType) == android::NO_ERROR;
 }
 
 };
