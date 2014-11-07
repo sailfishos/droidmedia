@@ -85,11 +85,6 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 
 DroidMediaCamera *droid_media_camera_connect(int camera_number)
 {
-    if (camera_number < 0 || camera_number >= droid_media_camera_get_number_of_cameras()) {
-        ALOGE("incorrect camera number %d", camera_number);
-        return NULL;
-    }
-
     android::sp<android::BufferQueue>
         queue(new android::BufferQueue(new DroidMediaAllocator, true,
                                        android::BufferQueue::MIN_UNDEQUEUED_BUFFERS));
