@@ -1,13 +1,22 @@
 #ifndef DROID_MEDIA_CAMERA_H
 #define DROID_MEDIA_CAMERA_H
 
+#ifdef __cplusplus
 extern "C" {
+#else
+#include <stdbool.h>
+  typedef void DroidMediaCamera;
+#endif
+
 struct DroidMediaCamera;
 
   typedef struct {
     int facing;
     int orientation;
   } DroidMediaCameraInfo;
+
+  void droid_media_camera_init();
+  void droid_media_camera_deinit();
 
   int droid_media_camera_get_number_of_cameras();
   bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number);
@@ -25,6 +34,9 @@ struct DroidMediaCamera;
   bool droid_media_camera_start_recording(DroidMediaCamera *camera);
   void droid_media_camera_stop_recording(DroidMediaCamera *camera);
   bool droid_media_camera_is_recording_enabled(DroidMediaCamera *camera);
+
+#ifdef __cplusplus
 };
+#endif
 
 #endif /* DROID_MEDIA_CAMERA_H */

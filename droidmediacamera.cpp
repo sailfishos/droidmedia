@@ -5,7 +5,11 @@
 #include <camera/Camera.h>
 #include <gui/Surface.h>
 #include <gui/SurfaceComposerClient.h>
+#include <gui/SurfaceTexture.h>
 #include <android/log.h>
+#include <utils/String8.h>
+#include <binder/ProcessState.h>
+#include <binder/IPCThreadState.h>
 
 extern "C" {
 
@@ -14,6 +18,9 @@ class DroidMediaCamera
 public:
     android::sp<android::Camera> m_camera;
     android::sp<android::BufferQueue> m_queue;
+    android::sp<android::BufferQueue::ConsumerListener> m_listener;
+    android::sp<android::BufferQueue::ProxyConsumerListener> m_proxy;
+ 
 #if 0
     android::sp<android::Surface> m_surface;
 #endif
@@ -41,6 +48,17 @@ public:
         fprintf(stderr, "%s\n", __FUNCTION__);
     }
 };
+
+void droid_media_camera_init()
+{
+    android::ProcessState::self()->startThreadPool();
+}
+
+void droid_media_camera_deinit()
+{
+    android::IPCThreadState::self()->stopProcess(false);
+    android::IPCThreadState::self()->joinThreadPool();
+}
 
 int droid_media_camera_get_number_of_cameras()
 {
@@ -82,8 +100,15 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
         ALOGE("Failed to get buffer queue");
         return NULL;
     }
+    queue->setConsumerName(android::String8("DroidMediaBufferQueue"));
+    queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+    queue->setSynchronousMode(false);
 
-    if (queue->consumerConnect(new Listener()) != android::NO_ERROR) {
+    android::sp<android::BufferQueue::ConsumerListener> listener = new Listener;
+    android::sp<android::BufferQueue::ProxyConsumerListener> proxy =
+        new android::BufferQueue::ProxyConsumerListener(listener);
+
+    if (queue->consumerConnect(proxy) != android::NO_ERROR) {
         ALOGE("Failed to set buffer consumer");
         return NULL;
     }
@@ -112,6 +137,9 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
         return NULL;
     }
 
+    cam->m_listener = listener;
+    cam->m_proxy = proxy;
+
     cam->m_camera = android::Camera::connect(camera_number);
     if (cam->m_camera.get() == NULL) {
         delete cam;
@@ -124,6 +152,10 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     cam->m_surface = surface;
 #endif
     cam->m_camera->setPreviewTexture(cam->m_queue);
+
+    cam->m_camera->sendCommand(CAMERA_CMD_START_FACE_DETECTION, 1, 1);
+
+    android::ProcessState::self()->startThreadPool();
 
     return cam;
 }

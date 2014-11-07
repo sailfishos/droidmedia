@@ -3,6 +3,8 @@
 #include <unistd.h>
 
 int main(int args, char *argv[]) {
+    droid_media_camera_init();
+
     int cameras = droid_media_camera_get_number_of_cameras();
     printf("%d cameras\n", cameras);
 
@@ -36,10 +38,7 @@ int main(int args, char *argv[]) {
         }
 
         printf("Started\n");
-//        for (int x = 0; x < 5; x++) {
-//            printf("sleep %d\n", x);
-//            sleep(1);
-//        }
+        sleep(2);
 
         printf("Stopping\n");
         droid_media_camera_stop_preview(cam);
@@ -47,4 +46,6 @@ int main(int args, char *argv[]) {
         printf("Stopped\n");
         droid_media_camera_disconnect(cam);
     }
+
+    droid_media_camera_deinit();
 }
