@@ -19,24 +19,7 @@ public:
     android::sp<android::Camera> m_camera;
     android::sp<android::BufferQueue> m_queue;
     android::sp<android::BufferQueue::ConsumerListener> m_listener;
-    android::sp<android::BufferQueue::ProxyConsumerListener> m_proxy;
- 
-#if 0
-    android::sp<android::Surface> m_surface;
-#endif
 };
-
-// class DroidMediaSurface : public android::Surface {
-// public:
-//     DroidMediaSurface(const android::sp<android::ISurfaceTexture>& st) :
-//         android::Surface(android::sp<android::ISurfaceTexture>()) {
-
-//     }
-
-//     ~DroidMediaSurface() {
-//     }
-// };
-
 
 class Listener : public android::BufferQueue::ConsumerListener {
 public:
@@ -107,13 +90,6 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
         return NULL;
     }
 
-//    android::sp<android::SurfaceComposerClient> surfaceClient(new android::SurfaceComposerClient);
-
-//    android::sp<android::SurfaceControl> surfaceControl =
-//        surfaceClient->createSurface(android::String8("camera"), 640, 480, android::PIXEL_FORMAT_RGBA_8888, 0);
-
-//    android::sp<android::SurfaceControl> surfaceControl(new android::SurfaceControl);
-
     android::sp<android::BufferQueue>
         queue(new android::BufferQueue(new DroidMediaAllocator, true,
                                        android::BufferQueue::MIN_UNDEQUEUED_BUFFERS));
@@ -121,37 +97,18 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
         ALOGE("Failed to get buffer queue");
         return NULL;
     }
+
     queue->setConsumerName(android::String8("DroidMediaBufferQueue"));
     queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
     queue->setSynchronousMode(false);
 
     android::sp<android::BufferQueue::ConsumerListener> listener = new Listener;
-    android::sp<android::BufferQueue::ProxyConsumerListener> proxy =
-        new android::BufferQueue::ProxyConsumerListener(listener);
 
-    if (queue->consumerConnect(proxy) != android::NO_ERROR) {
+    if (queue->consumerConnect(listener) != android::NO_ERROR) {
         ALOGE("Failed to set buffer consumer");
         return NULL;
     }
 
-#if 0
-    android::ISurfaceTexture *sf = queue.get();
-    if (!sf) {
-        ALOGE("Failed to get surface texture");
-        return NULL;
-    }
-#endif
-#if 0
-    android::sp<android::Surface> surface(new android::Surface(android::sp<android::ISurfaceTexture>(sf)));
-#endif
-//    android::sp<android::Surface> surface(new android::Surface(android::sp<android::ISurfaceTexture>()));
-//    surface->setISurfaceTexture(sf);
-#if 0
-    if (!surface.get()) {
-        ALOGE("Failed to get surface");
-        return NULL;
-    }
-#endif
     DroidMediaCamera *cam = new DroidMediaCamera;
     if (!cam) {
         ALOGE("Failed to allocate DroidMediaCamera");
@@ -160,7 +117,6 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 
     static_cast<Listener *>(listener.get())->setCamera(cam);
     cam->m_listener = listener;
-    cam->m_proxy = proxy;
 
     cam->m_camera = android::Camera::connect(camera_number);
     if (cam->m_camera.get() == NULL) {
@@ -170,14 +126,10 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     }
 
     cam->m_queue = queue;
-#if 0
-    cam->m_surface = surface;
-#endif
+
     cam->m_camera->setPreviewTexture(cam->m_queue);
 
     cam->m_camera->sendCommand(CAMERA_CMD_START_FACE_DETECTION, 1, 1);
-
-    android::ProcessState::self()->startThreadPool();
 
     return cam;
 }
