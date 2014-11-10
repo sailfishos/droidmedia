@@ -83,7 +83,13 @@ public:
 
     void postDataTimestamp(nsecs_t timestamp, int32_t msgType, const android::sp<android::IMemory>& dataPtr)
     {
-        // TODO:
+        DroidMediaMemory mem;
+        mem.size = dataPtr->size();
+        mem.data = dataPtr->pointer();
+
+        if (m_cam->m_cb && m_cam->m_cb->post_data_timestamp) {
+            m_cam->m_cb->post_data_timestamp(m_cam->m_cb->data, timestamp, msgType, &mem);
+        }
     }
 
 private:

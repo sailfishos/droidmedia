@@ -10,6 +10,9 @@ extern "C" {
   typedef void DroidMediaCamera;
 #endif
 
+  // From Timers.h
+  typedef int64_t nsecs_t; // nano-seconds
+
 struct DroidMediaCamera;
   /*
 typedef struct {
@@ -24,8 +27,15 @@ typedef struct {
 
 typedef struct {
   void *data;
+  size_t size;
+} DroidMediaMemory;
+
+typedef struct {
+  void *data;
   void (* notify)(void *data, int32_t msgType, int32_t ext1, int32_t ext2);
   void (* buffers_released)(void *data);
+  void (* post_data_timestamp)(void *data, nsecs_t timestamp, int32_t msgType, DroidMediaMemory *memory);
+
   /*
 // TODO:
     virtual void postData(int32_t msgType, const sp<IMemory>& dataPtr,                                             
