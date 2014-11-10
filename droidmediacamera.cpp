@@ -78,7 +78,7 @@ public:
     void postData(int32_t msgType, const android::sp<android::IMemory>& dataPtr,
                   camera_frame_metadata_t *metadata)
     {
-        DroidMediaMemory mem;
+        DroidMediaData mem;
         mem.size = dataPtr->size();
         mem.data = dataPtr->pointer();
 
@@ -91,7 +91,7 @@ public:
 
     void postDataTimestamp(nsecs_t timestamp, int32_t msgType, const android::sp<android::IMemory>& dataPtr)
     {
-        DroidMediaMemory mem;
+        DroidMediaData mem;
         mem.size = dataPtr->size();
         mem.data = dataPtr->pointer();
 
