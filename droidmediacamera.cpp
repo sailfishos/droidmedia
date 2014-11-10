@@ -8,8 +8,6 @@
 #include <gui/SurfaceTexture.h>
 #include <android/log.h>
 #include <utils/String8.h>
-#include <binder/ProcessState.h>
-#include <binder/IPCThreadState.h>
 
 extern "C" {
 
@@ -103,17 +101,6 @@ public:
 private:
     DroidMediaCamera *m_cam;
 };
-
-void droid_media_camera_init()
-{
-    android::ProcessState::self()->startThreadPool();
-}
-
-void droid_media_camera_deinit()
-{
-    android::IPCThreadState::self()->stopProcess(false);
-    android::IPCThreadState::self()->joinThreadPool();
-}
 
 int droid_media_camera_get_number_of_cameras()
 {

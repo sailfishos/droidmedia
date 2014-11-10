@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 int main(int args, char *argv[]) {
-    droid_media_camera_init();
+    droid_media_init();
 
     int cameras = droid_media_camera_get_number_of_cameras();
     printf("%d cameras\n", cameras);
@@ -47,5 +47,5 @@ int main(int args, char *argv[]) {
         droid_media_camera_disconnect(cam);
     }
 
-    droid_media_camera_deinit();
+    droid_media_deinit();
 }

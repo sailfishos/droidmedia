@@ -2,6 +2,7 @@
 #define DROID_MEDIA_CAMERA_H
 
 #include <stdint.h>
+#include "droidmedia.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,19 +23,11 @@ typedef struct {
 
 typedef struct {
   void *data;
-  size_t size;
-} DroidMediaData;
-
-typedef struct {
-  void *data;
   void (* notify)(void *data, int32_t msgType, int32_t ext1, int32_t ext2);
   void (* buffers_released)(void *data);
   void (* post_data_timestamp)(void *data, nsecs_t timestamp, int32_t msgType, DroidMediaData *mem);
   void (* post_data)(void *data, int32_t msgType, DroidMediaData *mem);
 } DroidMediaCameraCallbacks;
-
-void droid_media_camera_init();
-void droid_media_camera_deinit();
 
 int droid_media_camera_get_number_of_cameras();
 bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number);
