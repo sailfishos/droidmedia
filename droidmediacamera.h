@@ -25,6 +25,7 @@ typedef struct {
 typedef struct {
   void *data;
   void (* notify)(void *data, int32_t msgType, int32_t ext1, int32_t ext2);
+  void (* buffers_released)(void *data);
   /*
 // TODO:
     virtual void postData(int32_t msgType, const sp<IMemory>& dataPtr,                                             

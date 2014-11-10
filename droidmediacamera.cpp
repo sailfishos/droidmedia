@@ -48,8 +48,9 @@ public:
 
     void onBuffersReleased()
     {
-// TODO:
-        fprintf(stderr, "%s\n", __FUNCTION__);
+        if (m_cam->m_cb && m_cam->m_cb->buffers_released) {
+            m_cam->m_cb->buffers_released(m_cam->m_cb->data);
+        }
     }
 
     void setCamera(DroidMediaCamera *cam) {
