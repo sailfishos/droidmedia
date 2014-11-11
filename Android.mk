@@ -1,7 +1,11 @@
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := droidmedia.cpp droidmediacamera.cpp allocator.cpp
+LOCAL_SRC_FILES := droidmedia.cpp \
+                   droidmediacamera.cpp \
+                   allocator.cpp \
+                   mediabuffer.cpp
+
 LOCAL_SHARED_LIBRARIES := libc \
                           libutils \
                           libcutils \

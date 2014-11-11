@@ -8,11 +8,13 @@
 extern "C" {
 #else
 #include <stdbool.h>
-  typedef void DroidMediaCamera;
+typedef void DroidMediaCamera;
 #endif
 
 // From Timers.h
 typedef int64_t nsecs_t; // nano-seconds
+typedef void *EGLDisplay;
+typedef void *EGLSyncKHR;
 
 struct DroidMediaCamera;
 
@@ -25,6 +27,7 @@ typedef struct {
   void *data;
   void (* notify)(void *data, int32_t msgType, int32_t ext1, int32_t ext2);
   void (* buffers_released)(void *data);
+  void (* frame_available)(void *data);
   void (* post_data_timestamp)(void *data, nsecs_t timestamp, int32_t msgType, DroidMediaData *mem);
   void (* post_data)(void *data, int32_t msgType, DroidMediaData *mem);
 } DroidMediaCameraCallbacks;
@@ -59,6 +62,10 @@ bool droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *par
 char *droid_media_camera_get_parameters(DroidMediaCamera *camera);
 
 bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType);
+
+DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, DroidMediaBufferCallbacks *cb);
+void droid_media_camera_release_buffer(DroidMediaCamera *camera, DroidMediaBuffer *buffer,
+				       EGLDisplay display, EGLSyncKHR fence);
 
   // TODO: release recording frame
 

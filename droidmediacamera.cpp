@@ -8,6 +8,7 @@
 #include <gui/SurfaceTexture.h>
 #include <android/log.h>
 #include <utils/String8.h>
+#include "mediabuffer.h"
 
 extern "C" {
 
@@ -34,13 +35,8 @@ public:
 
     void onFrameAvailable()
     {
-        // TODO:
-        fprintf(stderr, "%s\n", __FUNCTION__);
-        android::BufferQueue::BufferItem buffer;
-        if (m_cam->m_queue->acquireBuffer(&buffer) != android::OK) {
-            ALOGE("DroidMediaCamera: Failed to acquire buffer from the queue");
-        } else {
-            m_cam->m_queue->releaseBuffer(buffer.mBuf, NULL, NULL);
+        if (m_cam->m_cb && m_cam->m_cb->frame_available) {
+            m_cam->m_cb->frame_available(m_cam->m_cb->data);
         }
     }
 
@@ -277,4 +273,26 @@ bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType)
     return camera->m_camera->takePicture(msgType) == android::NO_ERROR;
 }
 
+DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, DroidMediaBufferCallbacks *cb)
+{
+    android::BufferQueue::BufferItem buffer;
+
+    if (camera->m_queue->acquireBuffer(&buffer) != android::OK) {
+        ALOGE("DroidMediaCamera: Failed to acquire buffer from the queue");
+        return NULL;
+    }
+
+//    m_cam->m_queue->releaseBuffer(buffer.mBuf, NULL, NULL);
+    return new DroidMediaBuffer(buffer, cb->data, cb->ref, cb->unref);
+}
+
+void droid_media_camera_release_buffer(DroidMediaCamera *camera, DroidMediaBuffer *buffer,
+				       EGLDisplay display, EGLSyncKHR fence)
+{
+    android::BufferQueue::BufferItem buff = buffer->m_buffer;
+
+    camera->m_queue->releaseBuffer(buff.mBuf, display, fence);
+
+    delete buffer;
+}
 };
