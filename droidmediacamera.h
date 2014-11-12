@@ -9,6 +9,7 @@ extern "C" {
 #else
 #include <stdbool.h>
 typedef void DroidMediaCamera;
+typedef void DroidMediaCameraRecordingData;
 #endif
 
 // From Timers.h
@@ -17,6 +18,7 @@ typedef void *EGLDisplay;
 typedef void *EGLSyncKHR;
 
 struct DroidMediaCamera;
+struct DroidMediaCameraRecordingData;
 
 typedef struct {
   int facing;
@@ -28,7 +30,7 @@ typedef struct {
   void (* notify)(void *data, int32_t msgType, int32_t ext1, int32_t ext2);
   void (* buffers_released)(void *data);
   void (* frame_available)(void *data);
-  void (* post_data_timestamp)(void *data, nsecs_t timestamp, int32_t msgType, DroidMediaData *mem);
+  void (* post_data_timestamp)(void *data, int32_t msgType, DroidMediaCameraRecordingData *video_data);
   void (* post_data)(void *data, int32_t msgType, DroidMediaData *mem);
 } DroidMediaCameraCallbacks;
 
@@ -66,8 +68,11 @@ bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType);
 DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, DroidMediaBufferCallbacks *cb);
 void droid_media_camera_release_buffer(DroidMediaCamera *camera, DroidMediaBuffer *buffer,
 				       EGLDisplay display, EGLSyncKHR fence);
+void droid_media_camera_release_recording_frame(DroidMediaCamera *camera, DroidMediaCameraRecordingData *data);
 
-  // TODO: release recording frame
+nsecs_t droid_media_camera_recording_frame_get_timestamp(DroidMediaCameraRecordingData *data);
+size_t droid_media_camera_recording_frame_get_size(DroidMediaCameraRecordingData *data);
+void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData *data);
 
 #ifdef __cplusplus
 };

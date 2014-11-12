@@ -12,6 +12,13 @@
 
 extern "C" {
 
+class DroidMediaCameraRecordingData
+{
+public:
+    android::sp<android::IMemory> mem;
+    nsecs_t ts;
+};
+
 class DroidMediaCamera
 {
 public:
@@ -85,12 +92,11 @@ public:
 
     void postDataTimestamp(nsecs_t timestamp, int32_t msgType, const android::sp<android::IMemory>& dataPtr)
     {
-        DroidMediaData mem;
-        mem.size = dataPtr->size();
-        mem.data = dataPtr->pointer();
-
         if (m_cam->m_cb && m_cam->m_cb->post_data_timestamp) {
-            m_cam->m_cb->post_data_timestamp(m_cam->m_cb->data, timestamp, msgType, &mem);
+            DroidMediaCameraRecordingData *data = new DroidMediaCameraRecordingData;
+            data->mem = dataPtr;
+            data->ts = timestamp;
+            m_cam->m_cb->post_data_timestamp(m_cam->m_cb->data, msgType, data);
         }
     }
 
@@ -294,5 +300,26 @@ void droid_media_camera_release_buffer(DroidMediaCamera *camera, DroidMediaBuffe
     camera->m_queue->releaseBuffer(buff.mBuf, display, fence);
 
     delete buffer;
+}
+
+void droid_media_camera_release_recording_frame(DroidMediaCamera *camera, DroidMediaCameraRecordingData *data)
+{
+    camera->m_camera->releaseRecordingFrame(data->mem);
+    delete data;
+}
+
+nsecs_t droid_media_camera_recording_frame_get_timestamp(DroidMediaCameraRecordingData *data)
+{
+    return data->ts;
+}
+
+size_t droid_media_camera_recording_frame_get_size(DroidMediaCameraRecordingData *data)
+{
+    return data->mem->size();
+}
+
+void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData *data)
+{
+    return data->mem->pointer();
 }
 };
