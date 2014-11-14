@@ -97,6 +97,14 @@ static inline void *__resolve_sym(const char *sym)
     _sym();								\
   }									\
 
+#define HYBRIS_WRAPPER_0_3(arg0,arg1,arg2,sym)			     \
+  void sym(arg0 _arg0, arg1 _arg1, arg2 _arg2) {		     \
+    static void (* _sym)(arg0, arg1, arg2) = NULL;		     \
+    if (!_sym)							     \
+      _sym = __resolve_sym(#sym);				     \
+    _sym(_arg0,_arg1, _arg2);					     \
+  }								     \
+
 HYBRIS_WRAPPER_1_0(int,droid_media_camera_get_number_of_cameras)
 HYBRIS_WRAPPER_1_2(bool,DroidMediaCameraInfo*, int, droid_media_camera_get_info)
 HYBRIS_WRAPPER_1_1(DroidMediaCamera*,int,droid_media_camera_connect)
@@ -112,7 +120,7 @@ HYBRIS_WRAPPER_0_1(DroidMediaCamera*,droid_media_camera_stop_recording)
 HYBRIS_WRAPPER_1_1(bool,DroidMediaCamera*,droid_media_camera_is_recording_enabled)
 HYBRIS_WRAPPER_1_1(bool,DroidMediaCamera*,droid_media_camera_start_auto_focus)
 HYBRIS_WRAPPER_1_1(bool,DroidMediaCamera*,droid_media_camera_cancel_auto_focus)
-HYBRIS_WRAPPER_0_2(DroidMediaCamera*,DroidMediaCameraCallbacks*,droid_media_camera_set_callbacks)
+HYBRIS_WRAPPER_0_3(DroidMediaCamera*,DroidMediaCameraCallbacks*,void*,droid_media_camera_set_callbacks)
 HYBRIS_WRAPPER_1_4(bool,DroidMediaCamera*,int32_t,int32_t,int32_t,droid_media_camera_send_command)
 HYBRIS_WRAPPER_1_2(bool, DroidMediaCamera*,bool,droid_media_camera_store_meta_data_in_buffers)
 HYBRIS_WRAPPER_0_2(DroidMediaCamera*, int, droid_media_camera_set_preview_callback_flags)

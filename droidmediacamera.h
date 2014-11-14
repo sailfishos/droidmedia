@@ -26,7 +26,6 @@ typedef struct {
 } DroidMediaCameraInfo;
 
 typedef struct {
-  void *data;
   void (* notify)(void *data, int32_t msgType, int32_t ext1, int32_t ext2);
   void (* buffers_released)(void *data);
   void (* frame_available)(void *data);
@@ -55,7 +54,7 @@ bool droid_media_camera_is_recording_enabled(DroidMediaCamera *camera);
 bool droid_media_camera_start_auto_focus(DroidMediaCamera *camera);
 bool droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera);
 
-void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb);
+void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb, void *data);
 bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2);
 bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, bool enabled);
 void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera, int preview_callback_flag);

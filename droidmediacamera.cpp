@@ -23,13 +23,15 @@ class DroidMediaCamera
 {
 public:
     DroidMediaCamera() :
-        m_cb(0) {
+        m_cb(0),
+        m_cb_data(0) {
 
     }
 
     android::sp<android::Camera> m_camera;
     android::sp<android::BufferQueue> m_queue;
     DroidMediaCameraCallbacks *m_cb;
+    void *m_cb_data;
 };
 
 class BufferQueueListener : public android::BufferQueue::ConsumerListener {
@@ -43,14 +45,14 @@ public:
     void onFrameAvailable()
     {
         if (m_cam->m_cb && m_cam->m_cb->frame_available) {
-            m_cam->m_cb->frame_available(m_cam->m_cb->data);
+            m_cam->m_cb->frame_available(m_cam->m_cb_data);
         }
     }
 
     void onBuffersReleased()
     {
         if (m_cam->m_cb && m_cam->m_cb->buffers_released) {
-            m_cam->m_cb->buffers_released(m_cam->m_cb->data);
+            m_cam->m_cb->buffers_released(m_cam->m_cb_data);
         }
     }
 
@@ -72,7 +74,7 @@ public:
     void notify(int32_t msgType, int32_t ext1, int32_t ext2)
     {
         if (m_cam->m_cb && m_cam->m_cb->notify) {
-            m_cam->m_cb->notify(m_cam->m_cb->data, msgType, ext1, ext2);
+            m_cam->m_cb->notify(m_cam->m_cb_data, msgType, ext1, ext2);
         }
     }
 
@@ -84,7 +86,7 @@ public:
         mem.data = dataPtr->pointer();
 
         if (m_cam->m_cb && m_cam->m_cb->post_data) {
-            m_cam->m_cb->post_data(m_cam->m_cb->data, msgType, &mem);
+            m_cam->m_cb->post_data(m_cam->m_cb_data, msgType, &mem);
         }
 
         // TODO: expose camera_frame_metadata_t
@@ -96,7 +98,7 @@ public:
             DroidMediaCameraRecordingData *data = new DroidMediaCameraRecordingData;
             data->mem = dataPtr;
             data->ts = timestamp;
-            m_cam->m_cb->post_data_timestamp(m_cam->m_cb->data, msgType, data);
+            m_cam->m_cb->post_data_timestamp(m_cam->m_cb_data, msgType, data);
         }
     }
 
@@ -227,9 +229,10 @@ bool droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera)
     return camera->m_camera->cancelAutoFocus() == android::NO_ERROR;
 }
 
-void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb)
+void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb, void *data)
 {
     camera->m_cb = cb;
+    camera->m_cb_data = data;
 }
 
 bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2)
