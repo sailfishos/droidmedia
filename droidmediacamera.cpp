@@ -180,6 +180,10 @@ void droid_media_camera_disconnect(DroidMediaCamera *camera)
 {
     camera->m_camera->disconnect();
 
+    if (camera->m_queue != NULL) {
+        camera->m_queue->consumerDisconnect();
+    }
+
     delete camera;
 }
 
