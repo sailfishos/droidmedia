@@ -8,6 +8,7 @@ class DroidMediaBuffer : public ANativeWindowBuffer
 {
 public:
   DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
+		   android::sp<android::BufferQueue>& queue,
 		   void *data,
 		   void (* ref)(void *m_data),
 		   void (* unref)(void *m_data));
@@ -17,7 +18,9 @@ public:
   static void incRef(struct android_native_base_t* base);
   static void decRef(struct android_native_base_t* base);
 
-  android::BufferQueue::BufferItem m_buffer;
+  android::sp<android::GraphicBuffer> m_buffer;
+  android::sp<android::BufferQueue> m_queue;
+  int m_slot;
   void *m_data;
   void (* m_ref)(void *m_data);
   void (* m_unref)(void *m_data);

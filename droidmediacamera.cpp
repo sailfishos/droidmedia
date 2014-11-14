@@ -308,19 +308,7 @@ DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, Dr
         return NULL;
     }
 
-    return new DroidMediaBuffer(camera->m_slots[num], cb->data, cb->ref, cb->unref);
-}
-
-void droid_media_camera_release_buffer(DroidMediaCamera *camera, DroidMediaBuffer *buffer,
-				       EGLDisplay display, EGLSyncKHR fence)
-{
-    android::BufferQueue::BufferItem buff = buffer->m_buffer;
-
-    if (camera->m_queue->releaseBuffer(buff.mBuf, display, fence) != android::OK) {
-        ALOGE("Failed to release preview buffer");
-    }
-
-    delete buffer;
+    return new DroidMediaBuffer(camera->m_slots[num], camera->m_queue, cb->data, cb->ref, cb->unref);
 }
 
 void droid_media_camera_release_recording_frame(DroidMediaCamera *camera, DroidMediaCameraRecordingData *data)

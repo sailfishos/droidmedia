@@ -10,6 +10,9 @@ class DroidMediaBuffer;
 typedef void DroidMediaBuffer;
 #endif
 
+typedef void *EGLDisplay;
+typedef void *EGLSyncKHR;
+
 typedef struct {
   void *data;
   size_t size;
@@ -23,6 +26,9 @@ typedef struct {
 
 void droid_media_init();
 void droid_media_deinit();
+
+void droid_media_buffer_release(DroidMediaBuffer *buffer,
+				EGLDisplay display, EGLSyncKHR fence);
 
 #ifdef __cplusplus
 };

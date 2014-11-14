@@ -14,8 +14,6 @@ typedef void DroidMediaCameraRecordingData;
 
 // From Timers.h
 typedef int64_t nsecs_t; // nano-seconds
-typedef void *EGLDisplay;
-typedef void *EGLSyncKHR;
 
 struct DroidMediaCamera;
 struct DroidMediaCameraRecordingData;
@@ -65,8 +63,6 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera);
 bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType);
 
 DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, DroidMediaBufferCallbacks *cb);
-void droid_media_camera_release_buffer(DroidMediaCamera *camera, DroidMediaBuffer *buffer,
-				       EGLDisplay display, EGLSyncKHR fence);
 void droid_media_camera_release_recording_frame(DroidMediaCamera *camera, DroidMediaCameraRecordingData *data);
 
 nsecs_t droid_media_camera_recording_frame_get_timestamp(DroidMediaCameraRecordingData *data);
