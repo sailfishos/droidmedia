@@ -285,13 +285,18 @@ bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType)
 DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, DroidMediaBufferCallbacks *cb)
 {
     android::BufferQueue::BufferItem buffer;
-
-    if (camera->m_queue->acquireBuffer(&buffer) != android::OK) {
-        ALOGE("DroidMediaCamera: Failed to acquire buffer from the queue");
+    int err = camera->m_queue->acquireBuffer(&buffer);
+    if (err != android::OK) {
+        ALOGE("DroidMediaCamera: Failed to acquire buffer from the queue. Error 0x%x", -err);
         return NULL;
     }
 
-//    m_cam->m_queue->releaseBuffer(buffer.mBuf, NULL, NULL);
+    if (!buffer.mGraphicBuffer.get()) {
+        ALOGE("Got a buffer without real data");
+        camera->m_queue->releaseBuffer(buffer.mBuf, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
+        return NULL;
+    }
+
     return new DroidMediaBuffer(buffer, cb->data, cb->ref, cb->unref);
 }
 
@@ -300,7 +305,9 @@ void droid_media_camera_release_buffer(DroidMediaCamera *camera, DroidMediaBuffe
 {
     android::BufferQueue::BufferItem buff = buffer->m_buffer;
 
-    camera->m_queue->releaseBuffer(buff.mBuf, display, fence);
+    if (camera->m_queue->releaseBuffer(buff.mBuf, display, fence) != android::OK) {
+        ALOGE("Failed to release preview buffer");
+    }
 
     delete buffer;
 }
