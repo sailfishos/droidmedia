@@ -32,6 +32,8 @@ public:
     android::sp<android::BufferQueue> m_queue;
     DroidMediaCameraCallbacks *m_cb;
     void *m_cb_data;
+
+    android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
 };
 
 class BufferQueueListener : public android::BufferQueue::ConsumerListener {
@@ -285,19 +287,28 @@ bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType)
 DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, DroidMediaBufferCallbacks *cb)
 {
     android::BufferQueue::BufferItem buffer;
+    int num;
     int err = camera->m_queue->acquireBuffer(&buffer);
     if (err != android::OK) {
         ALOGE("DroidMediaCamera: Failed to acquire buffer from the queue. Error 0x%x", -err);
         return NULL;
     }
 
-    if (!buffer.mGraphicBuffer.get()) {
+    // TODO: Here we are working around the fact that BufferQueue will send us an mGraphicBuffer
+    // only when it changes. We can integrate SurfaceTexture but thart needs a lot of change in the whole stack
+    num = buffer.mBuf;
+
+    if (buffer.mGraphicBuffer != NULL) {
+        camera->m_slots[num] = buffer;
+    }
+
+    if (camera->m_slots[num].mGraphicBuffer == NULL) {
         ALOGE("Got a buffer without real data");
         camera->m_queue->releaseBuffer(buffer.mBuf, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
         return NULL;
     }
 
-    return new DroidMediaBuffer(buffer, cb->data, cb->ref, cb->unref);
+    return new DroidMediaBuffer(camera->m_slots[num], cb->data, cb->ref, cb->unref);
 }
 
 void droid_media_camera_release_buffer(DroidMediaCamera *camera, DroidMediaBuffer *buffer,
