@@ -20,6 +20,12 @@ public:
 
   android::sp<android::GraphicBuffer> m_buffer;
   android::sp<android::BufferQueue> m_queue;
+
+  uint32_t m_transform;
+  uint32_t m_scalingMode;
+  int64_t m_timestamp;
+  uint64_t m_frameNumber;
+
   int m_slot;
   void *m_data;
   void (* m_ref)(void *m_data);

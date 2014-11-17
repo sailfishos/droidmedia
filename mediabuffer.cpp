@@ -7,6 +7,10 @@ DroidMediaBuffer::DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
                                    void (* unref)(void *m_data)) :
     m_buffer(buffer.mGraphicBuffer),
     m_queue(queue),
+    m_transform(buffer.mTransform),
+    m_scalingMode(buffer.mScalingMode),
+    m_timestamp(buffer.mTimestamp),
+    m_frameNumber(buffer.mFrameNumber),
     m_slot(buffer.mBuf),
     m_data(data),
     m_ref(ref),
@@ -51,6 +55,26 @@ void droid_media_buffer_release(DroidMediaBuffer *buffer,
     }
 
     delete buffer;
+}
+
+uint32_t droid_media_buffer_get_transform(DroidMediaBuffer * buffer)
+{
+    return buffer->m_transform;
+}
+
+uint32_t droid_media_buffer_get_scaling_mode(DroidMediaBuffer * buffer)
+{
+    return buffer->m_scalingMode;
+}
+
+int64_t droid_media_buffer_get_timestamp(DroidMediaBuffer * buffer)
+{
+    return buffer->m_timestamp;
+}
+
+uint64_t droid_media_buffer_get_frame_number(DroidMediaBuffer * buffer)
+{
+    return buffer->m_frameNumber;
 }
 
 };
