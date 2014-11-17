@@ -10,6 +10,8 @@
 #include <utils/String8.h>
 #include "mediabuffer.h"
 
+class BufferQueueListener;
+
 extern "C" {
 
 class DroidMediaCameraRecordingData
@@ -34,6 +36,7 @@ public:
     void *m_cb_data;
 
     android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
+    android::sp<BufferQueueListener> m_bufferQueueListener;
 };
 
 class BufferQueueListener : public android::BufferQueue::ConsumerListener {
@@ -46,14 +49,14 @@ public:
 
     void onFrameAvailable()
     {
-        if (m_cam->m_cb && m_cam->m_cb->frame_available) {
+        if (m_cam && m_cam->m_cb && m_cam->m_cb->frame_available) {
             m_cam->m_cb->frame_available(m_cam->m_cb_data);
         }
     }
 
     void onBuffersReleased()
     {
-        if (m_cam->m_cb && m_cam->m_cb->buffers_released) {
+        if (m_cam && m_cam->m_cb && m_cam->m_cb->buffers_released) {
             m_cam->m_cb->buffers_released(m_cam->m_cb_data);
         }
     }
@@ -168,6 +171,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     cam->m_camera->setPreviewTexture(cam->m_queue);
 
     cam->m_camera->setListener(new CameraListener(cam));
+    cam->m_bufferQueueListener = listener;
 
     return cam;
 }
@@ -180,9 +184,7 @@ void droid_media_camera_disconnect(DroidMediaCamera *camera)
 {
     camera->m_camera->disconnect();
 
-    if (camera->m_queue != NULL) {
-        camera->m_queue->consumerDisconnect();
-    }
+    camera->m_bufferQueueListener->setCamera(0);
 
     delete camera;
 }
