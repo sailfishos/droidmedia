@@ -314,6 +314,12 @@ DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, Dr
         return NULL;
     }
 
+    camera->m_slots[num].mTransform = buffer.mTransform;
+    camera->m_slots[num].mScalingMode = buffer.mScalingMode;
+    camera->m_slots[num].mTimestamp = buffer.mTimestamp;
+    camera->m_slots[num].mFrameNumber = buffer.mFrameNumber;
+    camera->m_slots[num].mCrop = buffer.mCrop;
+
     return new DroidMediaBuffer(camera->m_slots[num], camera->m_queue, cb->data, cb->ref, cb->unref);
 }
 
