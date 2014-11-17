@@ -89,4 +89,14 @@ DroidMediaRect droid_media_buffer_get_crop_rect(DroidMediaBuffer * buffer)
     return rect;
 }
 
+uint32_t droid_media_buffer_get_width(DroidMediaBuffer * buffer)
+{
+    return buffer->width;
+}
+
+uint32_t droid_media_buffer_get_height(DroidMediaBuffer * buffer)
+{
+    return buffer->height;
+}
+
 };

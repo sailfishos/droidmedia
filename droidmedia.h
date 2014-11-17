@@ -39,6 +39,8 @@ uint32_t droid_media_buffer_get_scaling_mode(DroidMediaBuffer * buffer);
 int64_t droid_media_buffer_get_timestamp(DroidMediaBuffer * buffer);
 uint64_t droid_media_buffer_get_frame_number(DroidMediaBuffer * buffer);
 DroidMediaRect droid_media_buffer_get_crop_rect(DroidMediaBuffer * buffer);
+uint32_t droid_media_buffer_get_width(DroidMediaBuffer * buffer);
+uint32_t droid_media_buffer_get_height(DroidMediaBuffer * buffer);
 void droid_media_buffer_release(DroidMediaBuffer *buffer,
 				EGLDisplay display, EGLSyncKHR fence);
 
