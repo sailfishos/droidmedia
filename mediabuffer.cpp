@@ -11,6 +11,7 @@ DroidMediaBuffer::DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
     m_scalingMode(buffer.mScalingMode),
     m_timestamp(buffer.mTimestamp),
     m_frameNumber(buffer.mFrameNumber),
+    m_crop(buffer.mCrop),
     m_slot(buffer.mBuf),
     m_data(data),
     m_ref(ref),
@@ -75,6 +76,17 @@ int64_t droid_media_buffer_get_timestamp(DroidMediaBuffer * buffer)
 uint64_t droid_media_buffer_get_frame_number(DroidMediaBuffer * buffer)
 {
     return buffer->m_frameNumber;
+}
+
+DroidMediaRect droid_media_buffer_get_crop_rect(DroidMediaBuffer * buffer)
+{
+    DroidMediaRect rect;
+    rect.left = buffer->m_crop.left;
+    rect.right = buffer->m_crop.right;
+    rect.top = buffer->m_crop.top;
+    rect.bottom = buffer->m_crop.bottom;
+
+    return rect;
 }
 
 };

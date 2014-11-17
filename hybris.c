@@ -137,6 +137,6 @@ HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer,droid_media_buffer_get_transform)
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer,droid_media_buffer_get_scaling_mode)
 HYBRIS_WRAPPER_1_1(int64_t,DroidMediaBuffer,droid_media_buffer_get_timestamp)
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer,droid_media_buffer_get_frame_number)
-
+HYBRIS_WRAPPER_1_1(DroidMediaRect,DroidMediaBuffer*,droid_media_buffer_get_crop_rect)
 HYBRIS_WRAPPER_0_0(droid_media_init)
 HYBRIS_WRAPPER_0_0(droid_media_deinit)

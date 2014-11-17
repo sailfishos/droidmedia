@@ -3,6 +3,7 @@
 
 #include <system/window.h>
 #include <gui/BufferQueue.h>
+#include "droidmedia.h"
 
 class DroidMediaBuffer : public ANativeWindowBuffer
 {
@@ -25,6 +26,8 @@ public:
   uint32_t m_scalingMode;
   int64_t m_timestamp;
   uint64_t m_frameNumber;
+
+  android::Rect m_crop;
 
   int m_slot;
   void *m_data;
