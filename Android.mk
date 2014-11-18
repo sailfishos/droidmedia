@@ -19,7 +19,7 @@ LOCAL_MODULE := libdroidmedia
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := test.cpp
+LOCAL_SRC_FILES := test_camera.cpp
 LOCAL_SHARED_LIBRARIES := libdroidmedia
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := test_droidmedia_camera
