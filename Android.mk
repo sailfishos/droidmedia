@@ -22,7 +22,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := test.cpp
 LOCAL_SHARED_LIBRARIES := libdroidmedia
 LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE := test_droidmedia
+LOCAL_MODULE := test_droidmedia_camera
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
