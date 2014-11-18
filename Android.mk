@@ -3,6 +3,7 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := droidmedia.cpp \
                    droidmediacamera.cpp \
+                   droidmediacodec.cpp \
                    allocator.cpp \
                    mediabuffer.cpp
 
@@ -12,7 +13,9 @@ LOCAL_SHARED_LIBRARIES := libc \
                           libcamera_client \
                           libgui \
                           libui \
-                          libbinder
+                          libbinder \
+                          libstagefright \
+                          libstagefright_foundation
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
@@ -23,6 +26,13 @@ LOCAL_SRC_FILES := test_camera.cpp
 LOCAL_SHARED_LIBRARIES := libdroidmedia
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := test_droidmedia_camera
+include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := test_codec.cpp
+LOCAL_SHARED_LIBRARIES := libdroidmedia
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE := test_droidmedia_codec
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
