@@ -4,6 +4,8 @@
 #include <gui/ISurfaceComposer.h>
 #include <gui/IDisplayEventConnection.h>
 #include <CameraService.h>
+#include <binder/MemoryHeapBase.h>
+#include <MediaPlayerService.h>
 #include "allocator.h"
 
 using namespace android;
@@ -74,6 +76,7 @@ main(int argc, char* argv[])
     sp<IServiceManager> sm = defaultServiceManager();
 
     MiniSurfaceFlinger::instantiate();
+    MediaPlayerService::instantiate();
     CameraService::instantiate();
 
     ProcessState::self()->startThreadPool();

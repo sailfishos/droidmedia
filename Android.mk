@@ -64,8 +64,10 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := miniservice.cpp \
                    allocator.cpp
-LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice
+LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice \
+                    frameworks/av/media/libmediaplayerservice
 LOCAL_SHARED_LIBRARIES := libcameraservice \
+                          libmediaplayerservice \
                           libutils \
                           libbinder \
                           libgui \
