@@ -62,11 +62,15 @@ LOCAL_MODULE := test_droidmedia_codec
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := miniservice.cpp
+LOCAL_SRC_FILES := miniservice.cpp \
+                   allocator.cpp
 LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice
 LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libutils \
-                          libbinder
+                          libbinder \
+                          libgui \
+                          libcutils \
+                          libui
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := minicameraservice
 include $(BUILD_EXECUTABLE)
