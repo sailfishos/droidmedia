@@ -55,29 +55,31 @@ char **droid_media_codec_get_supported_types(size_t index, ssize_t *size)
 }
 
 bool droid_media_codec_get_capabilities(size_t index, const char *type,
-                                        uint32_t *profiles, uint32_t *levels, ssize_t *profiles_levels_size,
-                                        uint32_t *color_formats, ssize_t *color_formats_size)
+                                        uint32_t **profiles, uint32_t **levels, ssize_t *profiles_levels_size,
+                                        uint32_t **color_formats, ssize_t *color_formats_size)
 {
     android::Vector<android::MediaCodecList::ProfileLevel> profileLevels;
     android::Vector<uint32_t> colorFormats;
     if (android::MediaCodecList::getInstance()->getCodecCapabilities(index, type,
                                                                      &profileLevels,
                                                                      &colorFormats) != android::OK) {
+        ALOGE("DroidMediaCodec: Failed to get codec capabilities for %s", type);
         return false;
     }
 
     *profiles_levels_size = profileLevels.size();
-    profiles = (uint32_t *)malloc(*profiles_levels_size * sizeof(uint32_t));
-    levels = (uint32_t *)malloc(*profiles_levels_size * sizeof(uint32_t));
+    *profiles = (uint32_t *)malloc(*profiles_levels_size * sizeof(uint32_t));
+    *levels = (uint32_t *)malloc(*profiles_levels_size * sizeof(uint32_t));
+
     for (ssize_t x = 0; x < *profiles_levels_size; x++) {
-        profiles[x] = profileLevels[x].mProfile;
-        levels[x] = profileLevels[x].mLevel;
+        (*profiles)[x] = profileLevels[x].mProfile;
+        (*levels)[x] = profileLevels[x].mLevel;
     }
 
     *color_formats_size = colorFormats.size();
-    color_formats = (uint32_t *)malloc(*color_formats_size * sizeof(uint32_t));
+    *color_formats = (uint32_t *)malloc(*color_formats_size * sizeof(uint32_t));
     for (ssize_t x = 0; x < *color_formats_size; x++) {
-        color_formats[x] = colorFormats[x];
+        (*color_formats)[x] = colorFormats[x];
     }
 
     return true;
