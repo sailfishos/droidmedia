@@ -3,9 +3,6 @@
 #include "droidmediacamera.h"
 #include "allocator.h"
 #include <camera/Camera.h>
-#include <gui/Surface.h>
-#include <gui/SurfaceComposerClient.h>
-#include <gui/SurfaceTexture.h>
 #include <android/log.h>
 #include <utils/String8.h>
 #include "mediabuffer.h"
