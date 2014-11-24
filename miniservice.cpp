@@ -33,7 +33,10 @@ public:
     }
 
     sp<IMemoryHeap> getCblk() const {
-        return sp<IMemoryHeap>();
+        static android::sp<android::MemoryHeapBase>
+            mem(new MemoryHeapBase(4096,
+                                   MemoryHeapBase::READ_ONLY, "SurfaceFlinger read-only heap"));
+        return mem;
     }
 
     void setTransactionState(const Vector<ComposerState>& state,
