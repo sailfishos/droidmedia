@@ -9,6 +9,8 @@
 #include <MediaPlayerService.h>
 #include "allocator.h"
 
+// echo "persist.camera.shutter.disable=1" >> /system/build.prop
+
 using namespace android;
 
 class FakePermissionController : public BinderService<FakePermissionController>,
