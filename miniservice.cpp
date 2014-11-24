@@ -1,6 +1,7 @@
 #include <binder/IPCThreadState.h>
 #include <binder/ProcessState.h>
 #include <binder/IServiceManager.h>
+#include <binder/IPermissionController.h>
 #include <gui/ISurfaceComposer.h>
 #include <gui/IDisplayEventConnection.h>
 #include <CameraService.h>
@@ -9,6 +10,20 @@
 #include "allocator.h"
 
 using namespace android;
+
+class FakePermissionController : public BinderService<FakePermissionController>,
+                                 public BnPermissionController
+{
+public:
+    static char const *getServiceName() {
+        return "permission";
+    }
+
+    bool checkPermission(const String16& permission,
+                         int32_t pid, int32_t uid) {
+        return true; // DUH! :P
+    }
+};
 
 class MiniSurfaceFlinger : public BinderService<MiniSurfaceFlinger>,
                            public BnSurfaceComposer,
@@ -78,6 +93,7 @@ main(int argc, char* argv[])
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();
 
+    FakePermissionController::instantiate();
     MiniSurfaceFlinger::instantiate();
     MediaPlayerService::instantiate();
     CameraService::instantiate();
