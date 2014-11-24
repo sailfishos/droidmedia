@@ -52,7 +52,7 @@ void droid_media_buffer_release(DroidMediaBuffer *buffer,
 
     int err = buffer->m_queue->releaseBuffer(buffer->m_slot, display, fence);
     if (err != android::NO_ERROR) {
-        ALOGE("Error 0x%x releasing buffer", -err);
+        ALOGE("DroidMediaBuffer: Error 0x%x releasing buffer", -err);
     }
 
     delete buffer;
