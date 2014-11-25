@@ -84,6 +84,7 @@ public:
                   camera_frame_metadata_t *metadata)
     {
         DroidMediaData mem;
+        mem.ts = 0;
         mem.size = dataPtr->size();
         mem.data = dataPtr->pointer();
 

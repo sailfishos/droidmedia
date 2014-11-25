@@ -16,6 +16,7 @@ typedef void *EGLSyncKHR;
 typedef struct {
   void *data;
   size_t size;
+  int64_t ts;
 } DroidMediaData;
 
 typedef struct {
