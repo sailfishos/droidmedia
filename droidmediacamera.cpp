@@ -130,7 +130,8 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 DroidMediaCamera *droid_media_camera_connect(int camera_number)
 {
     android::sp<android::BufferQueue>
-        queue(new android::BufferQueue(false, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS));
+        queue(new android::BufferQueue(new DroidMediaAllocator, true,
+                                       android::BufferQueue::MIN_UNDEQUEUED_BUFFERS + 1));
     if (!queue.get()) {
         ALOGE("Failed to get buffer queue");
         return NULL;
@@ -138,6 +139,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 
     queue->setConsumerName(android::String8("DroidMediaBufferQueue"));
     queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+    queue->setSynchronousMode(false);
 
     android::sp<BufferQueueListener> listener = new BufferQueueListener;
 
