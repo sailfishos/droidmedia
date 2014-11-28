@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 #include "droidmedia.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #else
-#include <stdbool.h>
 typedef void DroidMediaCamera;
 typedef void DroidMediaCameraRecordingData;
 #endif
