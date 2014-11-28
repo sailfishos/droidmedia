@@ -1,4 +1,5 @@
 #include "droidmediacamera.h"
+#include "droidmediacodec.h"
 #include <dlfcn.h>
 #include <assert.h>
 #include <stdio.h>
@@ -64,6 +65,14 @@ static inline void *__resolve_sym(const char *sym)
       _sym = __resolve_sym(#sym);				     \
     return _sym(_arg0,_arg1, _arg2, _arg3);			     \
   }								     \
+
+#define HYBRIS_WRAPPER_1_7(ret,arg0,arg1,arg2,arg3,arg4,arg5,arg6,sym)	\
+  ret sym(arg0 _arg0, arg1 _arg1, arg2 _arg2, arg3 _arg3, arg4 _arg4, arg5 _arg5, arg6 _arg6) { \
+    static ret (* _sym)(arg0, arg1, arg2, arg3, arg4, arg5, arg6) = NULL; \
+    if (!_sym)								\
+      _sym = __resolve_sym(#sym);					\
+    return _sym(_arg0,_arg1, _arg2, _arg3, _arg4, _arg5, _arg6);	\
+  }									\
 
 #define HYBRIS_WRAPPER_0_4(arg0,arg1,arg2,arg3,sym)		     \
   void sym(arg0 _arg0, arg1 _arg1, arg2 _arg2, arg3 _arg3) {	     \
@@ -140,5 +149,18 @@ HYBRIS_WRAPPER_1_1(uint64_t,DroidMediaBuffer*,droid_media_buffer_get_frame_numbe
 HYBRIS_WRAPPER_1_1(DroidMediaRect,DroidMediaBuffer*,droid_media_buffer_get_crop_rect)
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer*,droid_media_buffer_get_width);
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer*,droid_media_buffer_get_height);
+HYBRIS_WRAPPER_1_2(ssize_t,const char *,bool,droid_media_codec_find_by_type);
+HYBRIS_WRAPPER_1_1(ssize_t,const char *,droid_media_codec_find_by_name);
+HYBRIS_WRAPPER_1_0(size_t,droid_media_codec_count);
+HYBRIS_WRAPPER_1_1(const char *,size_t,droid_media_codec_get_name);
+HYBRIS_WRAPPER_1_1(bool,size_t,droid_media_codec_is_encoder);
+HYBRIS_WRAPPER_1_2(bool,size_t,const char *,droid_media_codec_has_quirk);
+HYBRIS_WRAPPER_1_2(char **,size_t,ssize_t *,droid_media_codec_get_supported_types);
+HYBRIS_WRAPPER_1_7(bool,size_t,const char *,uint32_t **,uint32_t **,ssize_t *,uint32_t **,ssize_t *,droid_media_codec_get_capabilities);
+HYBRIS_WRAPPER_1_2(DroidMediaCodec*,DroidMediaCodecMetaData*,DroidMediaCodecFlags,droid_media_codec_create);
+HYBRIS_WRAPPER_1_1(bool,DroidMediaCodec*,droid_media_codec_start);
+HYBRIS_WRAPPER_0_1(DroidMediaCodec *,droid_media_codec_destroy);
+HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaData*,DroidMediaBufferCallbacks*,droid_media_codec_write);
+HYBRIS_WRAPPER_1_1(bool,DroidMediaCodec*,droid_media_codec_read);
 HYBRIS_WRAPPER_0_0(droid_media_init)
 HYBRIS_WRAPPER_0_0(droid_media_deinit)
