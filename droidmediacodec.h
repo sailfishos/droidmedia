@@ -29,6 +29,13 @@ typedef struct {
   ssize_t codec_data_size;
 } DroidMediaCodecMetaData;
 
+typedef struct {
+  void *data;
+  size_t size;
+  int64_t ts;
+  bool sync;
+} DroidMediaCodecData;
+
 ssize_t droid_media_codec_find_by_type(const char *type, bool encoder);
 ssize_t droid_media_codec_find_by_name(const char *name);
 size_t droid_media_codec_count();
@@ -44,7 +51,7 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMe
 bool droid_media_codec_start(DroidMediaCodec *codec);
 void droid_media_codec_stop(DroidMediaCodec *codec);
 void droid_media_codec_destroy(DroidMediaCodec *codec);
-void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaData *data, DroidMediaBufferCallbacks *cb);
+void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb);
 
   // TODO:
 bool droid_media_codec_read(DroidMediaCodec *codec);

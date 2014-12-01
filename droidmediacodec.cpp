@@ -5,7 +5,10 @@
 #include <media/stagefright/MetaData.h>
 #include <media/stagefright/foundation/ALooper.h>
 #include <media/stagefright/MediaDefs.h>
+#include <gui/BufferQueue.h>
+#include <gui/SurfaceTextureClient.h>
 #include "droidmediacodec.h"
+#include "allocator.h"
 
 static void mpeg4video(android::sp<android::MetaData> md, void *codec_data, ssize_t codec_data_size) {
     // TODO:
@@ -68,6 +71,36 @@ public:
 };
 
 class Source : public android::MediaSource {
+public:
+    void add(android::MediaBuffer * buffer) {
+        fprintf(stderr, "add \n");
+        m_framesReceived.lock.lock();
+        m_framesReceived.buffers.push_back(buffer);
+        m_framesReceived.cond.signal();
+        m_framesReceived.lock.unlock();
+    }
+
+    android::MediaBuffer *get() {
+        m_framesReceived.lock.lock();
+        fprintf(stderr, "locked \n");
+        while (m_framesReceived.buffers.empty()) {
+            // TODO: error
+        fprintf(stderr, "wait \n");
+            m_framesReceived.cond.wait(m_framesReceived.lock);
+        fprintf(stderr, "waited \n");
+        }
+
+        android::List<android::MediaBuffer *>::iterator iter = m_framesReceived.buffers.begin();
+        android::MediaBuffer *buffer = *iter;
+
+        m_framesReceived.buffers.erase(iter);
+
+        m_framesReceived.lock.unlock();
+
+        return buffer;
+    }
+
+private:
     android::status_t start(android::MetaData *meta) {
         fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
         return android::OK;
@@ -86,23 +119,42 @@ class Source : public android::MediaSource {
 
     android::status_t read(android::MediaBuffer **buffer,
                            const android::MediaSource::ReadOptions *options = NULL) {
-                fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
+        fprintf(stderr, "in %s\n", __PRETTY_FUNCTION__);
+        *buffer = get();
+        fprintf(stderr, "out %s\n", __PRETTY_FUNCTION__);
         return android::OK;
     }
 
-    android::List<android::MediaBuffer *> m_framesReceived;
-    android::List<android::MediaBuffer *> m_framesBeingEncoded;
+    Buffers m_framesReceived;
+    Buffers m_framesBeingProcessed;
 };
 
-class DroidMediaCodec
+class InputBuffer : public android::MediaBuffer {
+public:
+    InputBuffer(void *data, size_t size, void *cb_data, void (* unref)(void *)) :
+        android::MediaBuffer(data, size), m_cb_data(cb_data), m_unref(unref) {
+
+    }
+
+    void *m_cb_data;
+    void (* m_unref)(void *);
+};
+
+class DroidMediaCodec : public android::MediaBufferObserver
 {
 public:
     android::sp<android::MediaSource> m_codec;
     android::OMXClient *m_omx;
     android::sp<Source> m_src;
-    Buffers m_waiting;
-    Buffers m_processed;
+    android::sp<android::ISurfaceTexture> m_queue;
+    android::sp<ANativeWindow> m_window;
 //    android::sp<android::ALooper> m_looper;
+
+    void signalBufferReturned(android::MediaBuffer *buff)
+    {
+        fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
+// TODO:
+    }
 };
 
 extern "C" {
@@ -224,12 +276,23 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMe
         construct_codec_data (meta->type, md, meta->codec_data, meta->codec_data_size);
     }
 
+    android::sp<android::ISurfaceTexture>
+        queue(new android::BufferQueue(new DroidMediaAllocator, true,
+                                       android::BufferQueue::MIN_UNDEQUEUED_BUFFERS));
+    android::BufferQueue *q = (android::BufferQueue *)queue.get();
+    q->setConsumerName(android::String8("DroidMediaCodecBufferQueue"));
+    q->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+    q->setSynchronousMode(false);
+
+    android::sp<ANativeWindow>
+        window(new android::SurfaceTextureClient(queue));
+
     android::sp<android::MediaSource> codec
         = android::OMXCodec::Create(omx->interface(),
                                     md,
                                     flags & DROID_MEDIA_CODEC_ENCODER ? true : false,
                                     src,
-                                    NULL, codec_flags, NULL);
+                                    NULL, codec_flags, window);
 
     if (codec == NULL) {
         ALOGE("DroidMediaCodec: Failed to create codec");
@@ -242,7 +305,8 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMe
     mediaCodec->m_codec = codec;
     mediaCodec->m_omx = omx;
     mediaCodec->m_src = src;
-
+    mediaCodec->m_queue = queue;
+    mediaCodec->m_window = window;
 /*
     mediaCodec->m_looper = new android::ALooper;
     int err = mediaCodec->m_looper->start();
@@ -289,9 +353,15 @@ void droid_media_codec_destroy(DroidMediaCodec *codec)
     delete codec;
 }
 
-void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaData *data, DroidMediaBufferCallbacks *cb)
+void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb)
 {
-
+    InputBuffer *buffer = new InputBuffer(data->data, data->size, cb->data, cb->unref);
+    buffer->meta_data()->setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
+    buffer->meta_data()->setInt64(android::kKeyTime, data->ts);
+    buffer->setObserver(codec);
+    buffer->set_range(0, data->size);
+    buffer->add_ref();
+    codec->m_src->add(buffer);
 }
 
 bool droid_media_codec_read(DroidMediaCodec *codec)
@@ -304,6 +374,15 @@ bool droid_media_codec_read(DroidMediaCodec *codec)
         ALOGE("DroidMediaCodec: Error 0x%x reading from codec", -err);
         return false;
     }
+
+    android::sp<android::GraphicBuffer> buff = buffer->graphicBuffer();
+    if (buff == NULL) {
+        ALOGE("DroidMediaCodec: non graphic buffer received. Skipping");
+    } else {
+        codec->m_window->queueBuffer(codec->m_window.get(), buff.get());
+    }
+
+    buffer->release();
 
     return true;
 }
