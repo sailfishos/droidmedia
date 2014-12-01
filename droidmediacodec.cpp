@@ -9,6 +9,7 @@
 #include <gui/SurfaceTextureClient.h>
 #include "droidmediacodec.h"
 #include "allocator.h"
+#include "private.h"
 
 static void mpeg4video(android::sp<android::MetaData> md, void *codec_data, ssize_t codec_data_size) {
     // TODO:
@@ -148,7 +149,7 @@ public:
     android::sp<Source> m_src;
     android::sp<android::ISurfaceTexture> m_queue;
     android::sp<ANativeWindow> m_window;
-//    android::sp<android::ALooper> m_looper;
+    android::sp<BufferQueueListener> m_bufferQueueListener;
 
     void signalBufferReturned(android::MediaBuffer *buff)
     {
@@ -284,6 +285,13 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMe
     q->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
     q->setSynchronousMode(false);
 
+    android::sp<BufferQueueListener> listener = new BufferQueueListener;
+    if (q->consumerConnect(listener) != android::NO_ERROR) {
+        ALOGE("DroidMediaCodec: Failed to set buffer consumer");
+        delete omx;
+        return NULL;
+    }
+
     android::sp<ANativeWindow>
         window(new android::SurfaceTextureClient(queue));
 
@@ -307,15 +315,8 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMe
     mediaCodec->m_src = src;
     mediaCodec->m_queue = queue;
     mediaCodec->m_window = window;
-/*
-    mediaCodec->m_looper = new android::ALooper;
-    int err = mediaCodec->m_looper->start();
-    if (err != android::OK) {
-        ALOGE("DroidMediaCodec: Error 0x%x starting looper", -err);
-        delete omx;
-        return NULL;
-    }
-*/
+    mediaCodec->m_bufferQueueListener = listener;
+
     return mediaCodec;
 }
 
@@ -385,6 +386,12 @@ bool droid_media_codec_read(DroidMediaCodec *codec)
     buffer->release();
 
     return true;
+}
+
+void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,
+                                               DroidMediaRenderingCallbacks *cb, void *data)
+{
+    codec->m_bufferQueueListener->setCallbacks(cb, data);
 }
 
 };

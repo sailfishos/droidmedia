@@ -6,8 +6,7 @@
 #include <android/log.h>
 #include <utils/String8.h>
 #include "mediabuffer.h"
-
-class BufferQueueListener;
+#include "private.h"
 
 extern "C" {
 
@@ -34,36 +33,6 @@ public:
 
     android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
     android::sp<BufferQueueListener> m_bufferQueueListener;
-};
-
-class BufferQueueListener : public android::BufferQueue::ConsumerListener {
-public:
-    BufferQueueListener() :
-        m_cam(0)
-    {
-
-    }
-
-    void onFrameAvailable()
-    {
-        if (m_cam && m_cam->m_cb && m_cam->m_cb->frame_available) {
-            m_cam->m_cb->frame_available(m_cam->m_cb_data);
-        }
-    }
-
-    void onBuffersReleased()
-    {
-        if (m_cam && m_cam->m_cb && m_cam->m_cb->buffers_released) {
-            m_cam->m_cb->buffers_released(m_cam->m_cb_data);
-        }
-    }
-
-    void setCamera(DroidMediaCamera *cam) {
-        m_cam = cam;
-    }
-
-private:
-    DroidMediaCamera *m_cam;
 };
 
 class CameraListener : public android::CameraListener {
@@ -144,7 +113,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     android::sp<BufferQueueListener> listener = new BufferQueueListener;
 
     if (queue->consumerConnect(listener) != android::NO_ERROR) {
-        ALOGE("Failed to set buffer consumer");
+        ALOGE("DroidMediaCamera: Failed to set buffer consumer");
         return NULL;
     }
 
@@ -153,8 +122,6 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
         ALOGE("Failed to allocate DroidMediaCamera");
         return NULL;
     }
-
-    listener->setCamera(cam);
 
     cam->m_camera = android::Camera::connect(camera_number);
     if (cam->m_camera.get() == NULL) {
@@ -181,7 +148,7 @@ void droid_media_camera_disconnect(DroidMediaCamera *camera)
 {
     camera->m_camera->disconnect();
 
-    camera->m_bufferQueueListener->setCamera(0);
+    camera->m_bufferQueueListener->setCallbacks(0, 0);
 
     delete camera;
 }
@@ -238,6 +205,12 @@ void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCamera
 {
     camera->m_cb = cb;
     camera->m_cb_data = data;
+}
+
+void droid_media_camera_set_rendering_callbacks(DroidMediaCamera *camera,
+						DroidMediaRenderingCallbacks *cb, void *data)
+{
+    camera->m_bufferQueueListener->setCallbacks(cb, data);
 }
 
 bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2)

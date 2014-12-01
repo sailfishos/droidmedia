@@ -32,6 +32,11 @@ typedef struct {
   int32_t bottom;
 } DroidMediaRect;
 
+typedef struct {
+  void (* buffers_released)(void *data);
+  void (* frame_available)(void *data);
+} DroidMediaRenderingCallbacks;
+
 void droid_media_init();
 void droid_media_deinit();
 
