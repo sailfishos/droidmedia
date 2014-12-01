@@ -131,7 +131,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 {
     android::sp<android::BufferQueue>
         queue(new android::BufferQueue(new DroidMediaAllocator, true,
-                                       android::BufferQueue::MIN_UNDEQUEUED_BUFFERS + 1));
+                                       android::BufferQueue::MIN_UNDEQUEUED_BUFFERS));
     if (!queue.get()) {
         ALOGE("Failed to get buffer queue");
         return NULL;
