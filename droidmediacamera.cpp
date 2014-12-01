@@ -21,14 +21,13 @@ class DroidMediaCamera
 {
 public:
     DroidMediaCamera() :
-        m_cb(0),
         m_cb_data(0) {
-
+        memset(&m_cb, 0x0, sizeof(m_cb));
     }
 
     android::sp<android::Camera> m_camera;
     android::sp<android::BufferQueue> m_queue;
-    DroidMediaCameraCallbacks *m_cb;
+    DroidMediaCameraCallbacks m_cb;
     void *m_cb_data;
 
     android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
@@ -44,8 +43,8 @@ public:
 
     void notify(int32_t msgType, int32_t ext1, int32_t ext2)
     {
-        if (m_cam->m_cb && m_cam->m_cb->notify) {
-            m_cam->m_cb->notify(m_cam->m_cb_data, msgType, ext1, ext2);
+        if (m_cam->m_cb.notify) {
+            m_cam->m_cb.notify(m_cam->m_cb_data, msgType, ext1, ext2);
         }
     }
 
@@ -56,8 +55,8 @@ public:
         mem.size = dataPtr->size();
         mem.data = dataPtr->pointer();
 
-        if (m_cam->m_cb && m_cam->m_cb->post_data) {
-            m_cam->m_cb->post_data(m_cam->m_cb_data, msgType, &mem);
+        if (m_cam->m_cb.post_data) {
+            m_cam->m_cb.post_data(m_cam->m_cb_data, msgType, &mem);
         }
 
         // TODO: expose camera_frame_metadata_t
@@ -65,11 +64,11 @@ public:
 
     void postDataTimestamp(nsecs_t timestamp, int32_t msgType, const android::sp<android::IMemory>& dataPtr)
     {
-        if (m_cam->m_cb && m_cam->m_cb->post_data_timestamp) {
+        if (m_cam->m_cb.post_data_timestamp) {
             DroidMediaCameraRecordingData *data = new DroidMediaCameraRecordingData;
             data->mem = dataPtr;
             data->ts = timestamp;
-            m_cam->m_cb->post_data_timestamp(m_cam->m_cb_data, msgType, data);
+            m_cam->m_cb.post_data_timestamp(m_cam->m_cb_data, msgType, data);
         }
     }
 
@@ -203,7 +202,7 @@ bool droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera)
 
 void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb, void *data)
 {
-    camera->m_cb = cb;
+    memcpy(&camera->m_cb, cb, sizeof(camera->m_cb));
     camera->m_cb_data = data;
 }
 

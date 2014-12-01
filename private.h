@@ -12,7 +12,7 @@ public:
   void setCallbacks(DroidMediaRenderingCallbacks *cb, void *data);
 
 private:
-    DroidMediaRenderingCallbacks *m_cb;
+    DroidMediaRenderingCallbacks m_cb;
     void *m_data;
 };
 
