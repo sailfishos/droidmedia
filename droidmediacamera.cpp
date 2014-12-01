@@ -137,7 +137,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
         return NULL;
     }
 
-    queue->setConsumerName(android::String8("DroidMediaBufferQueue"));
+    queue->setConsumerName(android::String8("DroidMediaCameraBufferQueue"));
     queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
     queue->setSynchronousMode(false);
 
