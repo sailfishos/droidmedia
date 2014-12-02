@@ -48,15 +48,13 @@ bool droid_media_codec_get_capabilities(size_t index, const char *type,
                                         uint32_t **color_formats, ssize_t *color_formats_size);
 
 DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMediaCodecFlags flags);
-  void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,
-						 DroidMediaRenderingCallbacks *cb, void *data);
+void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,
+					       DroidMediaRenderingCallbacks *cb, void *data);
 bool droid_media_codec_start(DroidMediaCodec *codec);
 void droid_media_codec_stop(DroidMediaCodec *codec);
 void droid_media_codec_destroy(DroidMediaCodec *codec);
 void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb);
-
-  // TODO:
-bool droid_media_codec_read(DroidMediaCodec *codec);
+DroidMediaBuffer *droid_media_codec_acquire_buffer(DroidMediaCodec *codec, DroidMediaBufferCallbacks *cb);
 
 #ifdef __cplusplus
 };
