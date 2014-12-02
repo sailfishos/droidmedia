@@ -279,7 +279,7 @@ DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, Dr
 
     if (camera->m_slots[num].mGraphicBuffer == NULL) {
         int err;
-        ALOGE("Got a buffer without real data");
+        ALOGE("DroidMediaCamera: Got a buffer without real data");
         err = camera->m_queue->releaseBuffer(buffer.mBuf, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
         if (err != android::NO_ERROR) {
             ALOGE("DroidMediaCamera: error releasing buffer. Error 0x%x", -err);
