@@ -164,7 +164,9 @@ private:
 class InputBuffer : public android::MediaBuffer {
 public:
     InputBuffer(void *data, size_t size, void *cb_data, void (* unref)(void *)) :
-        android::MediaBuffer(data, size), m_cb_data(cb_data), m_unref(unref) {
+        android::MediaBuffer(data, size),
+        m_cb_data(cb_data),
+        m_unref(unref) {
 
     }
 
@@ -186,8 +188,9 @@ public:
 
     void signalBufferReturned(android::MediaBuffer *buff)
     {
-        fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
-// TODO:
+        InputBuffer *buffer = (InputBuffer *) buff;
+
+        buffer->m_unref(buffer->m_cb_data);
     }
 };
 
