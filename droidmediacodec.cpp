@@ -83,7 +83,7 @@ public:
     {
     }
 
-    void add(android::MediaBuffer * buffer) {
+    void add(android::MediaBuffer *buffer) {
         m_framesReceived.lock.lock();
         m_framesReceived.buffers.push_back(buffer);
         m_framesReceived.cond.signal();
@@ -98,6 +98,7 @@ public:
         }
 
         if (!m_running) {
+            m_framesReceived.lock.unlock();
             return NULL;
         }
 
