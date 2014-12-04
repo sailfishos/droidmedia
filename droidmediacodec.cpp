@@ -156,6 +156,7 @@ private:
         // Mark as not running
         m_framesReceived.lock.lock();
         m_running = false;
+
         // Just in case get() is waiting for a buffer
         m_framesReceived.cond.signal();
         m_framesReceived.lock.unlock();
@@ -169,6 +170,7 @@ private:
     android::status_t read(android::MediaBuffer **buffer,
                            const android::MediaSource::ReadOptions *options = NULL) {
         *buffer = get();
+
         if (*buffer) {
             return android::OK;
         } else {
@@ -232,9 +234,7 @@ public:
     }
 
     bool threadLoop() {
-        // TODO: error checking
-        droid_media_codec_read (m_codec);
-        return true;
+        return droid_media_codec_read (m_codec);
     }
 
 private:
@@ -422,8 +422,11 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
     }
 
     if (codec->m_thread != NULL) {
-        // TODO: error
-        codec->m_thread->requestExitAndWait();
+        int err = codec->m_thread->requestExitAndWait();
+        if (err != android::NO_ERROR) {
+            ALOGE("DroidMediaCodec: Error 0x%x stopping thread", -err);
+        }
+
         codec->m_thread.clear();
     }
 }
@@ -451,13 +454,28 @@ void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, 
     buffer->setObserver(codec);
     buffer->set_range(0, data->size);
     buffer->add_ref();
+
+    if (codec->m_src->m_draining) {
+        ALOGE("DroidMediaCodec: received buffer while draining");
+        buffer->release();
+        return;
+    }
+
     codec->m_src->add(buffer);
 
     // Now start our looping thread
     if (codec->m_thread == NULL) {
         codec->m_thread = new DroidMediaCodecLoop(codec);
-        // TODO: error
-        codec->m_thread->run("DroidMediaCodecLoop");
+
+        int err = codec->m_thread->run("DroidMediaCodecLoop");
+        if (err != android::NO_ERROR) {
+            ALOGE("DroidMediaCodec: Error 0x%x starting thread", -err);
+            if (codec->m_cb.error) {
+                codec->m_cb.error(codec->m_cb_data, err);
+            }
+
+            codec->m_thread.clear();
+        }
     }
 }
 
@@ -506,7 +524,19 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
     err = codec->m_codec->read(&buffer);
 
     if (err != android::OK) {
-        ALOGE("DroidMediaCodec: Error 0x%x reading from codec", -err);
+        if (err == android::ERROR_END_OF_STREAM) {
+            ALOGE("DroidMediaCodec: Got EOS");
+
+            if (codec->m_cb.signal_eos) {
+                codec->m_cb.signal_eos (codec->m_cb_data);
+            }
+        } else {
+            ALOGE("DroidMediaCodec: Error 0x%x reading from codec", -err);
+            if (codec->m_cb.error) {
+                codec->m_cb.error(codec->m_cb_data, err);
+            }
+        }
+
         return false;
     }
 
