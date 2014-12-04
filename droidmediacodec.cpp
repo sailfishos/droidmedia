@@ -112,6 +112,23 @@ public:
         return buffer;
     }
 
+    void flush() {
+        m_framesReceived.lock.lock();
+
+        while (!m_framesReceived.buffers.empty()) {
+            android::List<android::MediaBuffer *>::iterator iter = m_framesReceived.buffers.begin();
+            android::MediaBuffer *buffer = *iter;
+
+            m_framesReceived.buffers.erase(iter);
+
+            if (buffer) {
+                buffer->release();
+            }
+        }
+
+        m_framesReceived.lock.unlock();
+    }
+
 private:
     android::status_t start(android::MetaData *meta) {
         m_running = true;
@@ -126,25 +143,14 @@ private:
 
     android::status_t stop() {
         // Mark as not running
-        m_running = false;
-
-        // Add an empty buffer
-        add(NULL);
-
         m_framesReceived.lock.lock();
-        // Now clear all the buffers:
-        while (!m_framesReceived.buffers.empty()) {
-            android::List<android::MediaBuffer *>::iterator iter = m_framesReceived.buffers.begin();
-            android::MediaBuffer *buffer = *iter;
-
-            m_framesReceived.buffers.erase(iter);
-
-            if (buffer) {
-                buffer->release();
-            }
-        }
-
+        m_running = false;
+        // Just in case get() is waiting for a buffer
+        m_framesReceived.cond.signal();
         m_framesReceived.lock.unlock();
+
+        // Now clear all the buffers:
+        flush();
 
         return android::OK;
     }
@@ -152,7 +158,11 @@ private:
     android::status_t read(android::MediaBuffer **buffer,
                            const android::MediaSource::ReadOptions *options = NULL) {
         *buffer = get();
-        return android::OK;
+        if (*buffer) {
+            return android::OK;
+        } else {
+            return android::NOT_ENOUGH_DATA;
+        }
     }
 
     bool m_running;
@@ -430,7 +440,6 @@ void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, 
         // TODO: error
         codec->m_thread->run("DroidMediaCodecLoop");
     }
-
 }
 
 DroidMediaBuffer *droid_media_codec_acquire_buffer(DroidMediaCodec *codec, DroidMediaBufferCallbacks *cb)
@@ -499,6 +508,11 @@ void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,
                                                DroidMediaRenderingCallbacks *cb, void *data)
 {
     codec->m_bufferQueueListener->setCallbacks(cb, data);
+}
+
+void droid_media_codec_flush(DroidMediaCodec *codec)
+{
+    codec->m_src->flush();
 }
 
 };
