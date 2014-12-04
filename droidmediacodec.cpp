@@ -455,12 +455,6 @@ void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, 
     buffer->set_range(0, data->size);
     buffer->add_ref();
 
-    if (codec->m_src->m_draining) {
-        ALOGE("DroidMediaCodec: received buffer while draining");
-        buffer->release();
-        return;
-    }
-
     codec->m_src->add(buffer);
 
     // Now start our looping thread
@@ -568,6 +562,13 @@ void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,
 void droid_media_codec_flush(DroidMediaCodec *codec)
 {
     codec->m_src->flush();
+}
+
+void droid_media_codec_drain(DroidMediaCodec *codec)
+{
+    // This will cause read to return error to OMX and OMX will signal EOS
+    // In practice we can get any other error instead of ERROR_END_OF_STREAM
+    codec->m_src->add(NULL);
 }
 
 };

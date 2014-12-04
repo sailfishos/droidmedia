@@ -62,6 +62,7 @@ void droid_media_codec_destroy(DroidMediaCodec *codec);
 void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb);
 DroidMediaBuffer *droid_media_codec_acquire_buffer(DroidMediaCodec *codec, DroidMediaBufferCallbacks *cb);
 void droid_media_codec_flush(DroidMediaCodec *codec);
+void droid_media_codec_drain(DroidMediaCodec *codec);
 
 #ifdef __cplusplus
 };
