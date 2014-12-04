@@ -12,6 +12,8 @@
 #include "private.h"
 #include "mediabuffer.h"
 
+#define DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS 5
+
 extern "C" {
 static bool droid_media_codec_read(DroidMediaCodec *codec);
 }
@@ -85,6 +87,13 @@ public:
 
     void add(android::MediaBuffer *buffer) {
         m_framesReceived.lock.lock();
+
+        // TODO: I am not sure this is the right approach here.
+        if (m_framesReceived.buffers.size() >= DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS) {
+            // get() will signal us.
+            m_framesReceived.cond.wait(m_framesReceived.lock);
+        }
+
         m_framesReceived.buffers.push_back(buffer);
         m_framesReceived.cond.signal();
         m_framesReceived.lock.unlock();
@@ -106,6 +115,8 @@ public:
         android::MediaBuffer *buffer = *iter;
 
         m_framesReceived.buffers.erase(iter);
+
+        m_framesReceived.cond.signal();
 
         m_framesReceived.lock.unlock();
 
