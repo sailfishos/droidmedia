@@ -27,6 +27,7 @@ typedef struct {
   void (* notify)(void *data, int32_t msgType, int32_t ext1, int32_t ext2);
   void (* post_data_timestamp)(void *data, int32_t msgType, DroidMediaCameraRecordingData *video_data);
   void (* post_data)(void *data, int32_t msgType, DroidMediaData *mem);
+  // TODO: error callback
 } DroidMediaCameraCallbacks;
 
 int droid_media_camera_get_number_of_cameras();

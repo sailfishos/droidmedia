@@ -36,6 +36,11 @@ typedef struct {
   bool sync;
 } DroidMediaCodecData;
 
+typedef struct {
+  void (* signal_eos)(void *data);
+  void (* error)(void *data, int err);
+} DroidMediaCodecCallbacks;
+
 ssize_t droid_media_codec_find_by_type(const char *type, bool encoder);
 ssize_t droid_media_codec_find_by_name(const char *name);
 size_t droid_media_codec_count();
@@ -48,6 +53,7 @@ bool droid_media_codec_get_capabilities(size_t index, const char *type,
                                         uint32_t **color_formats, ssize_t *color_formats_size);
 
 DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMediaCodecFlags flags);
+void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data);
 void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,
 					       DroidMediaRenderingCallbacks *cb, void *data);
 bool droid_media_codec_start(DroidMediaCodec *codec);
