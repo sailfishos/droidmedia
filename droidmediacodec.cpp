@@ -562,9 +562,6 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
             ALOGE("DroidMediaCodec: Received a buffer without a timestamp!");
         } else {
             // Convert timestamp from useconds to nseconds
-            // We do not use those timestamps for anything. Something is really fishy.
-            // We provide stagefright with a timestamp that starts from 0 but we get
-            // a large timestamp for the output buffers. Something is fishy.
             native_window_set_buffers_timestamp(codec->m_window.get(), timestamp * 1000);
         }
 
