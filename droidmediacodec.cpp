@@ -556,7 +556,18 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
     if (buff == NULL) {
         ALOGE("DroidMediaCodec: non graphic buffer received. Skipping");
     } else {
-        // TODO: timestamp
+        int64_t timestamp = 0;
+        if (!buffer->meta_data()->findInt64(android::kKeyTime, &timestamp)) {
+            // I really don't know what to do here and I doubt we will reach that anyway.
+            ALOGE("DroidMediaCodec: Received a buffer without a timestamp!");
+        } else {
+            // Convert timestamp from useconds to nseconds
+            // We do not use those timestamps for anything. Something is really fishy.
+            // We provide stagefright with a timestamp that starts from 0 but we get
+            // a large timestamp for the output buffers. Something is fishy.
+            native_window_set_buffers_timestamp(codec->m_window.get(), timestamp * 1000);
+        }
+
         codec->m_window->queueBuffer(codec->m_window.get(), buff.get());
     }
 
