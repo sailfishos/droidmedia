@@ -32,10 +32,8 @@ typedef void DroidMediaCodec;
 #endif
 
 typedef enum {
-  DROID_MEDIA_CODEC_ENCODER = 0x1,
   DROID_MEDIA_CODEC_SW_ONLY = 0x2,
   DROID_MEDIA_CODEC_HW_ONLY = 0x4,
-  DROID_MEDIA_CODEC_STORE_META_DATA_IN_VIDEO_BUFFERS = 0x8,
 } DroidMediaCodecFlags;
 
 typedef struct {
@@ -43,9 +41,22 @@ typedef struct {
   ssize_t width;
   ssize_t height;
   int32_t fps;
+  DroidMediaCodecFlags flags;
+} DroidMediaCodecMetaData;
+
+typedef struct {
+  DroidMediaCodecMetaData parent;
+
   void *codec_data;
   ssize_t codec_data_size;
-} DroidMediaCodecMetaData;
+} DroidMediaCodecDecoderMetaData;
+
+typedef struct {
+  DroidMediaCodecMetaData parent;
+
+  int32_t bitrate;
+  bool meta_data;
+} DroidMediaCodecEncoderMetaData;
 
 typedef struct {
   void *data;
@@ -70,7 +81,9 @@ bool droid_media_codec_get_capabilities(size_t index, const char *type,
                                         uint32_t **profiles, uint32_t **levels, ssize_t *profiles_levels_size,
                                         uint32_t **color_formats, ssize_t *color_formats_size);
 
-DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMediaCodecFlags flags);
+DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData *meta);
+DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta);
+
 void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data);
 void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,
 					       DroidMediaRenderingCallbacks *cb, void *data);

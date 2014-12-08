@@ -344,7 +344,8 @@ bool droid_media_codec_get_capabilities(size_t index, const char *type,
     return true;
 }
 
-DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMediaCodecFlags flags)
+DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
+                                          android::sp<android::MetaData>& md, bool is_encoder, uint32_t flags)
 {
     android::OMXClient *omx = new android::OMXClient;
     if (omx->connect() != android::OK) {
@@ -354,29 +355,20 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMe
     }
 
     // We will not do any validation for the flags. Stagefright should take care of that.
-    uint32_t codec_flags = 0;
-    if (flags & DROID_MEDIA_CODEC_SW_ONLY) {
-        codec_flags |= android::OMXCodec::kSoftwareCodecsOnly;
+    if (meta->flags & DROID_MEDIA_CODEC_SW_ONLY) {
+        flags |= android::OMXCodec::kSoftwareCodecsOnly;
     }
 
-    if (flags & DROID_MEDIA_CODEC_HW_ONLY) {
-        codec_flags |= android::OMXCodec::kHardwareCodecsOnly;
-    }
-
-    if (flags & DROID_MEDIA_CODEC_STORE_META_DATA_IN_VIDEO_BUFFERS) {
-        codec_flags |= android::OMXCodec::kStoreMetaDataInVideoBuffers;
+    if (meta->flags & DROID_MEDIA_CODEC_HW_ONLY) {
+        flags |= android::OMXCodec::kHardwareCodecsOnly;
     }
 
     android::sp<Source> src(new Source);
 
-    android::sp<android::MetaData> md(new android::MetaData);
     md->setCString(android::kKeyMIMEType, meta->type);
     md->setInt32(android::kKeyWidth, meta->width);
     md->setInt32(android::kKeyHeight, meta->height);
     md->setInt32(android::kKeyFrameRate, meta->fps);
-    if (meta->codec_data_size > 0) {
-        construct_codec_data (meta->type, md, meta->codec_data, meta->codec_data_size);
-    }
 
     android::sp<android::BufferQueue>
         queue(new android::BufferQueue(new DroidMediaAllocator, true,
@@ -392,6 +384,7 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMe
         return NULL;
     }
 
+    // TODO: only if we are decoding
     android::sp<android::ISurfaceTexture> texture = queue;
     android::sp<ANativeWindow>
         window(new android::SurfaceTextureClient(texture));
@@ -399,9 +392,9 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMe
     android::sp<android::MediaSource> codec
         = android::OMXCodec::Create(omx->interface(),
                                     md,
-                                    flags & DROID_MEDIA_CODEC_ENCODER ? true : false,
+                                    is_encoder,
                                     src,
-                                    NULL, codec_flags, window);
+                                    NULL, flags, window);
 
     if (codec == NULL) {
         ALOGE("DroidMediaCodec: Failed to create codec");
@@ -419,6 +412,32 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta, DroidMe
     mediaCodec->m_bufferQueueListener = listener;
 
     return mediaCodec;
+}
+
+DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData *meta)
+{
+    android::sp<android::MetaData> md(new android::MetaData);
+
+    if (meta->codec_data_size > 0) {
+        construct_codec_data (((DroidMediaCodecMetaData *)meta)->type,
+                              md, meta->codec_data, meta->codec_data_size);
+    }
+
+    return droid_media_codec_create((DroidMediaCodecMetaData *)meta, md, false, 0);
+}
+
+DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta)
+{
+    uint32_t flags = 0;
+
+    android::sp<android::MetaData> md(new android::MetaData);
+    md->setInt32(android::kKeyBitRate, meta->bitrate);
+
+    if (meta->meta_data) {
+        flags |= android::OMXCodec::kStoreMetaDataInVideoBuffers;
+    }
+
+    return droid_media_codec_create((DroidMediaCodecMetaData *)meta, md, true, flags);
 }
 
 bool droid_media_codec_start(DroidMediaCodec *codec)
