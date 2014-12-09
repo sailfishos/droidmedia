@@ -370,31 +370,34 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     md->setInt32(android::kKeyHeight, meta->height);
     md->setInt32(android::kKeyFrameRate, meta->fps);
 
-    android::sp<android::BufferQueue>
-        queue(new android::BufferQueue(new DroidMediaAllocator, true,
-                                       android::BufferQueue::MIN_UNDEQUEUED_BUFFERS));
-    queue->setConsumerName(android::String8("DroidMediaCodecBufferQueue"));
-    queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
-    queue->setSynchronousMode(false);
+    android::sp<android::BufferQueue> queue;
+    android::sp<BufferQueueListener> listener;
+    android::sp<ANativeWindow> window;
 
-    android::sp<BufferQueueListener> listener = new BufferQueueListener;
-    if (queue->consumerConnect(listener) != android::NO_ERROR) {
-        ALOGE("DroidMediaCodec: Failed to set buffer consumer");
-        delete omx;
-        return NULL;
+    if (!is_encoder) {
+        queue = new android::BufferQueue(new DroidMediaAllocator, true,
+                                         android::BufferQueue::MIN_UNDEQUEUED_BUFFERS);
+        queue->setConsumerName(android::String8("DroidMediaCodecBufferQueue"));
+        queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+        queue->setSynchronousMode(false);
+
+        listener = new BufferQueueListener;
+        if (queue->consumerConnect(listener) != android::NO_ERROR) {
+            ALOGE("DroidMediaCodec: Failed to set buffer consumer");
+            delete omx;
+            return NULL;
+        }
+
+        android::sp<android::ISurfaceTexture> texture = queue;
+        window = new android::SurfaceTextureClient(texture);
     }
-
-    // TODO: only if we are decoding
-    android::sp<android::ISurfaceTexture> texture = queue;
-    android::sp<ANativeWindow>
-        window(new android::SurfaceTextureClient(texture));
 
     android::sp<android::MediaSource> codec
         = android::OMXCodec::Create(omx->interface(),
                                     md,
                                     is_encoder,
                                     src,
-                                    NULL, flags, window);
+                                    NULL, flags, is_encoder ? NULL : window);
 
     if (codec == NULL) {
         ALOGE("DroidMediaCodec: Failed to create codec");
