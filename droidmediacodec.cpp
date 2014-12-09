@@ -435,7 +435,13 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
 
     android::sp<android::MetaData> md(new android::MetaData);
     md->setInt32(android::kKeyBitRate, meta->bitrate);
+    md->setInt32(android::kKeyStride, meta->stride);
+    md->setInt32(android::kKeySliceHeight, meta->slice_height);
 
+    // TODO: This is hardcoded for now. Fix it.
+    md->setInt32(android::kKeyIFramesInterval, 2);
+
+    // TODO: kKeyHFR, kKeyColorFormat
     if (meta->meta_data) {
         flags |= android::OMXCodec::kStoreMetaDataInVideoBuffers;
     }

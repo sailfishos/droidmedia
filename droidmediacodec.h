@@ -56,6 +56,8 @@ typedef struct {
 
   int32_t bitrate;
   bool meta_data;
+  int32_t stride;
+  int32_t slice_height;
 } DroidMediaCodecEncoderMetaData;
 
 typedef struct {
