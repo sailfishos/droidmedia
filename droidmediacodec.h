@@ -64,7 +64,8 @@ typedef struct {
   void *data;
   size_t size;
   int64_t ts;
-  bool sync;
+  bool sync; /* used for decoder input and encoder output */
+  bool codec_config; /* user for encoder output */
 } DroidMediaCodecData;
 
 typedef struct {
