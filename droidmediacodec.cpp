@@ -209,7 +209,9 @@ public:
         android::MediaBuffer(data, size),
         m_cb_data(cb_data),
         m_unref(unref) {
+    }
 
+    ~InputBuffer() {
     }
 
     void *m_cb_data;
@@ -504,7 +506,6 @@ void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, 
     buffer->setObserver(codec);
     buffer->set_range(0, data->size);
     buffer->add_ref();
-
     codec->m_src->add(buffer);
 
     // Now start our looping thread
@@ -633,6 +634,7 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
     }
 
     buffer->release();
+    buffer = NULL;
 
     return true;
 }
