@@ -586,7 +586,39 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
 
     android::sp<android::GraphicBuffer> buff = buffer->graphicBuffer();
     if (buff == NULL) {
-        ALOGE("DroidMediaCodec: non graphic buffer received. Skipping");
+        if (codec->m_data_cb.data_available) {
+            DroidMediaCodecData data;
+            data.data = (uint8_t *)buffer->data() + buffer->range_offset();
+            data.size = buffer->range_length();
+            data.ts = 0;
+            if (!buffer->meta_data()->findInt64(android::kKeyTime, &data.ts)) {
+                // I really don't know what to do here and I doubt we will reach that anyway.
+                ALOGE("DroidMediaCodec: Received a buffer without a timestamp!");
+            } else {
+                // Convert timestamp from useconds to nseconds
+                data.ts *= 1000;
+            }
+
+            int32_t sync = 0;
+            data.sync = false;
+            buffer->meta_data()->findInt32(android::kKeyIsSyncFrame, &sync);
+            if (sync) {
+                data.sync = true;
+            }
+
+            int32_t codecConfig = 0;
+            data.codec_config = false;
+            if (buffer->meta_data()->findInt32(android::kKeyIsCodecConfig, &codecConfig)
+                && codecConfig) {
+                data.codec_config = true;
+            }
+
+            ALOGV("DroidMediaCodec: sync? %i, codec config? %i, ts = %lli", sync, codecConfig, data.ts);
+
+            codec->m_data_cb.data_available (codec->m_data_cb_data, &data);
+        } else {
+            ALOGE("DroidMediaCodec: non graphic buffer received. Skipping");
+        }
     } else {
         int64_t timestamp = 0;
         if (!buffer->meta_data()->findInt64(android::kKeyTime, &timestamp)) {
