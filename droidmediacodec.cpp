@@ -220,8 +220,10 @@ class DroidMediaCodec : public android::MediaBufferObserver
 {
 public:
     DroidMediaCodec() :
-        m_cb_data(0) {
+        m_cb_data(0),
+        m_data_cb_data(0) {
         memset(&m_cb, 0x0, sizeof(m_cb));
+        memset(&m_data_cb, 0x0, sizeof(m_data_cb));
     }
 
     android::sp<android::MediaSource> m_codec;
@@ -242,6 +244,8 @@ public:
 
     DroidMediaCodecCallbacks m_cb;
     void *m_cb_data;
+    DroidMediaCodecDataCallbacks m_data_cb;
+    void *m_data_cb_data;
 };
 
 class DroidMediaCodecLoop : public android::Thread {
@@ -605,6 +609,12 @@ void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCall
 {
     memcpy(&codec->m_cb, cb, sizeof(codec->m_cb));
     codec->m_cb_data = data;
+}
+
+void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec, DroidMediaCodecDataCallbacks *cb, void *data)
+{
+    memcpy(&codec->m_data_cb, cb, sizeof(codec->m_data_cb));
+    codec->m_data_cb_data = data;
 }
 
 void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,

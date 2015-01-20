@@ -72,6 +72,10 @@ typedef struct {
   void (* error)(void *data, int err);
 } DroidMediaCodecCallbacks;
 
+typedef struct {
+  void (* data_available) (void *data, DroidMediaCodecData *encoded);
+} DroidMediaCodecDataCallbacks;
+
 ssize_t droid_media_codec_find_by_type(const char *type, bool encoder);
 ssize_t droid_media_codec_find_by_name(const char *name);
 size_t droid_media_codec_count();
@@ -89,6 +93,9 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
 void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data);
 void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,
 					       DroidMediaRenderingCallbacks *cb, void *data);
+void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec,
+					  DroidMediaCodecDataCallbacks *cb, void *data);
+
 bool droid_media_codec_start(DroidMediaCodec *codec);
 void droid_media_codec_stop(DroidMediaCodec *codec);
 void droid_media_codec_destroy(DroidMediaCodec *codec);
