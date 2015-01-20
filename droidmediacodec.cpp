@@ -568,6 +568,12 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
     android::MediaBuffer *buffer = NULL;
     err = codec->m_codec->read(&buffer);
 
+    if (buffer->range_length() == 0) {
+        buffer->release();
+        buffer = NULL;
+        return true;
+    }
+
     if (err != android::OK) {
         if (err == android::ERROR_END_OF_STREAM) {
             ALOGE("DroidMediaCodec: Got EOS");
