@@ -103,6 +103,12 @@ public:
     {
     }
 
+    void unlock() {
+        m_framesReceived.lock.lock();
+        m_framesReceived.cond.signal();
+        m_framesReceived.lock.unlock();
+    }
+
     void add(android::MediaBuffer *buffer) {
         m_framesReceived.lock.lock();
 
@@ -579,6 +585,7 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
             ALOGE("DroidMediaCodec: Error 0x%x reading from codec", -err);
             if (codec->m_cb.error) {
                 codec->m_cb.error(codec->m_cb_data, err);
+                codec->m_src->unlock();
             }
         }
 
