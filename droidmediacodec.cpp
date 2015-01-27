@@ -114,7 +114,7 @@ public:
 
         // TODO: I am not sure this is the right approach here.
         if (m_framesReceived.buffers.size() >= DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS) {
-            // get() will signal us.
+            // either get() will signal us or we will be signaled in case of an error
             m_framesReceived.cond.wait(m_framesReceived.lock);
         }
 
@@ -144,7 +144,28 @@ public:
 
         m_framesReceived.lock.unlock();
 
+        if (buffer != NULL) {
+            m_framesBeingProcessed.lock.lock();
+            m_framesBeingProcessed.buffers.push_back(buffer);
+            m_framesBeingProcessed.lock.unlock();
+        }
+
         return buffer;
+    }
+
+    void removeProcessedBuffer(android::MediaBuffer *buffer) {
+        for (android::List<android::MediaBuffer *>::iterator iter = m_framesBeingProcessed.buffers.begin();
+             iter != m_framesBeingProcessed.buffers.end(); iter++) {
+            if (*iter == buffer) {
+                m_framesBeingProcessed.buffers.erase(iter);
+                m_framesBeingProcessed.lock.lock();
+                m_framesBeingProcessed.cond.signal();
+                m_framesBeingProcessed.lock.unlock();
+                return;
+            }
+        }
+
+        ALOGW("DroidMediaCodec: A buffer we don't know about is being finished!");
     }
 
     void flush() {
@@ -188,6 +209,15 @@ private:
         // Now clear all the buffers:
         flush();
 
+        m_framesBeingProcessed.lock.lock();
+
+        while (!m_framesBeingProcessed.buffers.empty()) {
+            ALOGW("DroidMediaCodec::stop(): waiting for %d frames", m_framesBeingProcessed.buffers.size());
+            m_framesBeingProcessed.cond.wait(m_framesBeingProcessed.lock);
+        }
+
+        m_framesBeingProcessed.lock.unlock();
+
         return android::OK;
     }
 
@@ -204,9 +234,7 @@ private:
 
     bool m_running;
     Buffers m_framesReceived;
-
-// TODO:
-//    Buffers m_framesBeingProcessed;
+    Buffers m_framesBeingProcessed;
 };
 
 class InputBuffer : public android::MediaBuffer {
@@ -247,7 +275,13 @@ public:
     {
         InputBuffer *buffer = (InputBuffer *) buff;
 
+        m_src->removeProcessedBuffer(buffer);
+
         buffer->m_unref(buffer->m_cb_data);
+
+        // TODO: android does that
+        buff->setObserver(0);
+        buff->release();
     }
 
     DroidMediaCodecCallbacks m_cb;
