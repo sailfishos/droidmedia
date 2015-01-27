@@ -508,11 +508,6 @@ bool droid_media_codec_start(DroidMediaCodec *codec)
 
 void droid_media_codec_stop(DroidMediaCodec *codec)
 {
-    int err = codec->m_codec->stop();
-    if (err != android::OK) {
-        ALOGE("DroidMediaCodec: error 0x%x stopping codec", -err);
-    }
-
     if (codec->m_thread != NULL) {
         int err = codec->m_thread->requestExitAndWait();
         if (err != android::NO_ERROR) {
@@ -521,6 +516,12 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
 
         codec->m_thread.clear();
     }
+
+    int err = codec->m_codec->stop();
+    if (err != android::OK) {
+        ALOGE("DroidMediaCodec: error 0x%x stopping codec", -err);
+    }
+
 }
 
 void droid_media_codec_destroy(DroidMediaCodec *codec)
