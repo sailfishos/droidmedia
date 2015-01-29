@@ -70,6 +70,7 @@ typedef struct {
 typedef struct {
   void (* signal_eos)(void *data);
   void (* error)(void *data, int err);
+  int (* size_changed)(void *data, int32_t width, int32_t height);
 } DroidMediaCodecCallbacks;
 
 typedef struct {
