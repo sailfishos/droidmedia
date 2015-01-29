@@ -541,11 +541,11 @@ void droid_media_codec_destroy(DroidMediaCodec *codec)
 
 void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb)
 {
-    InputBuffer *buffer = new InputBuffer(data->data, data->size, cb->data, cb->unref);
+    InputBuffer *buffer = new InputBuffer(data->data.data, data->data.size, cb->data, cb->unref);
     buffer->meta_data()->setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
     buffer->meta_data()->setInt64(android::kKeyTime, data->ts);
     buffer->setObserver(codec);
-    buffer->set_range(0, data->size);
+    buffer->set_range(0, data->data.size);
     buffer->add_ref();
     codec->m_src->add(buffer);
 
@@ -637,8 +637,8 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
     if (buff == NULL) {
         if (codec->m_data_cb.data_available) {
             DroidMediaCodecData data;
-            data.data = (uint8_t *)buffer->data() + buffer->range_offset();
-            data.size = buffer->range_length();
+            data.data.data = (uint8_t *)buffer->data() + buffer->range_offset();
+            data.data.size = buffer->range_length();
             data.ts = 0;
             if (!buffer->meta_data()->findInt64(android::kKeyTime, &data.ts)) {
                 // I really don't know what to do here and I doubt we will reach that anyway.
