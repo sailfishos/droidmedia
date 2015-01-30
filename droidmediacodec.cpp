@@ -36,59 +36,6 @@ extern "C" {
 static bool droid_media_codec_read(DroidMediaCodec *codec);
 }
 
-static void mpeg4video(android::sp<android::MetaData> md, void *codec_data, ssize_t codec_data_size) {
-    // TODO:
-    // This code is crap and it was ripped off android's MPEG4 writer
-    uint8_t data[codec_data_size + 29];
-    data[0] = data[1] = data[2] = data[3] = 0x0;
-    data[4] = 0x03;
-    data[5] = 23 + codec_data_size;
-    data[6] = data[7] = 0x0;
-    data[8] = 0x1f;
-    data[9] = 0x04;
-    data[10] = 15 + codec_data_size;
-    data[11] = 0x20;
-    data[12] = 0x11;
-    data[13] = 0x01;
-    data[14] = 0x77;
-    data[15] = 0x00;
-    data[16] = 0x00;
-    data[17] = 0x03;
-    data[18] = 0xe8;
-    data[19] = 0x00;
-    data[20] = 0x00;
-    data[21] = 0x03;
-    data[22] = 0xe8;
-    data[23] = 0x00;
-    data[24] = 0x05;
-    data[25] = codec_data_size;
-    memcpy(data + 26, codec_data, codec_data_size);
-    data[26 + codec_data_size] = 0x06;
-    data[26 + codec_data_size + 1] = 0x01;
-    data[26 + codec_data_size + 2] = 0x02;
-    md->setData(android::kKeyESDS, android::kTypeESDS, data + 4, codec_data_size + 29 - 4);
-}
-
-struct CodecDataConstructor {
-    const char *mime;
-    void (*cb)(android::sp<android::MetaData>, void *, ssize_t);
-} CodecDataConstructors[] = {
-    {android::MEDIA_MIMETYPE_VIDEO_MPEG4, mpeg4video},
-
-    {NULL, NULL}
-};
-
-static void construct_codec_data(const char *mime, android::sp<android::MetaData> md,
-                                 void *codec_data, ssize_t codec_data_size) {
-    CodecDataConstructor *c = &CodecDataConstructors[0];
-    while (c->mime != NULL) {
-        if (!strcmp(c->mime, mime)) {
-            c->cb(md, codec_data, codec_data_size);
-            break;
-        }
-    }
-}
-
 class Buffers {
 public:
     android::List<android::MediaBuffer *> buffers;
@@ -507,8 +454,7 @@ DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData
     android::sp<android::MetaData> md(new android::MetaData);
 
     if (meta->codec_data_size > 0) {
-        construct_codec_data (((DroidMediaCodecMetaData *)meta)->type,
-                              md, meta->codec_data, meta->codec_data_size);
+        md->setData(android::kKeyRawCodecSpecificData, 0, meta->codec_data, meta->codec_data_size);
     }
 
     return droid_media_codec_create((DroidMediaCodecMetaData *)meta, md, false, 0);
@@ -684,6 +630,7 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
             data.data.data = (uint8_t *)buffer->data() + buffer->range_offset();
             data.data.size = buffer->range_length();
             data.ts = 0;
+
             if (!buffer->meta_data()->findInt64(android::kKeyTime, &data.ts)) {
                 // I really don't know what to do here and I doubt we will reach that anyway.
                 ALOGE("DroidMediaCodec: Received a buffer without a timestamp!");
