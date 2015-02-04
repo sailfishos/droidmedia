@@ -42,3 +42,22 @@ void BufferQueueListener::setCallbacks(DroidMediaRenderingCallbacks *cb, void *d
     memcpy(&m_cb, cb, sizeof(m_cb));
     m_data = data;
 }
+
+android::sp<android::BufferQueue> createBufferQueue(const char *name,
+						    android::sp<BufferQueueListener>& listener)
+{
+  android::BufferQueue *
+    queue(new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS));
+
+  queue->setConsumerName(android::String8(name));
+  queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+  queue->setSynchronousMode(false);
+
+  if (queue->consumerConnect(listener) != android::NO_ERROR) {
+    ALOGE("Failed to set buffer consumer");
+    delete queue;
+    return NULL;
+  }
+
+  return queue;
+}

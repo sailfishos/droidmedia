@@ -407,17 +407,15 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     android::sp<ANativeWindow> window;
 
     if (!is_encoder) {
-        queue = new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS);
-        queue->setConsumerName(android::String8("DroidMediaCodecBufferQueue"));
-        queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
-        queue->setSynchronousMode(false);
-
         listener = new BufferQueueListener;
-        if (queue->consumerConnect(listener) != android::NO_ERROR) {
-            ALOGE("DroidMediaCodec: Failed to set buffer consumer");
-            delete omx;
-            return NULL;
-        }
+        queue = createBufferQueue("DroidMediaCodecBufferQueue", listener);
+
+	if (!queue.get()) {
+	  ALOGE("Failed to get buffer queue");
+	  listener.clear();
+	  delete omx;
+	  return NULL;
+	}
 
         android::sp<android::ISurfaceTexture> texture = queue;
         window = new android::SurfaceTextureClient(texture);

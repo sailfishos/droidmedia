@@ -34,4 +34,7 @@ private:
     void *m_data;
 };
 
+android::sp<android::BufferQueue> createBufferQueue(const char *name,
+			            android::sp<BufferQueueListener>& listener);
+
 #endif /* DROID_MEDIA_PRIVATE_H */

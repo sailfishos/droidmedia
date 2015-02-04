@@ -113,21 +113,13 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 
 DroidMediaCamera *droid_media_camera_connect(int camera_number)
 {
-    android::sp<android::BufferQueue>
-        queue(new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS));
-    if (!queue.get()) {
-        ALOGE("Failed to get buffer queue");
-        return NULL;
-    }
-
-    queue->setConsumerName(android::String8("DroidMediaCameraBufferQueue"));
-    queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
-    queue->setSynchronousMode(false);
-
     android::sp<BufferQueueListener> listener = new BufferQueueListener;
 
-    if (queue->consumerConnect(listener) != android::NO_ERROR) {
-        ALOGE("DroidMediaCamera: Failed to set buffer consumer");
+    android::sp<android::BufferQueue> queue(createBufferQueue("DroidMediaCameraBufferQueue",
+							      listener));
+    if (!queue.get()) {
+        ALOGE("Failed to get buffer queue");
+	listener.clear();
         return NULL;
     }
 
