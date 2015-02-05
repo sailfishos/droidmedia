@@ -725,11 +725,17 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
             native_window_set_buffers_timestamp(codec->m_window.get(), timestamp * 1000);
         }
 
-        codec->m_window->queueBuffer(codec->m_window.get(), buff.get()
+        int err = codec->m_window->queueBuffer(codec->m_window.get(), buff.get()
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
 				     , -1 /* TODO: Where do we get the fence from? */
 #endif
 );
+
+        if (err != android::NO_ERROR) {
+            ALOGE("DroidMediaCodec: queueBuffer failed with error 0x%d", -err);
+        } else {
+            buffer->meta_data()->setInt32(android::kKeyRendered, 1);
+        }
     }
 
     buffer->release();
