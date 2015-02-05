@@ -40,6 +40,15 @@ extern "C" {
 static bool droid_media_codec_read(DroidMediaCodec *codec);
 }
 
+struct DroidMediaCodecMetaDataKey {
+    const char *mime;
+    int key;
+    int type;
+} metaDataKeys[] = {
+    {android::MEDIA_MIMETYPE_VIDEO_MPEG4, android::kKeyESDS, android::kTypeESDS},
+    {NULL, 0, 0}
+};
+
 class Buffers {
 public:
     android::List<android::MediaBuffer *> buffers;
@@ -465,9 +474,24 @@ DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData
 {
     android::sp<android::MetaData> md(new android::MetaData);
 
-    if (meta->codec_data_size > 0) {
-      // TODO: This key has been removed from Android 4.4
-      //        md->setData(android::kKeyRawCodecSpecificData, 0, meta->codec_data, meta->codec_data_size);
+    if (meta->codec_data.size > 0) {
+        const char *mime = ((DroidMediaCodecMetaData *)meta)->type;
+        DroidMediaCodecMetaDataKey *key = metaDataKeys;
+        bool found = false;
+
+        while (key->mime) {
+            if (!strcmp (key->mime, mime)) {
+                md->setData(key->key, key->type, meta->codec_data.data, meta->codec_data.size);
+                found = true;
+                break;
+            }
+            ++key;
+        }
+
+        if (!found) {
+            ALOGE("DroidMediaCodec: No handler for codec data for %s", ((DroidMediaCodecMetaData *)meta)->type);
+            return NULL;
+        }
     }
 
     return droid_media_codec_create((DroidMediaCodecMetaData *)meta, md, false, 0);
