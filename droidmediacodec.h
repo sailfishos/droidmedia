@@ -47,8 +47,7 @@ typedef struct {
 typedef struct {
   DroidMediaCodecMetaData parent;
 
-  void *codec_data;
-  ssize_t codec_data_size;
+  DroidMediaData codec_data;
 } DroidMediaCodecDecoderMetaData;
 
 typedef struct {
