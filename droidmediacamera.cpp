@@ -130,7 +130,8 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     }
 
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-    cam->m_camera = android::Camera::connect(camera_number, android::String16("droidmedia"), 0);
+    cam->m_camera = android::Camera::connect(camera_number, android::String16("droidmedia"),
+					     android::Camera::USE_CALLING_UID);
 #else
     cam->m_camera = android::Camera::connect(camera_number);
 #endif
