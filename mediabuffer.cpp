@@ -67,7 +67,15 @@ extern "C" {
 void droid_media_buffer_release(DroidMediaBuffer *buffer,
                                 EGLDisplay display, EGLSyncKHR fence)
 {
-    int err = buffer->m_queue->releaseBuffer(buffer->m_slot, display, fence);
+    int err = buffer->m_queue->releaseBuffer(buffer->m_slot,
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+					     buffer->m_frameNumber,
+#endif
+					     display, fence
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+					     , android::Fence::NO_FENCE
+#endif
+);
     if (err != android::NO_ERROR) {
         ALOGE("DroidMediaBuffer: Error 0x%x releasing buffer", -err);
     }

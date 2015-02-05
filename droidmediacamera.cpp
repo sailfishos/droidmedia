@@ -129,7 +129,11 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
         return NULL;
     }
 
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+    cam->m_camera = android::Camera::connect(camera_number, android::String16("droidmedia"), 0);
+#else
     cam->m_camera = android::Camera::connect(camera_number);
+#endif
     if (cam->m_camera.get() == NULL) {
         delete cam;
         ALOGE("Failed to connect to camera service");
@@ -138,7 +142,11 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 
     cam->m_queue = queue;
 
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+    cam->m_camera->setPreviewTarget(cam->m_queue);
+#else
     cam->m_camera->setPreviewTexture(cam->m_queue);
+#endif
 
     cam->m_camera->setListener(new CameraListener(cam));
     cam->m_bufferQueueListener = listener;
@@ -270,7 +278,11 @@ DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, Dr
 {
     android::BufferQueue::BufferItem buffer;
     int num;
-    int err = camera->m_queue->acquireBuffer(&buffer);
+    int err = camera->m_queue->acquireBuffer(&buffer
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: UGLY!
+    , 0
+#endif
+);
     if (err != android::OK) {
         ALOGE("DroidMediaCamera: Failed to acquire buffer from the queue. Error 0x%x", -err);
         return NULL;
@@ -287,7 +299,15 @@ DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, Dr
     if (camera->m_slots[num].mGraphicBuffer == NULL) {
         int err;
         ALOGE("DroidMediaCamera: Got a buffer without real data");
-        err = camera->m_queue->releaseBuffer(buffer.mBuf, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
+        err = camera->m_queue->releaseBuffer(buffer.mBuf,
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+					     buffer.mFrameNumber,
+#endif
+					     EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+					     , android::Fence::NO_FENCE
+#endif
+);
         if (err != android::NO_ERROR) {
             ALOGE("DroidMediaCamera: error releasing buffer. Error 0x%x", -err);
         }

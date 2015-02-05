@@ -64,6 +64,60 @@ public:
         return gba;
     }
 
+    void bootFinished() {
+        // Nothing
+    }
+
+    sp<IDisplayEventConnection> createDisplayEventConnection() {
+        return sp<IDisplayEventConnection>();
+    }
+
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+  sp<IBinder> createDisplay(const String8& displayName, bool secure) {
+    return NULL;
+  }
+
+  void destroyDisplay(const sp<IBinder>& display) {
+    // Nothing
+  }
+
+  void setTransactionState(const Vector<ComposerState>& state,
+			   const Vector<DisplayState>& displays, uint32_t flags) {
+    // Nothing
+  }
+
+  void blank(const sp<IBinder>& display) {
+    // Nothing
+  }
+
+  void unblank(const sp<IBinder>& display) {
+    // Nothing
+  }
+
+  virtual sp<IBinder> getBuiltInDisplay(int32_t id) {
+    return NULL;
+  }
+
+  bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer>& surface) const {
+    return true;
+  }
+
+  status_t getDisplayInfo(const sp<IBinder>& display, DisplayInfo* info) {
+    return BAD_VALUE;
+  }
+
+  status_t captureScreen(const sp<IBinder>& display,
+			 const sp<IGraphicBufferProducer>& producer,
+			 uint32_t reqWidth, uint32_t reqHeight,
+			 uint32_t minLayerZ, uint32_t maxLayerZ) {
+    return BAD_VALUE;
+  }
+
+  bool isAnimationPermitted() {
+    return false;
+  }
+
+#else
     sp<IMemoryHeap> getCblk() const {
         static android::sp<android::MemoryHeapBase>
             mem(new MemoryHeapBase(4096,
@@ -91,17 +145,10 @@ public:
         return BAD_VALUE;
     }
 
-    void bootFinished() {
-        // Nothing
-    }
-
     bool authenticateSurfaceTexture(const sp<ISurfaceTexture>& surface) const {
         return false;
     }
-
-    sp<IDisplayEventConnection> createDisplayEventConnection() {
-        return sp<IDisplayEventConnection>();
-    }
+#endif
 };
 
 int

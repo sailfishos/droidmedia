@@ -75,6 +75,7 @@ LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libcutils \
                           libui
 LOCAL_MODULE_TAGS := optional
+LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO)
 LOCAL_MODULE := minimediaservice
 include $(BUILD_EXECUTABLE)
 
@@ -86,5 +87,6 @@ LOCAL_SHARED_LIBRARIES := libutils \
                           libcutils \
                           libui
 LOCAL_MODULE_TAGS := optional
+LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO)
 LOCAL_MODULE := minisfservice
 include $(BUILD_EXECUTABLE)

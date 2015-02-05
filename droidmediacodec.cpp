@@ -24,7 +24,11 @@
 #include <media/stagefright/foundation/ALooper.h>
 #include <media/stagefright/MediaDefs.h>
 #include <gui/BufferQueue.h>
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#include <gui/Surface.h>
+#else
 #include <gui/SurfaceTextureClient.h>
+#endif
 #include "droidmediacodec.h"
 #include "allocator.h"
 #include "private.h"
@@ -351,9 +355,15 @@ bool droid_media_codec_get_capabilities(size_t index, const char *type,
 {
     android::Vector<android::MediaCodecList::ProfileLevel> profileLevels;
     android::Vector<uint32_t> colorFormats;
+    // TODO: expose this to the API
+    uint32_t flags = 0;
     if (android::MediaCodecList::getInstance()->getCodecCapabilities(index, type,
                                                                      &profileLevels,
-                                                                     &colorFormats) != android::OK) {
+                                                                     &colorFormats
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+								     , &flags
+#endif
+) != android::OK) {
         ALOGE("DroidMediaCodec: Failed to get codec capabilities for %s", type);
         return false;
     }
@@ -417,8 +427,13 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
 	  return NULL;
 	}
 
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+	android::sp<android::IGraphicBufferProducer> texture = queue;
+        window = new android::Surface(texture, true);
+#else
         android::sp<android::ISurfaceTexture> texture = queue;
         window = new android::SurfaceTextureClient(texture);
+#endif
     }
 
     android::sp<android::MediaSource> codec
@@ -451,7 +466,8 @@ DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData
     android::sp<android::MetaData> md(new android::MetaData);
 
     if (meta->codec_data_size > 0) {
-        md->setData(android::kKeyRawCodecSpecificData, 0, meta->codec_data, meta->codec_data_size);
+      // TODO: This key has been removed from Android 4.4
+      //        md->setData(android::kKeyRawCodecSpecificData, 0, meta->codec_data, meta->codec_data_size);
     }
 
     return droid_media_codec_create((DroidMediaCodecMetaData *)meta, md, false, 0);
@@ -551,7 +567,11 @@ DroidMediaBuffer *droid_media_codec_acquire_buffer(DroidMediaCodec *codec, Droid
 {
     android::BufferQueue::BufferItem buffer;
     int num;
-    int err = codec->m_queue->acquireBuffer(&buffer);
+    int err = codec->m_queue->acquireBuffer(&buffer
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: UGLY!
+    , 0
+#endif
+);
     if (err != android::OK) {
         ALOGE("DroidMediaCodec: Failed to acquire buffer from the queue. Error 0x%x", -err);
         return NULL;
@@ -568,7 +588,15 @@ DroidMediaBuffer *droid_media_codec_acquire_buffer(DroidMediaCodec *codec, Droid
     if (codec->m_slots[num].mGraphicBuffer == NULL) {
         int err;
         ALOGE("DroidMediaCodec: Got a buffer without real data");
-        err = codec->m_queue->releaseBuffer(buffer.mBuf, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
+        err = codec->m_queue->releaseBuffer(buffer.mBuf,
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+					     buffer.mFrameNumber,
+#endif
+					    EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+					     , android::Fence::NO_FENCE
+#endif
+);
         if (err != android::NO_ERROR) {
             ALOGE("DroidMediaCodec: error releasing buffer. Error 0x%x", -err);
         }
@@ -673,7 +701,11 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
             native_window_set_buffers_timestamp(codec->m_window.get(), timestamp * 1000);
         }
 
-        codec->m_window->queueBuffer(codec->m_window.get(), buff.get());
+        codec->m_window->queueBuffer(codec->m_window.get(), buff.get()
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+				     , -1 /* TODO: Where do we get the fence from? */
+#endif
+);
     }
 
     buffer->release();

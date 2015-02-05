@@ -22,7 +22,12 @@
 #include "droidmedia.h"
 #include <gui/BufferQueue.h>
 
-class BufferQueueListener : public android::BufferQueue::ConsumerListener {
+class BufferQueueListener :
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+public android::BufferQueue::ProxyConsumerListener {
+#else
+public android::BufferQueue::ConsumerListener {
+#endif
 public:
   BufferQueueListener();
   void onFrameAvailable();

@@ -19,6 +19,9 @@
 #include "private.h"
 
 BufferQueueListener::BufferQueueListener() :
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+  ProxyConsumerListener(NULL),
+#endif
     m_data(0)
 {
     memset(&m_cb, 0x0, sizeof(m_cb));
@@ -46,14 +49,23 @@ void BufferQueueListener::setCallbacks(DroidMediaRenderingCallbacks *cb, void *d
 android::sp<android::BufferQueue> createBufferQueue(const char *name,
 						    android::sp<BufferQueueListener>& listener)
 {
-  android::BufferQueue *
-    queue(new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS));
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+  android::BufferQueue *queue =
+    new android::BufferQueue;
+#else
+  android::BufferQueue *queue =
+    new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS);
+  queue->setSynchronousMode(false);
+#endif
 
   queue->setConsumerName(android::String8(name));
   queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
-  queue->setSynchronousMode(false);
 
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+  if (queue->consumerConnect(listener, true) != android::NO_ERROR) {
+#else
   if (queue->consumerConnect(listener) != android::NO_ERROR) {
+#endif
     ALOGE("Failed to set buffer consumer");
     delete queue;
     return NULL;

@@ -30,6 +30,7 @@ public:
   android::sp<android::GraphicBuffer> createGraphicBuffer(uint32_t w, uint32_t h,
 							  android::PixelFormat format, uint32_t usage,
 							  android::status_t* error);
+
   void setGraphicBufferSize(int size);
 
 private:
