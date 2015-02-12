@@ -443,6 +443,14 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
         android::sp<android::ISurfaceTexture> texture = queue;
         window = new android::SurfaceTextureClient(texture);
 #endif
+
+	android::status_t err = native_window_api_connect(window.get(), NATIVE_WINDOW_API_MEDIA);
+	if (err != android::NO_ERROR) {
+	  ALOGE("DroidMediaCodec: Failed to connect window");
+	  omx->disconnect();
+	  delete omx;
+	  return NULL;
+	}
     }
 
     android::sp<android::MediaSource> codec
