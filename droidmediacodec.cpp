@@ -656,6 +656,18 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
         return codec->notifySizeChanged();
     }
 
+    if (err == -EWOULDBLOCK) {
+      ALOGI("DroidMediaCodec: retry reading again. error: 0x%x", -err);
+      return true;
+    }
+
+#if 0
+    if (err == -EWOULDBLOCK || err == -ETIMEDOUT) {
+      ALOGI("DroidMediaCodec: retry reading again. error: 0x%x", -err);
+      return true;
+    }
+#endif
+
     if (err != android::OK) {
         if (err == android::ERROR_END_OF_STREAM) {
             ALOGE("DroidMediaCodec: Got EOS");
