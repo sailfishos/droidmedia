@@ -50,8 +50,11 @@ android::sp<android::BufferQueue> createBufferQueue(const char *name,
 						    android::sp<BufferQueueListener>& listener)
 {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-  android::BufferQueue *queue =
-    new android::BufferQueue;
+  android::BufferQueue *queue = new android::BufferQueue;
+
+  // TODO: This number is arbitrary but if we don't do that then playback gets stuck. I need to debug that
+  // and get rid of this hack
+  queue->setMaxAcquiredBufferCount(6);
 #else
   android::BufferQueue *queue =
     new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS);
