@@ -305,7 +305,7 @@ DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, Dr
 					     buffer.mFrameNumber,
 #endif
 					     EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 || ANDROID_MINOR == 2 // TODO: fix this when we do video rendering
 					     , android::Fence::NO_FENCE
 #endif
 );

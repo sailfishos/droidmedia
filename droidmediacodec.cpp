@@ -625,7 +625,7 @@ DroidMediaBuffer *droid_media_codec_acquire_buffer(DroidMediaCodec *codec, Droid
 					     buffer.mFrameNumber,
 #endif
 					    EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 || ANDROID_MINOR == 2 // TODO: fix this when we do video rendering
 					     , android::Fence::NO_FENCE
 #endif
 );
@@ -746,7 +746,7 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
         }
 
         int err = codec->m_window->queueBuffer(codec->m_window.get(), buff.get()
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 || ANDROID_MINOR == 2
 				     , -1 /* TODO: Where do we get the fence from? */
 #endif
 );
