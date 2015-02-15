@@ -108,7 +108,11 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
     }
 
     info->orientation = inf.orientation;
-    info->facing = inf.facing;
+    if (inf.facing == CAMERA_FACING_FRONT) {
+      info->facing = DROID_MEDIA_CAMERA_FACING_FRONT;
+    } else {
+      info->facing = DROID_MEDIA_CAMERA_FACING_BACK;
+    }
 
     return true;
 }

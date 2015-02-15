@@ -36,6 +36,9 @@ typedef int64_t nsecs_t; // nano-seconds
 struct DroidMediaCamera;
 struct DroidMediaCameraRecordingData;
 
+#define DROID_MEDIA_CAMERA_FACING_FRONT 0
+#define DROID_MEDIA_CAMERA_FACING_BACK 1
+
 typedef struct {
   int facing;
   int orientation;
