@@ -318,4 +318,16 @@ void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData 
 {
     return data->mem->pointer();
 }
+
+bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
+					      DroidMediaCameraFaceDetectionType type, bool enable)
+{
+  int detection_type = type == DROID_CAMERA_FACE_DETECTION_HW ? CAMERA_FACE_DETECTION_HW :
+    CAMERA_FACE_DETECTION_SW;
+
+  int cmd = enable ? CAMERA_CMD_START_FACE_DETECTION : CAMERA_CMD_STOP_FACE_DETECTION;
+
+  return droid_media_camera_send_command (camera, cmd, detection_type, 0);
+}
+
 };

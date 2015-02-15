@@ -44,6 +44,11 @@ struct DroidMediaCameraRecordingData;
 #define DROID_MEDIA_CAMERA_MSG_FOCUS_MOVE 2
 #define DROID_MEDIA_CAMERA_MSG_ERROR -1
 
+typedef enum {
+  DROID_MEDIA_CAMERA_FACE_DETECTION_HW = 0,
+  DROID_MEDIA_CAMERA_FACE_DETECTION_SW = 1,
+} DroidMediaCameraFaceDetectionType;
+
 typedef struct {
   int facing;
   int orientation;
@@ -93,6 +98,9 @@ void droid_media_camera_release_recording_frame(DroidMediaCamera *camera, DroidM
 nsecs_t droid_media_camera_recording_frame_get_timestamp(DroidMediaCameraRecordingData *data);
 size_t droid_media_camera_recording_frame_get_size(DroidMediaCameraRecordingData *data);
 void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData *data);
+
+bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
+					      DroidMediaCameraFaceDetectionType type, bool enable);
 
 #ifdef __cplusplus
 };
