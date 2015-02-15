@@ -55,7 +55,7 @@ typedef struct {
 typedef struct {
   void (* buffers_released)(void *data);
   void (* frame_available)(void *data);
-} DroidMediaRenderingCallbacks;
+} DroidMediaBufferQueueCallbacks;
 
 /* droidmedia.cpp */
 void droid_media_init();
@@ -75,6 +75,8 @@ void droid_media_buffer_release(DroidMediaBuffer *buffer,
 /* private.h */
 DroidMediaBuffer *droid_media_buffer_queue_acquire_buffer(DroidMediaBufferQueue *queue,
 							  DroidMediaBufferCallbacks *cb);
+void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
+					    DroidMediaBufferQueueCallbacks *cb, void *data);
 
 #ifdef __cplusplus
 };

@@ -45,7 +45,6 @@ public:
     android::sp<DroidMediaBufferQueue> m_queue;
     DroidMediaCameraCallbacks m_cb;
     void *m_cb_data;
-    android::sp<BufferQueueListener> m_bufferQueueListener;
 };
 
 class CameraListener : public android::CameraListener {
@@ -116,11 +115,11 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 
 DroidMediaCamera *droid_media_camera_connect(int camera_number)
 {
-    android::sp<BufferQueueListener> listener = new BufferQueueListener;
+  android::sp<DroidMediaBufferQueueListener> listener(new DroidMediaBufferQueueListener);
 
     android::sp<DroidMediaBufferQueue>
       queue(new DroidMediaBufferQueue("DroidMediaCameraBufferQueue"));
-    if (!queue->connectListener(listener)) {
+    if (!queue->connectListener()) {
         ALOGE("Failed to connect buffer queue listener");
 	queue.clear();
 	listener.clear();
@@ -154,7 +153,6 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 #endif
 
     cam->m_camera->setListener(new CameraListener(cam));
-    cam->m_bufferQueueListener = listener;
 
     return cam;
 }
@@ -167,7 +165,7 @@ void droid_media_camera_disconnect(DroidMediaCamera *camera)
 {
     camera->m_camera->disconnect();
 
-    camera->m_bufferQueueListener->setCallbacks(0, 0);
+    camera->m_queue->setCallbacks(0, 0);
 
     delete camera;
 }
@@ -224,12 +222,6 @@ void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCamera
 {
     memcpy(&camera->m_cb, cb, sizeof(camera->m_cb));
     camera->m_cb_data = data;
-}
-
-void droid_media_camera_set_rendering_callbacks(DroidMediaCamera *camera,
-						DroidMediaRenderingCallbacks *cb, void *data)
-{
-    camera->m_bufferQueueListener->setCallbacks(cb, data);
 }
 
 bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2)

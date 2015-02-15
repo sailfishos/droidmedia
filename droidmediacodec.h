@@ -93,8 +93,6 @@ DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData
 DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta);
 
 void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data);
-void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,
-					       DroidMediaRenderingCallbacks *cb, void *data);
 void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec,
 					  DroidMediaCodecDataCallbacks *cb, void *data);
 

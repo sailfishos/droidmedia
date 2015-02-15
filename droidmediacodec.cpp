@@ -227,7 +227,6 @@ public:
     android::sp<Source> m_src;
     android::sp<DroidMediaBufferQueue> m_queue;
     android::sp<ANativeWindow> m_window;
-    android::sp<BufferQueueListener> m_bufferQueueListener;
     android::sp<android::Thread> m_thread;
 
     void signalBufferReturned(android::MediaBuffer *buff)
@@ -426,16 +425,13 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     md->setInt32(android::kKeyFrameRate, meta->fps);
 
     android::sp<DroidMediaBufferQueue> queue;
-    android::sp<BufferQueueListener> listener;
     android::sp<ANativeWindow> window;
 
     if (!is_encoder) {
-        listener = new BufferQueueListener;
         queue = new DroidMediaBufferQueue("DroidMediaCodecBufferQueue");
-	if (!queue->connectListener(listener)) {
+	if (!queue->connectListener()) {
 	  ALOGE("Failed to connect buffer queue listener");
 	  queue.clear();
-	  listener.clear();
 	  delete omx;
 	  return NULL;
 	}
@@ -477,7 +473,6 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     mediaCodec->m_src = src;
     mediaCodec->m_queue = queue;
     mediaCodec->m_window = window;
-    mediaCodec->m_bufferQueueListener = listener;
 
     return mediaCodec;
 }
@@ -728,12 +723,6 @@ void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec, DroidMediaCode
 {
     memcpy(&codec->m_data_cb, cb, sizeof(codec->m_data_cb));
     codec->m_data_cb_data = data;
-}
-
-void droid_media_codec_set_rendering_callbacks(DroidMediaCodec *codec,
-                                               DroidMediaRenderingCallbacks *cb, void *data)
-{
-    codec->m_bufferQueueListener->setCallbacks(cb, data);
 }
 
 void droid_media_codec_flush(DroidMediaCodec *codec)

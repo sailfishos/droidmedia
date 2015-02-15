@@ -19,32 +19,32 @@
 #include "private.h"
 #include "droidmediabuffer.h"
 
-BufferQueueListener::BufferQueueListener() :
+DroidMediaBufferQueueListener::DroidMediaBufferQueueListener() :
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
   ProxyConsumerListener(NULL),
 #endif
-    m_data(0)
+  m_data(0)
 {
-    memset(&m_cb, 0x0, sizeof(m_cb));
+  memset(&m_cb, 0x0, sizeof(m_cb));
 }
 
-void BufferQueueListener::onFrameAvailable()
+void DroidMediaBufferQueueListener::onFrameAvailable()
 {
-    if (m_cb.frame_available) {
-        m_cb.frame_available(m_data);
-    }
+  if (m_cb.frame_available) {
+    m_cb.frame_available(m_data);
+  }
 }
 
-void BufferQueueListener::onBuffersReleased()
+void DroidMediaBufferQueueListener::onBuffersReleased()
 {
-    if (m_cb.buffers_released) {
-        m_cb.buffers_released(m_data);
-    }
+  if (m_cb.buffers_released) {
+    m_cb.buffers_released(m_data);
+  }
 }
 
-void BufferQueueListener::setCallbacks(DroidMediaRenderingCallbacks *cb, void *data) {
-    memcpy(&m_cb, cb, sizeof(m_cb));
-    m_data = data;
+void DroidMediaBufferQueueListener::setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data) {
+  memcpy(&m_cb, cb, sizeof(m_cb));
+  m_data = data;
 }
 
 DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
@@ -69,17 +69,24 @@ DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
 
 DroidMediaBufferQueue::~DroidMediaBufferQueue()
 {
-  // TODO:
+  m_listener.clear();
 }
 
-bool DroidMediaBufferQueue::connectListener(android::sp<BufferQueueListener>& listener)
+bool DroidMediaBufferQueue::connectListener()
 {
+  assert(m_listener.get() == NULL);
+
+  m_listener = new DroidMediaBufferQueueListener;
+
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-  if (consumerConnect(listener, true) != android::NO_ERROR) {
+  if (consumerConnect(m_listener, true) != android::NO_ERROR) {
 #else
-  if (consumerConnect(listener) != android::NO_ERROR) {
+  if (consumerConnect(m_listener) != android::NO_ERROR) {
 #endif
     ALOGE("Failed to set buffer consumer");
+
+    m_listener.clear();
+
     return false;
   }
 
@@ -127,7 +134,7 @@ DroidMediaBuffer *DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCall
       ALOGE("DroidMediaBufferQueue: error releasing buffer. Error 0x%x", -err);
     }
 
-      return NULL;
+    return NULL;
   }
 
   m_slots[num].mTransform = buffer.mTransform;
@@ -139,11 +146,22 @@ DroidMediaBuffer *DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCall
   return new DroidMediaBuffer(m_slots[num], this, cb->data, cb->ref, cb->unref);
 }
 
+void DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data) {
+  assert(m_listener.get());
+  m_listener->setCallbacks(cb, data);
+}
+
 extern "C" {
 DroidMediaBuffer *droid_media_buffer_queue_acquire_buffer(DroidMediaBufferQueue *queue,
-							  DroidMediaBufferCallbacks *cb)
+    DroidMediaBufferCallbacks *cb)
 {
   return queue->acquireMediaBuffer(cb);
 }
 
+void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
+    DroidMediaBufferQueueCallbacks *cb, void *data)
+{
+
+  return queue->setCallbacks(cb, data);
+}
 };

@@ -22,21 +22,21 @@
 #include "droidmedia.h"
 #include <gui/BufferQueue.h>
 
-class BufferQueueListener :
+class DroidMediaBufferQueueListener :
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
 public android::BufferQueue::ProxyConsumerListener {
 #else
 public android::BufferQueue::ConsumerListener {
 #endif
 public:
-  BufferQueueListener();
+  DroidMediaBufferQueueListener();
   void onFrameAvailable();
   void onBuffersReleased();
-  void setCallbacks(DroidMediaRenderingCallbacks *cb, void *data);
+  void setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data);
 
 private:
-    DroidMediaRenderingCallbacks m_cb;
-    void *m_data;
+  DroidMediaBufferQueueCallbacks m_cb;
+  void *m_data;
 };
 
 class DroidMediaBufferQueue : public android::BufferQueue {
@@ -44,11 +44,15 @@ public:
   DroidMediaBufferQueue(const char *name);
   ~DroidMediaBufferQueue();
 
-  bool connectListener(android::sp<BufferQueueListener>& listener);
+  bool connectListener();
   DroidMediaBuffer *acquireMediaBuffer(DroidMediaBufferCallbacks *cb);
+
+  void setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data);
 
 private:
   android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
+
+  android::sp<DroidMediaBufferQueueListener> m_listener;
 };
 
 #endif /* DROID_MEDIA_PRIVATE_H */

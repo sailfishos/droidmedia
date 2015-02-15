@@ -71,8 +71,6 @@ bool droid_media_camera_start_auto_focus(DroidMediaCamera *camera);
 bool droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera);
 
 void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb, void *data);
-void droid_media_camera_set_rendering_callbacks(DroidMediaCamera *camera,
-						DroidMediaRenderingCallbacks *cb, void *data);
 bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2);
 bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, bool enabled);
 void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera, int preview_callback_flag);
