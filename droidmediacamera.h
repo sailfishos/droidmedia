@@ -39,6 +39,11 @@ struct DroidMediaCameraRecordingData;
 #define DROID_MEDIA_CAMERA_FACING_FRONT 0
 #define DROID_MEDIA_CAMERA_FACING_BACK 1
 
+#define DROID_MEDIA_CAMERA_MSG_SHUTTER 0
+#define DROID_MEDIA_CAMERA_MSG_FOCUS 1
+#define DROID_MEDIA_CAMERA_MSG_FOCUS_MOVE 2
+#define DROID_MEDIA_CAMERA_MSG_ERROR -1
+
 typedef struct {
   int facing;
   int orientation;

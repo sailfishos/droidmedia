@@ -56,8 +56,31 @@ public:
 
     void notify(int32_t msgType, int32_t ext1, int32_t ext2)
     {
+        int target_msg = -1;
+        switch (msgType) {
+	  case CAMERA_MSG_SHUTTER:
+	    target_msg = DROID_MEDIA_CAMERA_MSG_SHUTTER;
+	    break;
+
+	  case CAMERA_MSG_FOCUS:
+	    target_msg = DROID_MEDIA_CAMERA_MSG_FOCUS;
+	    break;
+
+  	case CAMERA_MSG_FOCUS_MOVE:
+  	    target_msg = DROID_MEDIA_CAMERA_MSG_FOCUS_MOVE;
+	    break;
+
+        case CAMERA_MSG_ERROR:
+	    target_msg = DROID_MEDIA_CAMERA_MSG_ERROR;
+	    break;
+
+	default:
+	    ALOGW("DroidMediaCamera: unknown message type 0x%x", msgType);
+	    return;
+	}
+
         if (m_cam->m_cb.notify) {
-            m_cam->m_cb.notify(m_cam->m_cb_data, msgType, ext1, ext2);
+            m_cam->m_cb.notify(m_cam->m_cb_data, target_msg, ext1, ext2);
         }
     }
 
