@@ -695,7 +695,7 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
         }
 
         int err = codec->m_window->queueBuffer(codec->m_window.get(), buff.get()
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
 				     , -1 /* TODO: Where do we get the fence from? */
 #endif
 );

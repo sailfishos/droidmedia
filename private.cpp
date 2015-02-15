@@ -48,7 +48,7 @@ void DroidMediaBufferQueueListener::setCallbacks(DroidMediaBufferQueueCallbacks 
 }
 
 DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
   android::BufferQueue()
 #else
   android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS)
@@ -125,7 +125,7 @@ DroidMediaBuffer *DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCall
     buffer.mFrameNumber,
 #endif
     EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2) // TODO: fix this when we do video rendering
     , android::Fence::NO_FENCE
 #endif
     );
