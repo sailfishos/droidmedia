@@ -132,6 +132,8 @@ void droid_media_buffer_release(DroidMediaBuffer *buffer,
                                 EGLDisplay display, EGLSyncKHR fence)
 {
     if (buffer->m_queue == NULL) {
+      // TODO: what should we do with fence?
+      delete buffer;
       return;
     }
 
