@@ -39,7 +39,16 @@ private:
     void *m_data;
 };
 
-android::sp<android::BufferQueue> createBufferQueue(const char *name,
-			            android::sp<BufferQueueListener>& listener);
+class DroidMediaBufferQueue : public android::BufferQueue {
+public:
+  DroidMediaBufferQueue(const char *name);
+  ~DroidMediaBufferQueue();
+
+  bool connectListener(android::sp<BufferQueueListener>& listener);
+  DroidMediaBuffer *acquireMediaBuffer(DroidMediaBufferCallbacks *cb);
+
+private:
+  android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
+};
 
 #endif /* DROID_MEDIA_PRIVATE_H */

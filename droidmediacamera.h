@@ -48,6 +48,7 @@ typedef struct {
   // TODO: error callback
 } DroidMediaCameraCallbacks;
 
+DroidMediaBufferQueue *droid_media_camera_get_buffer_queue (DroidMediaCamera *camera);
 int droid_media_camera_get_number_of_cameras();
 bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number);
 
@@ -81,7 +82,6 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera);
 
 bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType);
 
-DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, DroidMediaBufferCallbacks *cb);
 void droid_media_camera_release_recording_frame(DroidMediaCamera *camera, DroidMediaCameraRecordingData *data);
 
 nsecs_t droid_media_camera_recording_frame_get_timestamp(DroidMediaCameraRecordingData *data);

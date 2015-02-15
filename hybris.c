@@ -154,7 +154,7 @@ HYBRIS_WRAPPER_0_2(DroidMediaCamera*, int, droid_media_camera_set_preview_callba
 HYBRIS_WRAPPER_1_2(bool, DroidMediaCamera*,const char *,droid_media_camera_set_parameters)
 HYBRIS_WRAPPER_1_1(char *, DroidMediaCamera*, droid_media_camera_get_parameters)
 HYBRIS_WRAPPER_1_2(bool, DroidMediaCamera*, int, droid_media_camera_take_picture)
-HYBRIS_WRAPPER_1_2(DroidMediaBuffer *, DroidMediaCamera *, DroidMediaBufferCallbacks *, droid_media_camera_acquire_buffer)
+HYBRIS_WRAPPER_1_1(DroidMediaBufferQueue*, DroidMediaCamera*, droid_media_camera_get_buffer_queue)
 HYBRIS_WRAPPER_0_3(DroidMediaBuffer*,EGLDisplay,EGLSyncKHR,droid_media_buffer_release)
 HYBRIS_WRAPPER_0_2(DroidMediaCamera*, DroidMediaCameraRecordingData*,droid_media_camera_release_recording_frame)
 HYBRIS_WRAPPER_1_1(nsecs_t,DroidMediaCameraRecordingData*,droid_media_camera_recording_frame_get_timestamp)
@@ -182,7 +182,7 @@ HYBRIS_WRAPPER_1_1(bool,DroidMediaCodec*,droid_media_codec_start);
 HYBRIS_WRAPPER_0_1(DroidMediaCodec*,droid_media_codec_stop);
 HYBRIS_WRAPPER_0_1(DroidMediaCodec *,droid_media_codec_destroy);
 HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaCodecData*,DroidMediaBufferCallbacks*,droid_media_codec_write);
-HYBRIS_WRAPPER_1_2(DroidMediaBuffer*,DroidMediaCodec*,DroidMediaBufferCallbacks*,droid_media_codec_acquire_buffer);
+HYBRIS_WRAPPER_1_1(DroidMediaBufferQueue*,DroidMediaCodec*,droid_media_codec_get_buffer_queue);
 HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaCodecCallbacks*, void*, droid_media_codec_set_callbacks);
 HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaRenderingCallbacks*,void*,droid_media_codec_set_rendering_callbacks);
 HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaCodecDataCallbacks*,void*,droid_media_codec_set_data_callbacks);
@@ -191,3 +191,4 @@ HYBRIS_WRAPPER_0_1(DroidMediaCodec *, droid_media_codec_flush);
 HYBRIS_WRAPPER_0_1(DroidMediaCodec *, droid_media_codec_drain);
 HYBRIS_WRAPPER_0_0(droid_media_init)
 HYBRIS_WRAPPER_0_0(droid_media_deinit)
+HYBRIS_WRAPPER_1_2(DroidMediaBuffer*,DroidMediaBufferQueue*,DroidMediaBufferCallbacks*,droid_media_buffer_queue_acquire_buffer)

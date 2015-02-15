@@ -225,9 +225,8 @@ public:
     android::sp<android::MediaSource> m_codec;
     android::OMXClient *m_omx;
     android::sp<Source> m_src;
-    android::sp<android::BufferQueue> m_queue;
+    android::sp<DroidMediaBufferQueue> m_queue;
     android::sp<ANativeWindow> m_window;
-    android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
     android::sp<BufferQueueListener> m_bufferQueueListener;
     android::sp<android::Thread> m_thread;
 
@@ -305,6 +304,11 @@ private:
 };
 
 extern "C" {
+
+DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec)
+{
+  return codec->m_queue.get();
+}
 
 ssize_t droid_media_codec_find_by_type(const char *type, bool encoder)
 {
@@ -421,16 +425,16 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     md->setInt32(android::kKeyHeight, meta->height);
     md->setInt32(android::kKeyFrameRate, meta->fps);
 
-    android::sp<android::BufferQueue> queue;
+    android::sp<DroidMediaBufferQueue> queue;
     android::sp<BufferQueueListener> listener;
     android::sp<ANativeWindow> window;
 
     if (!is_encoder) {
         listener = new BufferQueueListener;
-        queue = createBufferQueue("DroidMediaCodecBufferQueue", listener);
-
-	if (!queue.get()) {
-	  ALOGE("Failed to get buffer queue");
+        queue = new DroidMediaBufferQueue("DroidMediaCodecBufferQueue");
+	if (!queue->connectListener(listener)) {
+	  ALOGE("Failed to connect buffer queue listener");
+	  queue.clear();
 	  listener.clear();
 	  delete omx;
 	  return NULL;
@@ -593,56 +597,6 @@ void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, 
             codec->m_thread.clear();
         }
     }
-}
-
-DroidMediaBuffer *droid_media_codec_acquire_buffer(DroidMediaCodec *codec, DroidMediaBufferCallbacks *cb)
-{
-    android::BufferQueue::BufferItem buffer;
-    int num;
-    int err = codec->m_queue->acquireBuffer(&buffer
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: UGLY!
-    , 0
-#endif
-);
-    if (err != android::OK) {
-        ALOGE("DroidMediaCodec: Failed to acquire buffer from the queue. Error 0x%x", -err);
-        return NULL;
-    }
-
-    // TODO: Here we are working around the fact that BufferQueue will send us an mGraphicBuffer
-    // only when it changes. We can integrate SurfaceTexture but thart needs a lot of change in the whole stack
-    num = buffer.mBuf;
-
-    if (buffer.mGraphicBuffer != NULL) {
-        codec->m_slots[num] = buffer;
-    }
-
-    if (codec->m_slots[num].mGraphicBuffer == NULL) {
-        int err;
-        ALOGE("DroidMediaCodec: Got a buffer without real data");
-        err = codec->m_queue->releaseBuffer(buffer.mBuf,
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
-					     buffer.mFrameNumber,
-#endif
-					    EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
-					     , android::Fence::NO_FENCE
-#endif
-);
-        if (err != android::NO_ERROR) {
-            ALOGE("DroidMediaCodec: error releasing buffer. Error 0x%x", -err);
-        }
-
-        return NULL;
-    }
-
-    codec->m_slots[num].mTransform = buffer.mTransform;
-    codec->m_slots[num].mScalingMode = buffer.mScalingMode;
-    codec->m_slots[num].mTimestamp = buffer.mTimestamp;
-    codec->m_slots[num].mFrameNumber = buffer.mFrameNumber;
-    codec->m_slots[num].mCrop = buffer.mCrop;
-
-    return new DroidMediaBuffer(codec->m_slots[num], codec->m_queue, cb->data, cb->ref, cb->unref);
 }
 
 static bool droid_media_codec_read(DroidMediaCodec *codec)

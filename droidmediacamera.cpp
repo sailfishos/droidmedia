@@ -42,11 +42,9 @@ public:
     }
 
     android::sp<android::Camera> m_camera;
-    android::sp<android::BufferQueue> m_queue;
+    android::sp<DroidMediaBufferQueue> m_queue;
     DroidMediaCameraCallbacks m_cb;
     void *m_cb_data;
-
-    android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
     android::sp<BufferQueueListener> m_bufferQueueListener;
 };
 
@@ -92,6 +90,11 @@ private:
     DroidMediaCamera *m_cam;
 };
 
+DroidMediaBufferQueue *droid_media_camera_get_buffer_queue (DroidMediaCamera *camera)
+{
+  return camera->m_queue.get();
+}
+
 int droid_media_camera_get_number_of_cameras()
 {
     return android::Camera::getNumberOfCameras();
@@ -115,10 +118,11 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 {
     android::sp<BufferQueueListener> listener = new BufferQueueListener;
 
-    android::sp<android::BufferQueue> queue(createBufferQueue("DroidMediaCameraBufferQueue",
-							      listener));
-    if (!queue.get()) {
-        ALOGE("Failed to get buffer queue");
+    android::sp<DroidMediaBufferQueue>
+      queue(new DroidMediaBufferQueue("DroidMediaCameraBufferQueue"));
+    if (!queue->connectListener(listener)) {
+        ALOGE("Failed to connect buffer queue listener");
+	queue.clear();
 	listener.clear();
         return NULL;
     }
@@ -273,56 +277,6 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
 bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType)
 {
     return camera->m_camera->takePicture(msgType) == android::NO_ERROR;
-}
-
-DroidMediaBuffer *droid_media_camera_acquire_buffer(DroidMediaCamera *camera, DroidMediaBufferCallbacks *cb)
-{
-    android::BufferQueue::BufferItem buffer;
-    int num;
-    int err = camera->m_queue->acquireBuffer(&buffer
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: UGLY!
-    , 0
-#endif
-);
-    if (err != android::OK) {
-        ALOGE("DroidMediaCamera: Failed to acquire buffer from the queue. Error 0x%x", -err);
-        return NULL;
-    }
-
-    // TODO: Here we are working around the fact that BufferQueue will send us an mGraphicBuffer
-    // only when it changes. We can integrate SurfaceTexture but thart needs a lot of change in the whole stack
-    num = buffer.mBuf;
-
-    if (buffer.mGraphicBuffer != NULL) {
-        camera->m_slots[num] = buffer;
-    }
-
-    if (camera->m_slots[num].mGraphicBuffer == NULL) {
-        int err;
-        ALOGE("DroidMediaCamera: Got a buffer without real data");
-        err = camera->m_queue->releaseBuffer(buffer.mBuf,
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
-					     buffer.mFrameNumber,
-#endif
-					     EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
-					     , android::Fence::NO_FENCE
-#endif
-);
-        if (err != android::NO_ERROR) {
-            ALOGE("DroidMediaCamera: error releasing buffer. Error 0x%x", -err);
-        }
-
-        return NULL;
-    }
-
-    camera->m_slots[num].mTransform = buffer.mTransform;
-    camera->m_slots[num].mScalingMode = buffer.mScalingMode;
-    camera->m_slots[num].mTimestamp = buffer.mTimestamp;
-    camera->m_slots[num].mFrameNumber = buffer.mFrameNumber;
-    camera->m_slots[num].mCrop = buffer.mCrop;
-
-    return new DroidMediaBuffer(camera->m_slots[num], camera->m_queue, cb->data, cb->ref, cb->unref);
 }
 
 void droid_media_camera_release_recording_frame(DroidMediaCamera *camera, DroidMediaCameraRecordingData *data)

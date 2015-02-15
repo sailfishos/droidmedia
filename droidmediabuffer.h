@@ -23,11 +23,13 @@
 #include <gui/BufferQueue.h>
 #include "droidmedia.h"
 
+class DroidMediaBufferQueue;
+
 class DroidMediaBuffer : public ANativeWindowBuffer
 {
 public:
   DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
-		   android::sp<android::BufferQueue>& queue,
+		   android::sp<DroidMediaBufferQueue> queue,
 		   void *data,
 		   void (* ref)(void *m_data),
 		   void (* unref)(void *m_data));
@@ -38,7 +40,7 @@ public:
   static void decRef(struct android_native_base_t* base);
 
   android::sp<android::GraphicBuffer> m_buffer;
-  android::sp<android::BufferQueue> m_queue;
+  android::sp<DroidMediaBufferQueue> m_queue;
 
   uint32_t m_transform;
   uint32_t m_scalingMode;

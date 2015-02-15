@@ -17,6 +17,7 @@
  */
 
 #include "private.h"
+#include "droidmediabuffer.h"
 
 BufferQueueListener::BufferQueueListener() :
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
@@ -46,33 +47,103 @@ void BufferQueueListener::setCallbacks(DroidMediaRenderingCallbacks *cb, void *d
     m_data = data;
 }
 
-android::sp<android::BufferQueue> createBufferQueue(const char *name,
-						    android::sp<BufferQueueListener>& listener)
+DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+  android::BufferQueue()
+#else
+  android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS)
+#endif
 {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-  android::BufferQueue *queue = new android::BufferQueue;
-
-  // TODO: This number is arbitrary but if we don't do that then playback gets stuck. I need to debug that
+  // TODO: This number is arbitrary but if we don't do that then
+  // playback gets stuck. I need to debug that
   // and get rid of this hack
-  queue->setMaxAcquiredBufferCount(6);
+  setMaxAcquiredBufferCount(6);
 #else
-  android::BufferQueue *queue =
-    new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS);
   queue->setSynchronousMode(false);
 #endif
 
-  queue->setConsumerName(android::String8(name));
-  queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+  setConsumerName(android::String8(name));
+  setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+}
 
+DroidMediaBufferQueue::~DroidMediaBufferQueue()
+{
+  // TODO:
+}
+
+bool DroidMediaBufferQueue::connectListener(android::sp<BufferQueueListener>& listener)
+{
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-  if (queue->consumerConnect(listener, true) != android::NO_ERROR) {
+  if (consumerConnect(listener, true) != android::NO_ERROR) {
 #else
-  if (queue->consumerConnect(listener) != android::NO_ERROR) {
+  if (consumerConnect(listener) != android::NO_ERROR) {
 #endif
     ALOGE("Failed to set buffer consumer");
-    delete queue;
+    return false;
+  }
+
+  return true;
+}
+
+DroidMediaBuffer *DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCallbacks *cb)
+{
+  android::BufferQueue::BufferItem buffer;
+  int num;
+  int err = acquireBuffer(&buffer
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: UGLY!
+    , 0
+#endif
+    );
+
+  if (err != android::OK) {
+    ALOGE("DroidMediaBufferQueue: Failed to acquire buffer from the queue. Error 0x%x", -err);
     return NULL;
   }
 
-  return queue;
+  // TODO: Here we are working around the fact that BufferQueue will send us an mGraphicBuffer
+  // only when it changes. We can integrate SurfaceTexture but thart needs a lot of
+  // change in the whole stack
+  num = buffer.mBuf;
+
+  if (buffer.mGraphicBuffer != NULL) {
+    m_slots[num] = buffer;
+  }
+
+  if (m_slots[num].mGraphicBuffer == NULL) {
+    int err;
+    ALOGE("DroidMediaBufferQueue: Got a buffer without real data");
+    err = releaseBuffer(buffer.mBuf,
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+    buffer.mFrameNumber,
+#endif
+    EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+    , android::Fence::NO_FENCE
+#endif
+    );
+
+    if (err != android::NO_ERROR) {
+      ALOGE("DroidMediaBufferQueue: error releasing buffer. Error 0x%x", -err);
+    }
+
+      return NULL;
+  }
+
+  m_slots[num].mTransform = buffer.mTransform;
+  m_slots[num].mScalingMode = buffer.mScalingMode;
+  m_slots[num].mTimestamp = buffer.mTimestamp;
+  m_slots[num].mFrameNumber = buffer.mFrameNumber;
+  m_slots[num].mCrop = buffer.mCrop;
+
+  return new DroidMediaBuffer(m_slots[num], this, cb->data, cb->ref, cb->unref);
 }
+
+extern "C" {
+DroidMediaBuffer *droid_media_buffer_queue_acquire_buffer(DroidMediaBufferQueue *queue,
+							  DroidMediaBufferCallbacks *cb)
+{
+  return queue->acquireMediaBuffer(cb);
+}
+
+};

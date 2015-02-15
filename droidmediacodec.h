@@ -77,6 +77,7 @@ typedef struct {
   void (* data_available) (void *data, DroidMediaCodecData *encoded);
 } DroidMediaCodecDataCallbacks;
 
+DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec);
 ssize_t droid_media_codec_find_by_type(const char *type, bool encoder);
 ssize_t droid_media_codec_find_by_name(const char *name);
 size_t droid_media_codec_count();
@@ -101,7 +102,6 @@ bool droid_media_codec_start(DroidMediaCodec *codec);
 void droid_media_codec_stop(DroidMediaCodec *codec);
 void droid_media_codec_destroy(DroidMediaCodec *codec);
 void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb);
-DroidMediaBuffer *droid_media_codec_acquire_buffer(DroidMediaCodec *codec, DroidMediaBufferCallbacks *cb);
 void droid_media_codec_flush(DroidMediaCodec *codec);
 void droid_media_codec_drain(DroidMediaCodec *codec);
 

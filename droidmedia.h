@@ -25,8 +25,10 @@
 #ifdef __cplusplus
 extern "C" {
 class DroidMediaBuffer;
+class DroidMediaBufferQueue;
 #else
 typedef void DroidMediaBuffer;
+typedef void DroidMediaBufferQueue;
 #endif
 
 typedef void *EGLDisplay;
@@ -55,9 +57,11 @@ typedef struct {
   void (* frame_available)(void *data);
 } DroidMediaRenderingCallbacks;
 
+/* droidmedia.cpp */
 void droid_media_init();
 void droid_media_deinit();
 
+/* droidmediabuffer.cpp */
 uint32_t droid_media_buffer_get_transform(DroidMediaBuffer * buffer);
 uint32_t droid_media_buffer_get_scaling_mode(DroidMediaBuffer * buffer);
 int64_t droid_media_buffer_get_timestamp(DroidMediaBuffer * buffer);
@@ -67,6 +71,10 @@ uint32_t droid_media_buffer_get_width(DroidMediaBuffer * buffer);
 uint32_t droid_media_buffer_get_height(DroidMediaBuffer * buffer);
 void droid_media_buffer_release(DroidMediaBuffer *buffer,
 				EGLDisplay display, EGLSyncKHR fence);
+
+/* private.h */
+DroidMediaBuffer *droid_media_buffer_queue_acquire_buffer(DroidMediaBufferQueue *queue,
+							  DroidMediaBufferCallbacks *cb);
 
 #ifdef __cplusplus
 };

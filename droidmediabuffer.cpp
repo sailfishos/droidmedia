@@ -17,9 +17,10 @@
  */
 
 #include "droidmediabuffer.h"
+#include "private.h"
 
 DroidMediaBuffer::DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
-                                   android::sp<android::BufferQueue>& queue,
+                                   android::sp<DroidMediaBufferQueue> queue,
                                    void *data,
                                    void (* ref)(void *m_data),
                                    void (* unref)(void *m_data)) :
