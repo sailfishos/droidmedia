@@ -49,7 +49,7 @@ void BufferQueueListener::setCallbacks(DroidMediaRenderingCallbacks *cb, void *d
 android::sp<android::BufferQueue> createBufferQueue(const char *name,
 						    android::sp<BufferQueueListener>& listener)
 {
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 || ANDROID_MINOR == 2
+#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
   android::BufferQueue *queue = new android::BufferQueue;
 
   // TODO: This number is arbitrary but if we don't do that then playback gets stuck. I need to debug that

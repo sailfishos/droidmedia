@@ -72,7 +72,7 @@ void droid_media_buffer_release(DroidMediaBuffer *buffer,
 					     buffer->m_frameNumber,
 #endif
 					     display, fence
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 || ANDROID_MINOR == 2 // TODO: fix this when we do video rendering
+#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2) // TODO: fix this when we do video rendering
 					     , android::Fence::NO_FENCE
 #endif
 );
