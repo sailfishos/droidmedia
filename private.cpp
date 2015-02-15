@@ -60,7 +60,7 @@ DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
   // and get rid of this hack
   setMaxAcquiredBufferCount(6);
 #else
-  queue->setSynchronousMode(false);
+  setSynchronousMode(false);
 #endif
 
   setConsumerName(android::String8(name));
