@@ -16,7 +16,7 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
-#include "mediabuffer.h"
+#include "droidmediabuffer.h"
 
 DroidMediaBuffer::DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
                                    android::sp<android::BufferQueue>& queue,

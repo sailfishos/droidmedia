@@ -31,7 +31,7 @@ LOCAL_SRC_FILES := droidmedia.cpp \
                    droidmediacamera.cpp \
                    droidmediacodec.cpp \
                    allocator.cpp \
-                   mediabuffer.cpp \
+                   droidmediabuffer.cpp \
                    private.cpp
 
 LOCAL_SHARED_LIBRARIES := libc \

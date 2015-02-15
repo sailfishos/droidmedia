@@ -32,7 +32,7 @@
 #include "droidmediacodec.h"
 #include "allocator.h"
 #include "private.h"
-#include "mediabuffer.h"
+#include "droidmediabuffer.h"
 
 #define DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS 5
 

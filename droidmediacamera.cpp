@@ -21,7 +21,7 @@
 #include <camera/Camera.h>
 #include <android/log.h>
 #include <utils/String8.h>
-#include "mediabuffer.h"
+#include "droidmediabuffer.h"
 #include "private.h"
 
 extern "C" {
