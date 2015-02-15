@@ -34,6 +34,11 @@ public:
 		   void (* ref)(void *m_data),
 		   void (* unref)(void *m_data));
 
+  DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer,
+		   void *data,
+		   void (* ref)(void *m_data),
+		   void (* unref)(void *m_data));
+
   ~DroidMediaBuffer();
 
   static void incRef(struct android_native_base_t* base);

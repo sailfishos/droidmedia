@@ -62,6 +62,9 @@ void droid_media_init();
 void droid_media_deinit();
 
 /* droidmediabuffer.cpp */
+DroidMediaBuffer *droid_media_buffer_create_from_yv12_data(uint32_t w, uint32_t h,
+							   DroidMediaData *data,
+							   DroidMediaBufferCallbacks *cb);
 uint32_t droid_media_buffer_get_transform(DroidMediaBuffer * buffer);
 uint32_t droid_media_buffer_get_scaling_mode(DroidMediaBuffer * buffer);
 int64_t droid_media_buffer_get_timestamp(DroidMediaBuffer * buffer);

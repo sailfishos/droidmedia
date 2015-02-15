@@ -47,6 +47,31 @@ DroidMediaBuffer::DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
     common.decRef = decRef;
 }
 
+DroidMediaBuffer::DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer,
+				   void *data,
+				   void (* ref)(void *m_data),
+				   void (* unref)(void *m_data)) :
+    m_buffer(buffer),
+    m_transform(-1),
+    m_scalingMode(-1),
+    m_timestamp(-1),
+    m_frameNumber(-1),
+    m_slot(-1),
+    m_data(data),
+    m_ref(ref),
+    m_unref(unref)
+{
+    width  = m_buffer->width;
+    height = m_buffer->height;
+    stride = m_buffer->stride;
+    format = m_buffer->format;
+    usage  = m_buffer->usage;
+    handle = m_buffer->handle;
+
+    common.incRef = incRef;
+    common.decRef = decRef;
+}
+
 DroidMediaBuffer::~DroidMediaBuffer()
 {
 
@@ -65,9 +90,53 @@ void DroidMediaBuffer::decRef(struct android_native_base_t* base)
 }
 
 extern "C" {
+DroidMediaBuffer *droid_media_buffer_create_from_yv12_data(uint32_t w, uint32_t h,
+							   DroidMediaData *data,
+							   DroidMediaBufferCallbacks *cb)
+{
+  android::sp<android::GraphicBuffer>
+    buffer(new android::GraphicBuffer(w, h, HAL_PIXEL_FORMAT_YV12,
+				      android::GraphicBuffer::USAGE_HW_TEXTURE));
+
+  android::status_t err = buffer->initCheck();
+
+  if (err != android::NO_ERROR) {
+    ALOGE("DroidMediaBuffer: Error 0x%x allocating buffer", -err);
+    buffer.clear();
+    return NULL;
+  }
+
+  void *addr = NULL;
+
+  err = buffer->lock(android::GraphicBuffer::USAGE_SW_READ_RARELY
+		     | android::GraphicBuffer::USAGE_SW_WRITE_RARELY, &addr);
+  if (err != android::NO_ERROR) {
+    ALOGE("DroidMediaBuffer: Error 0x%x locking buffer", -err);
+    buffer.clear();
+    return NULL;
+  }
+
+  memcpy(addr, data->data, data->size);
+
+  err = buffer->unlock();
+  if (err != android::NO_ERROR) {
+    ALOGE("DroidMediaBuffer: Error 0x%x unlocking buffer", -err);
+    buffer.clear();
+    return NULL;
+  }
+
+  return new DroidMediaBuffer(buffer, cb->data, cb->ref, cb->unref);
+}
+
 void droid_media_buffer_release(DroidMediaBuffer *buffer,
                                 EGLDisplay display, EGLSyncKHR fence)
 {
+    if (buffer->m_queue == NULL) {
+      // TODO: what should we do with fence?
+      delete buffer;
+      return;
+    }
+
     int err = buffer->m_queue->releaseBuffer(buffer->m_slot,
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
 					     buffer->m_frameNumber,
