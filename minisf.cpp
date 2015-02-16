@@ -25,6 +25,10 @@
 #include <binder/IPermissionController.h>
 #include <binder/MemoryHeapBase.h>
 #include "allocator.h"
+#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+#include <binder/AppOpsManager.h>
+#include <binder/IAppOpsService.h>
+#endif
 
 using namespace android;
 
@@ -166,6 +170,49 @@ public:
 #endif
 };
 
+#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+class FakeAppOps : public BinderService<FakeAppOps>,
+		   public BnAppOpsService
+{
+public:
+    static char const *getServiceName() {
+      return "appops";
+    }
+
+  virtual int32_t checkOperation(int32_t code, int32_t uid, const String16& packageName) {
+    return android::AppOpsManager::MODE_ALLOWED;
+  }
+
+  virtual int32_t noteOperation(int32_t code, int32_t uid, const String16& packageName) {
+    return android::AppOpsManager::MODE_ALLOWED;
+  }
+
+  virtual int32_t startOperation(const sp<IBinder>& token, int32_t code, int32_t uid,
+				 const String16& packageName) {
+    return android::AppOpsManager::MODE_ALLOWED;
+  }
+
+  virtual void finishOperation(const sp<IBinder>& token, int32_t code, int32_t uid,
+			       const String16& packageName) {
+    // Nothing
+  }
+
+  virtual void startWatchingMode(int32_t op, const String16& packageName,
+				 const sp<IAppOpsCallback>& callback) {
+    // Nothing
+  }
+
+  void stopWatchingMode(const sp<IAppOpsCallback>& callback) {
+    // Nothing
+  }
+
+  virtual sp<IBinder> getToken(const sp<IBinder>& clientToken) {
+    return NULL;
+  }
+};
+
+#endif
+
 int
 main(int argc, char* argv[])
 {
@@ -174,6 +221,10 @@ main(int argc, char* argv[])
 
     FakePermissionController::instantiate();
     MiniSurfaceFlinger::instantiate();
+
+#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+    FakeAppOps::instantiate();
+#endif
 
     ProcessState::self()->startThreadPool();
     IPCThreadState::self()->joinThreadPool();
