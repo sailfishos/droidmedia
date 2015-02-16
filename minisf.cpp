@@ -106,7 +106,18 @@ public:
     return BAD_VALUE;
   }
 
-#if ANDROID_MINOR == 4
+#if ANDROID_MINOR == 4 && ANDROID_MICRO == 2
+  bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer>& surface) const {
+    return true;
+  }
+
+  status_t captureScreen(const sp<IBinder>& display,
+			 const sp<IGraphicBufferProducer>& producer,
+			 uint32_t reqWidth, uint32_t reqHeight,
+			 uint32_t minLayerZ, uint32_t maxLayerZ, bool) {
+    return BAD_VALUE;
+  }
+#elif ANDROID_MINOR == 4
   bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer>& surface) const {
     return true;
   }
@@ -117,9 +128,7 @@ public:
 			 uint32_t minLayerZ, uint32_t maxLayerZ) {
     return BAD_VALUE;
   }
-#endif
-
-#if ANDROID_MINOR == 2
+#elif ANDROID_MINOR == 2
   bool authenticateSurfaceTexture(const sp<ISurfaceTexture>& surface) const {
     return true;
   }
