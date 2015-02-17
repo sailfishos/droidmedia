@@ -50,10 +50,19 @@ typedef struct {
 } DroidMediaCameraInfo;
 
 typedef struct {
-  void (* notify)(void *data, int32_t msgType, int32_t ext1, int32_t ext2);
-  void (* post_data_timestamp)(void *data, int32_t msgType, DroidMediaCameraRecordingData *video_data);
-  void (* post_data)(void *data, int32_t msgType, DroidMediaData *mem);
-  // TODO: error callback
+  void (* shutter_cb) (void *data);
+  void (* focus_cb) (void *data, int arg);
+  void (* focus_move_cb) (void *data, int arg);
+  void (* error_cb) (void *data, int arg);
+  void (* zoom_cb) (void *data, int value, int arg);
+
+  void (* raw_image_cb) (void *data, DroidMediaData *mem);
+  void (* compressed_image_cb) (void *data, DroidMediaData *mem);
+  void (* postview_frame_cb) (void *data, DroidMediaData *mem);
+  void (* raw_image_notify_cb) (void *data);
+  void (* preview_frame_cb) (void *data, DroidMediaData *mem);
+
+  void (* video_frame_cb) (void *data, DroidMediaCameraRecordingData *video_data);
 } DroidMediaCameraCallbacks;
 
 DroidMediaBufferQueue *droid_media_camera_get_buffer_queue (DroidMediaCamera *camera);

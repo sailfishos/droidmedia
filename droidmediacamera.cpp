@@ -56,8 +56,39 @@ public:
 
     void notify(int32_t msgType, int32_t ext1, int32_t ext2)
     {
-        if (m_cam->m_cb.notify) {
-            m_cam->m_cb.notify(m_cam->m_cb_data, msgType, ext1, ext2);
+        switch (msgType) {
+            case CAMERA_MSG_SHUTTER:
+                if (m_cam->m_cb.shutter_cb) {
+                    m_cam->m_cb.shutter_cb(m_cam->m_cb_data);
+                }
+                break;
+
+            case CAMERA_MSG_FOCUS:
+                if (m_cam->m_cb.focus_cb) {
+                    m_cam->m_cb.focus_cb(m_cam->m_cb_data, ext1);
+                }
+                break;
+
+            case CAMERA_MSG_FOCUS_MOVE:
+                if (m_cam->m_cb.focus_move_cb) {
+                    m_cam->m_cb.focus_move_cb(m_cam->m_cb_data, ext1);
+                }
+                break;
+
+            case CAMERA_MSG_ERROR:
+                if (m_cam->m_cb.error_cb) {
+                    m_cam->m_cb.error_cb(m_cam->m_cb_data, ext1);
+                }
+                break;
+
+            case CAMERA_MSG_ZOOM:
+                if (m_cam->m_cb.zoom_cb) {
+                    m_cam->m_cb.zoom_cb(m_cam->m_cb_data, ext1, ext2);
+                }
+                break;
+            default:
+                ALOGW("DroidMediaCamera: unknown notify message 0x%x", msgType);
+                break;
         }
     }
 
@@ -68,20 +99,66 @@ public:
         mem.size = dataPtr->size();
         mem.data = dataPtr->pointer();
 
-        if (m_cam->m_cb.post_data) {
-            m_cam->m_cb.post_data(m_cam->m_cb_data, msgType, &mem);
-        }
+        switch (msgType) {
+            case CAMERA_MSG_RAW_IMAGE:
+                if (m_cam->m_cb.raw_image_cb) {
+                    m_cam->m_cb.raw_image_cb(m_cam->m_cb_data, &mem);
+                }
+                break;
 
+            case CAMERA_MSG_COMPRESSED_IMAGE:
+                if (m_cam->m_cb.compressed_image_cb) {
+                    m_cam->m_cb.compressed_image_cb(m_cam->m_cb_data, &mem);
+                }
+                break;
+
+            case CAMERA_MSG_POSTVIEW_FRAME:
+                if (m_cam->m_cb.postview_frame_cb) {
+                    m_cam->m_cb.postview_frame_cb(m_cam->m_cb_data, &mem);
+                }
+                break;
+
+            case CAMERA_MSG_PREVIEW_METADATA:
         // TODO: expose camera_frame_metadata_t
+                break;
+
+            case CAMERA_MSG_RAW_IMAGE_NOTIFY:
+                if (m_cam->m_cb.raw_image_notify_cb) {
+                    m_cam->m_cb.raw_image_notify_cb(m_cam->m_cb_data);
+                }
+                break;
+
+            case CAMERA_MSG_PREVIEW_FRAME:
+                if (m_cam->m_cb.preview_frame_cb) {
+                    m_cam->m_cb.preview_frame_cb(m_cam->m_cb_data, &mem);
+                }
+                break;
+
+            default:
+                ALOGW("DroidMediaCamera: unknown postData message 0x%x", msgType);
+                break;
+        }
     }
 
     void postDataTimestamp(nsecs_t timestamp, int32_t msgType, const android::sp<android::IMemory>& dataPtr)
     {
-        if (m_cam->m_cb.post_data_timestamp) {
-            DroidMediaCameraRecordingData *data = new DroidMediaCameraRecordingData;
-            data->mem = dataPtr;
-            data->ts = timestamp;
-            m_cam->m_cb.post_data_timestamp(m_cam->m_cb_data, msgType, data);
+        switch (msgType) {
+            case CAMERA_MSG_VIDEO_FRAME:
+                if (m_cam->m_cb.video_frame_cb) {
+                    // TODO: revisit this data structure
+                    DroidMediaCameraRecordingData *data = new DroidMediaCameraRecordingData;
+                    data->mem = dataPtr;
+                    data->ts = timestamp;
+                    m_cam->m_cb.video_frame_cb(m_cam->m_cb_data, data);
+                } else {
+                    m_cam->m_camera->releaseRecordingFrame(dataPtr);
+                }
+
+                break;
+
+            default:
+                ALOGW("DroidMediaCamera: unknown postDataTimestamp message 0x%x", msgType);
+                break;
         }
     }
 
