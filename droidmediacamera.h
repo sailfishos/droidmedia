@@ -50,6 +50,19 @@ typedef struct {
 } DroidMediaCameraInfo;
 
 typedef struct {
+  int32_t left;
+  int32_t top;
+  int32_t right;
+  int32_t bottom;
+  int32_t score;
+  int32_t id;
+
+  int32_t left_eye[2];
+  int32_t right_eye[2];
+  int32_t mouth[2];
+} DroidMediaCameraFace;
+
+typedef struct {
   void (* shutter_cb) (void *data);
   void (* focus_cb) (void *data, int arg);
   void (* focus_move_cb) (void *data, int arg);
@@ -62,6 +75,7 @@ typedef struct {
   void (* raw_image_notify_cb) (void *data);
   void (* preview_frame_cb) (void *data, DroidMediaData *mem);
 
+  void (* preview_metadata_cb) (void *data, const DroidMediaCameraFace *faces, size_t num_faces);
   void (* video_frame_cb) (void *data, DroidMediaCameraRecordingData *video_data);
 } DroidMediaCameraCallbacks;
 

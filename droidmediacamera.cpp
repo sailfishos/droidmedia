@@ -119,7 +119,9 @@ public:
                 break;
 
             case CAMERA_MSG_PREVIEW_METADATA:
-        // TODO: expose camera_frame_metadata_t
+                if (m_cam->m_cb.preview_metadata_cb) {
+                    sendPreviewMetadata(metadata);
+                }
                 break;
 
             case CAMERA_MSG_RAW_IMAGE_NOTIFY:
@@ -160,6 +162,31 @@ public:
                 ALOGW("DroidMediaCamera: unknown postDataTimestamp message 0x%x", msgType);
                 break;
         }
+    }
+
+    void sendPreviewMetadata(camera_frame_metadata_t *metadata)
+    {
+        android::Vector<DroidMediaCameraFace> faces;
+
+        for (int x = 0; x < metadata->number_of_faces; x++) {
+            DroidMediaCameraFace face;
+            face.left = metadata->faces[x].rect[0];
+            face.top = metadata->faces[x].rect[1];
+            face.right = metadata->faces[x].rect[2];
+            face.bottom = metadata->faces[x].rect[3];
+            face.score = metadata->faces[x].score;
+            face.id = metadata->faces[x].id;
+            face.left_eye[0] = metadata->faces[x].left_eye[0];
+            face.left_eye[1] = metadata->faces[x].left_eye[1];
+            face.right_eye[0] = metadata->faces[x].right_eye[0];
+            face.right_eye[1] = metadata->faces[x].right_eye[1];
+            face.mouth[0] = metadata->faces[x].mouth[0];
+            face.mouth[1] = metadata->faces[x].mouth[1];
+
+            faces.push_back(face);
+        }
+
+        m_cam->m_cb.preview_metadata_cb(m_cam->m_cb_data, faces.array(), faces.size());
     }
 
 private:
