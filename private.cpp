@@ -55,9 +55,9 @@ DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
 #endif
 {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-  // TODO: This number is arbitrary but if we don't do that then
-  // playback gets stuck. I need to debug that
-  // and get rid of this hack
+  // TODO: This number is arbitary but if we don't do that then
+  // we fail to acquire frames eventually.
+  // I need to debug that and get rid of this hack
   setMaxAcquiredBufferCount(6);
 #else
   setSynchronousMode(false);
@@ -79,7 +79,7 @@ bool DroidMediaBufferQueue::connectListener()
   m_listener = new DroidMediaBufferQueueListener;
 
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-  if (consumerConnect(m_listener, true) != android::NO_ERROR) {
+  if (consumerConnect(m_listener, false) != android::NO_ERROR) {
 #else
   if (consumerConnect(m_listener) != android::NO_ERROR) {
 #endif
