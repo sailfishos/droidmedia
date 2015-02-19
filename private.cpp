@@ -43,7 +43,12 @@ void DroidMediaBufferQueueListener::onBuffersReleased()
 }
 
 void DroidMediaBufferQueueListener::setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data) {
-  memcpy(&m_cb, cb, sizeof(m_cb));
+  if (!cb) {
+    memset(&m_cb, 0x0, sizeof(m_cb));
+  } else {
+    memcpy(&m_cb, cb, sizeof(m_cb));
+  }
+
   m_data = data;
 }
 
