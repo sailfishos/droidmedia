@@ -25,7 +25,7 @@
 #include <binder/IPermissionController.h>
 #include <binder/MemoryHeapBase.h>
 #include "allocator.h"
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
 #include <binder/AppOpsManager.h>
 #include <binder/IAppOpsService.h>
 #endif
@@ -179,7 +179,7 @@ public:
 #endif
 };
 
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
 class FakeAppOps : public BinderService<FakeAppOps>,
 		   public BnAppOpsService
 {
@@ -231,7 +231,7 @@ main(int argc, char* argv[])
     FakePermissionController::instantiate();
     MiniSurfaceFlinger::instantiate();
 
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
     FakeAppOps::instantiate();
 #endif
 
