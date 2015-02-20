@@ -37,6 +37,8 @@ public:
 private:
   DroidMediaBufferQueueCallbacks m_cb;
   void *m_data;
+
+  android::Mutex m_lock;
 };
 
 class DroidMediaBufferQueue : public android::BufferQueue {

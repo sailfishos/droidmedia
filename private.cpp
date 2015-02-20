@@ -30,19 +30,29 @@ DroidMediaBufferQueueListener::DroidMediaBufferQueueListener() :
 
 void DroidMediaBufferQueueListener::onFrameAvailable()
 {
+  m_lock.lock();
+
   if (m_cb.frame_available) {
     m_cb.frame_available(m_data);
   }
+
+  m_lock.unlock();
 }
 
 void DroidMediaBufferQueueListener::onBuffersReleased()
 {
+  m_lock.lock();
+
   if (m_cb.buffers_released) {
     m_cb.buffers_released(m_data);
   }
+
+  m_lock.unlock();
 }
 
 void DroidMediaBufferQueueListener::setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data) {
+  m_lock.lock();
+
   if (!cb) {
     memset(&m_cb, 0x0, sizeof(m_cb));
   } else {
@@ -50,6 +60,8 @@ void DroidMediaBufferQueueListener::setCallbacks(DroidMediaBufferQueueCallbacks 
   }
 
   m_data = data;
+
+  m_lock.unlock();
 }
 
 DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
