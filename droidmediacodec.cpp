@@ -608,6 +608,10 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
 void droid_media_codec_destroy(DroidMediaCodec *codec)
 {
     codec->m_omx->disconnect();
+    codec->m_codec.clear();
+    codec->m_queue.clear();
+    codec->m_window.clear();
+    codec->m_src.clear();
 
     delete codec->m_omx;
     delete codec;
