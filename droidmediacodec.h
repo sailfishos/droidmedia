@@ -99,9 +99,12 @@ void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec,
 bool droid_media_codec_start(DroidMediaCodec *codec);
 void droid_media_codec_stop(DroidMediaCodec *codec);
 void droid_media_codec_destroy(DroidMediaCodec *codec);
-void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb);
 void droid_media_codec_flush(DroidMediaCodec *codec);
 void droid_media_codec_drain(DroidMediaCodec *codec);
+DroidMediaCodecData *droid_media_codec_dequeue_input_buffer(DroidMediaCodec *codec);
+void droid_media_codec_queue_input_buffer(DroidMediaCodec *codec, DroidMediaCodecData *data,
+					  DroidMediaBufferCallbacks *cb);
+void droid_media_codec_release_input_buffer(DroidMediaCodec *codec, DroidMediaCodecData *data);
 
 #ifdef __cplusplus
 };

@@ -49,105 +49,142 @@ struct DroidMediaCodecMetaDataKey {
     {NULL, 0, 0}
 };
 
-class Buffers {
+class SourceBuffer : public DroidMediaCodecData
+{
 public:
-    android::List<android::MediaBuffer *> buffers;
-    android::Condition cond;
-    android::Mutex lock;
+    SourceBuffer() :
+        m_buffer(0),
+        m_queued(false)
+    {
+        memset(&m_cb, 0x0, sizeof (m_cb));
+    }
+
+    android::MediaBuffer *buffer() { return m_buffer; }
+
+    void setBuffer(android::MediaBuffer *buffer, DroidMediaBufferCallbacks *cb) {
+        assert(m_buffer == 0);
+        m_buffer = buffer;
+
+        if (cb) {
+            memcpy(&m_cb, cb, sizeof(m_cb));
+        } else {
+            memset(&m_cb, 0x0, sizeof (m_cb));
+            m_cb.data = NULL;
+        }
+    }
+
+    bool isFree() { return m_buffer == 0; }
+
+    void unrefData() {
+        m_cb.unref(m_cb.data);
+    }
+
+    bool isQueued() { return m_queued; }
+    void setQueued(bool queued) { m_queued = queued; }
+
+private:
+    android::MediaBuffer *m_buffer;
+
+    DroidMediaBufferCallbacks m_cb;
+    bool m_queued;
 };
 
-class Source : public android::MediaSource {
+class Source : public android::MediaSource, public android::MediaBufferObserver {
 public:
     Source() :
         m_running(false)
     {
+
+    }
+
+    DroidMediaCodecData *dequeueInputBuffer() {
+        DroidMediaCodecData *data = NULL;
+
+        m_lock.lock();
+
+        for (int x = 0; x < DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS; x++) {
+            if (m_inputBuffers[x].isFree()) {
+                data = &m_inputBuffers[x];
+                goto out;
+            }
+        }
+
+        // No free buffers?
+        m_inputBuffersCond.wait(m_lock);
+
+        if (!m_running) {
+            goto out;
+        }
+
+        // Retry again:
+        for (int x = 0; x < DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS; x++) {
+            if (m_inputBuffers[x].isFree()) {
+                data = &m_inputBuffers[x];
+                goto out;
+            }
+        }
+
+    out:
+        m_lock.unlock();
+        return data;
+    }
+
+    void queueInputBuffer(SourceBuffer *buffer) {
+        m_lock.lock();
+        m_pendingBuffers.push_back(buffer->buffer());
+        m_pendingBuffersCond.signal();
+        m_lock.unlock();
+    }
+
+    void drain() {
+        // Add a NULL buffer which will cause read() to return ERROR_END_OF_STREAM
+        m_lock.lock();
+        m_pendingBuffers.push_back(NULL);
+        m_pendingBuffersCond.signal();
+        m_lock.unlock();
     }
 
     void unlock() {
-        m_framesReceived.lock.lock();
-        m_framesReceived.cond.signal();
-        m_framesReceived.lock.unlock();
-    }
-
-    void add(android::MediaBuffer *buffer) {
-        m_framesReceived.lock.lock();
-
-        // TODO: I am not sure this is the right approach here.
-        if (m_framesReceived.buffers.size() >= DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS) {
-            // either get() will signal us or we will be signaled in case of an error
-            m_framesReceived.cond.wait(m_framesReceived.lock);
-        }
-
-        m_framesReceived.buffers.push_back(buffer);
-        m_framesReceived.cond.signal();
-        m_framesReceived.lock.unlock();
-    }
-
-    android::MediaBuffer *get() {
-        m_framesReceived.lock.lock();
-
-        while (m_running && m_framesReceived.buffers.empty()) {
-            m_framesReceived.cond.wait(m_framesReceived.lock);
-        }
-
-        if (!m_running) {
-            m_framesReceived.lock.unlock();
-            return NULL;
-        }
-
-        android::List<android::MediaBuffer *>::iterator iter = m_framesReceived.buffers.begin();
-        android::MediaBuffer *buffer = *iter;
-
-        m_framesReceived.buffers.erase(iter);
-
-        m_framesReceived.cond.signal();
-
-        m_framesReceived.lock.unlock();
-
-        if (buffer != NULL) {
-            m_framesBeingProcessed.lock.lock();
-            m_framesBeingProcessed.buffers.push_back(buffer);
-            m_framesBeingProcessed.lock.unlock();
-        }
-
-        return buffer;
-    }
-
-    void removeProcessedBuffer(android::MediaBuffer *buffer) {
-        for (android::List<android::MediaBuffer *>::iterator iter = m_framesBeingProcessed.buffers.begin();
-             iter != m_framesBeingProcessed.buffers.end(); iter++) {
-            if (*iter == buffer) {
-                m_framesBeingProcessed.buffers.erase(iter);
-                m_framesBeingProcessed.lock.lock();
-                m_framesBeingProcessed.cond.signal();
-                m_framesBeingProcessed.lock.unlock();
-                return;
-            }
-        }
-
-        ALOGW("DroidMediaCodec: A buffer we don't know about is being finished!");
+        m_lock.lock();
+        m_inputBuffersCond.signal();
+        m_lock.unlock();
     }
 
     void flush() {
-        m_framesReceived.lock.lock();
+        m_lock.lock();
 
-        while (!m_framesReceived.buffers.empty()) {
-            android::List<android::MediaBuffer *>::iterator iter = m_framesReceived.buffers.begin();
-            android::MediaBuffer *buffer = *iter;
+        for (int x = 0; x < DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS; x++) {
+            android::MediaBuffer *buff = m_inputBuffers[x].buffer();
+            if (buff) {
+                if (m_inputBuffers[x].isQueued()) {
+                    // Buffer owned by OMX
+                    continue;
+                }
 
-            m_framesReceived.buffers.erase(iter);
+                m_inputBuffers[x].unrefData();
 
-            if (buffer) {
-                buffer->release();
+                m_inputBuffers[x].setBuffer(NULL, NULL);
+
+                buff->setObserver(0);
+                buff->release();
+                buff = NULL;
             }
         }
 
-        m_framesReceived.lock.unlock();
+        m_pendingBuffers.clear();
+
+        // Signal _dequeue_input_buffer()
+        m_inputBuffersCond.signal();
+
+        m_lock.unlock();
     }
 
 private:
     android::status_t start(android::MetaData *meta) {
+        m_lock.lock();
         m_running = true;
+        m_lock.unlock();
+
         return android::OK;
     }
 
@@ -158,61 +195,119 @@ private:
     }
 
     android::status_t stop() {
+        m_lock.lock();
+
         // Mark as not running
-        m_framesReceived.lock.lock();
         m_running = false;
 
-        // Just in case get() is waiting for a buffer
-        m_framesReceived.cond.signal();
-        m_framesReceived.lock.unlock();
+        // In case dequeueInputBuffer() is waiting
+        m_pendingBuffersCond.signal();
 
-        // Now clear all the buffers:
+        m_lock.unlock();
+
+        // flush
         flush();
 
-        m_framesBeingProcessed.lock.lock();
+        m_lock.lock();
+        bool queued = false;
 
-        while (!m_framesBeingProcessed.buffers.empty()) {
-            ALOGW("DroidMediaCodec::stop(): waiting for %d frames", m_framesBeingProcessed.buffers.size());
-            m_framesBeingProcessed.cond.wait(m_framesBeingProcessed.lock);
+    retry:
+        for (int x = 0; x < DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS; x++) {
+            if (m_inputBuffers[x].isQueued()) {
+                queued = true;
+                break;
+            }
         }
 
-        m_framesBeingProcessed.lock.unlock();
+        if (queued) {
+            ALOGV("DroidMediaCodec::stop(): waiting for frames");
+            m_inputBuffersCond.wait(m_lock);
+            queued = false;
+            goto retry;
+        }
+
+        m_lock.unlock();
 
         return android::OK;
     }
 
+    SourceBuffer *findSourceBufferLocked(android::MediaBuffer *buff) {
+        for (int x = 0; x < DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS; x++) {
+            if (m_inputBuffers[x].buffer() == buff) {
+                return &m_inputBuffers[x];
+            }
+        }
+
+        return NULL;
+    }
+
+    void signalBufferReturned(android::MediaBuffer *buff)
+    {
+        assert(buff != NULL);
+
+        m_lock.lock();
+        SourceBuffer *src = findSourceBufferLocked(buff);
+        src->unrefData();
+        src->setBuffer(NULL, NULL);
+        src->setQueued(false);
+
+        m_inputBuffersCond.signal();
+        buff->setObserver(0);
+        buff->release();
+        buff = NULL;
+
+        m_lock.unlock();
+    }
+
     android::status_t read(android::MediaBuffer **buffer,
                            const android::MediaSource::ReadOptions *options = NULL) {
-        *buffer = get();
+        android::status_t ret;
+
+        m_lock.lock();
+
+        while (m_running && m_pendingBuffers.empty()) {
+            m_pendingBuffersCond.wait(m_lock);
+        }
+
+        if (!m_running || m_pendingBuffers.empty()) {
+            *buffer = NULL;
+            ret = android::NOT_ENOUGH_DATA;
+        } else {
+            android::List<android::MediaBuffer *>::iterator iter = m_pendingBuffers.begin();
+            *buffer = *iter;
+            m_pendingBuffers.erase(iter);
+            if (*buffer) {
+                SourceBuffer *src = findSourceBufferLocked(*buffer);
+                src->setQueued(true);
+                ret = android::OK;
+            } else {
+                ret = android::ERROR_END_OF_STREAM;
+            }
+        }
 
         if (*buffer) {
-            return android::OK;
-        } else {
-            return android::NOT_ENOUGH_DATA;
+            // We add the ref here because if we add it earlier and then try to delete the buffer
+            // in flush() then we will happily assert
+            (*buffer)->add_ref();
         }
+
+        m_lock.unlock();
+
+        return ret;
     }
+
+    android::Mutex m_lock;
+    android::Condition m_inputBuffersCond;
+    android::Condition m_pendingBuffersCond;
+
+    SourceBuffer m_inputBuffers[DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS];
+
+    android::List<android::MediaBuffer *> m_pendingBuffers;
 
     bool m_running;
-    Buffers m_framesReceived;
-    Buffers m_framesBeingProcessed;
 };
 
-class InputBuffer : public android::MediaBuffer {
-public:
-    InputBuffer(void *data, size_t size, void *cb_data, void (* unref)(void *)) :
-        android::MediaBuffer(data, size),
-        m_cb_data(cb_data),
-        m_unref(unref) {
-    }
-
-    ~InputBuffer() {
-    }
-
-    void *m_cb_data;
-    void (* m_unref)(void *);
-};
-
-class DroidMediaCodec : public android::MediaBufferObserver
+class DroidMediaCodec
 {
 public:
     DroidMediaCodec() :
@@ -228,19 +323,6 @@ public:
     android::sp<DroidMediaBufferQueue> m_queue;
     android::sp<ANativeWindow> m_window;
     android::sp<android::Thread> m_thread;
-
-    void signalBufferReturned(android::MediaBuffer *buff)
-    {
-        InputBuffer *buffer = (InputBuffer *) buff;
-
-        m_src->removeProcessedBuffer(buffer);
-
-        buffer->m_unref(buffer->m_cb_data);
-
-        // TODO: android does that
-        buff->setObserver(0);
-        buff->release();
-    }
 
     bool notifySizeChanged() {
         android::sp<android::MetaData> meta = m_codec->getFormat();
@@ -555,30 +637,33 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
 
 void droid_media_codec_destroy(DroidMediaCodec *codec)
 {
-//    int err;
-// TODO:
     codec->m_omx->disconnect();
-/*
-    err = codec->m_looper->stop();
-    if (err != android::OK) {
-        ALOGE("DroidMediaCodec: Error 0x%x stopping looper", -err);
-    }
-*/
+
     delete codec->m_omx;
     delete codec;
 }
 
-void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb)
+DroidMediaCodecData *droid_media_codec_dequeue_input_buffer(DroidMediaCodec *codec)
 {
-    InputBuffer *buffer = new InputBuffer(data->data.data, data->data.size, cb->data, cb->unref);
-    buffer->meta_data()->setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
-    buffer->meta_data()->setInt64(android::kKeyTime, data->ts);
-    buffer->setObserver(codec);
-    buffer->set_range(0, data->data.size);
-    buffer->add_ref();
-    codec->m_src->add(buffer);
+    return codec->m_src->dequeueInputBuffer();
+}
 
-    // Now start our looping thread
+void droid_media_codec_queue_input_buffer(DroidMediaCodec *codec, DroidMediaCodecData *data,
+					  DroidMediaBufferCallbacks *cb)
+{
+    SourceBuffer *buffer = (SourceBuffer *)data;
+
+    assert(buffer->buffer() == 0);
+
+    android::MediaBuffer *mediaBuffer = new android::MediaBuffer(data->data.data, data->data.size);
+    buffer->setBuffer(mediaBuffer, cb);
+    mediaBuffer->meta_data()->setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
+    mediaBuffer->meta_data()->setInt64(android::kKeyTime, data->ts);
+    mediaBuffer->setObserver(codec->m_src.get());
+    mediaBuffer->set_range(0, data->data.size);
+
+    codec->m_src->queueInputBuffer(buffer);
+
     if (codec->m_thread == NULL) {
         codec->m_thread = new DroidMediaCodecLoop(codec);
 
@@ -592,6 +677,11 @@ void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, 
             codec->m_thread.clear();
         }
     }
+}
+
+void droid_media_codec_release_input_buffer(DroidMediaCodec *codec, DroidMediaCodecData *data)
+{
+    // Nothing here really.
 }
 
 static bool droid_media_codec_read(DroidMediaCodec *codec)
@@ -732,9 +822,7 @@ void droid_media_codec_flush(DroidMediaCodec *codec)
 
 void droid_media_codec_drain(DroidMediaCodec *codec)
 {
-    // This will cause read to return error to OMX and OMX will signal EOS
-    // In practice we can get any other error instead of ERROR_END_OF_STREAM
-    codec->m_src->add(NULL);
+    codec->m_src->drain();
 }
 
 };

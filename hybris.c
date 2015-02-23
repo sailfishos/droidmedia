@@ -190,7 +190,9 @@ HYBRIS_WRAPPER_1_1(DroidMediaCodec*,DroidMediaCodecEncoderMetaData*,droid_media_
 HYBRIS_WRAPPER_1_1(bool,DroidMediaCodec*,droid_media_codec_start);
 HYBRIS_WRAPPER_0_1(DroidMediaCodec*,droid_media_codec_stop);
 HYBRIS_WRAPPER_0_1(DroidMediaCodec *,droid_media_codec_destroy);
-HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaCodecData*,DroidMediaBufferCallbacks*,droid_media_codec_write);
+HYBRIS_WRAPPER_1_1(DroidMediaCodecData*,DroidMediaCodec*,droid_media_codec_dequeue_input_buffer);
+HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaCodecData*,DroidMediaBufferCallbacks*,droid_media_codec_queue_input_buffer);
+HYBRIS_WRAPPER_0_2(DroidMediaCodec*,DroidMediaCodecData*,droid_media_codec_release_input_buffer);
 HYBRIS_WRAPPER_1_1(DroidMediaBufferQueue*,DroidMediaCodec*,droid_media_codec_get_buffer_queue);
 HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaCodecCallbacks*, void*, droid_media_codec_set_callbacks);
 HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaCodecDataCallbacks*,void*,droid_media_codec_set_data_callbacks);

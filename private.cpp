@@ -72,10 +72,7 @@ DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
 #endif
 {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-  // TODO: This number is arbitary but if we don't do that then
-  // we fail to acquire frames eventually.
-  // I need to debug that and get rid of this hack
-  setMaxAcquiredBufferCount(6);
+  // Nothing for now
 #else
   setSynchronousMode(false);
 #endif
