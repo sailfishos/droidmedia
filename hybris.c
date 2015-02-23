@@ -199,6 +199,7 @@ HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaCodecDataCallbacks*,void*,droid_me
 
 HYBRIS_WRAPPER_0_1(DroidMediaCodec *, droid_media_codec_flush);
 HYBRIS_WRAPPER_0_1(DroidMediaCodec *, droid_media_codec_drain);
+HYBRIS_WRAPPER_1_1(bool,DroidMediaCodec*,droid_media_codec_loop);
 HYBRIS_WRAPPER_0_0(droid_media_init)
 HYBRIS_WRAPPER_0_0(droid_media_deinit)
 HYBRIS_WRAPPER_1_2(DroidMediaBuffer*,DroidMediaBufferQueue*,DroidMediaBufferCallbacks*,droid_media_buffer_queue_acquire_buffer)

@@ -105,6 +105,7 @@ DroidMediaCodecData *droid_media_codec_dequeue_input_buffer(DroidMediaCodec *cod
 void droid_media_codec_queue_input_buffer(DroidMediaCodec *codec, DroidMediaCodecData *data,
 					  DroidMediaBufferCallbacks *cb);
 void droid_media_codec_release_input_buffer(DroidMediaCodec *codec, DroidMediaCodecData *data);
+bool droid_media_codec_loop(DroidMediaCodec *codec);
 
 #ifdef __cplusplus
 };

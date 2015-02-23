@@ -36,10 +36,6 @@
 
 #define DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS 5
 
-extern "C" {
-static bool droid_media_codec_read(DroidMediaCodec *codec);
-}
-
 struct DroidMediaCodecMetaDataKey {
     const char *mime;
     int key;
@@ -322,7 +318,6 @@ public:
     android::sp<Source> m_src;
     android::sp<DroidMediaBufferQueue> m_queue;
     android::sp<ANativeWindow> m_window;
-    android::sp<android::Thread> m_thread;
 
     bool notifySizeChanged() {
         android::sp<android::MetaData> meta = m_codec->getFormat();
@@ -367,21 +362,6 @@ public:
     void *m_cb_data;
     DroidMediaCodecDataCallbacks m_data_cb;
     void *m_data_cb_data;
-};
-
-class DroidMediaCodecLoop : public android::Thread {
-public:
-    DroidMediaCodecLoop(DroidMediaCodec *codec) :
-    Thread(false),
-    m_codec(codec) {
-    }
-
-    bool threadLoop() {
-        return droid_media_codec_read (m_codec);
-    }
-
-private:
-    DroidMediaCodec *m_codec;
 };
 
 extern "C" {
@@ -619,20 +599,10 @@ bool droid_media_codec_start(DroidMediaCodec *codec)
 
 void droid_media_codec_stop(DroidMediaCodec *codec)
 {
-    if (codec->m_thread != NULL) {
-        int err = codec->m_thread->requestExitAndWait();
-        if (err != android::NO_ERROR) {
-            ALOGE("DroidMediaCodec: Error 0x%x stopping thread", -err);
-        }
-
-        codec->m_thread.clear();
-    }
-
     int err = codec->m_codec->stop();
     if (err != android::OK) {
         ALOGE("DroidMediaCodec: error 0x%x stopping codec", -err);
     }
-
 }
 
 void droid_media_codec_destroy(DroidMediaCodec *codec)
@@ -663,20 +633,6 @@ void droid_media_codec_queue_input_buffer(DroidMediaCodec *codec, DroidMediaCode
     mediaBuffer->set_range(0, data->data.size);
 
     codec->m_src->queueInputBuffer(buffer);
-
-    if (codec->m_thread == NULL) {
-        codec->m_thread = new DroidMediaCodecLoop(codec);
-
-        int err = codec->m_thread->run("DroidMediaCodecLoop");
-        if (err != android::NO_ERROR) {
-            ALOGE("DroidMediaCodec: Error 0x%x starting thread", -err);
-            if (codec->m_cb.error) {
-                codec->m_cb.error(codec->m_cb_data, err);
-            }
-
-            codec->m_thread.clear();
-        }
-    }
 }
 
 void droid_media_codec_release_input_buffer(DroidMediaCodec *codec, DroidMediaCodecData *data)
@@ -684,7 +640,7 @@ void droid_media_codec_release_input_buffer(DroidMediaCodec *codec, DroidMediaCo
     // Nothing here really.
 }
 
-static bool droid_media_codec_read(DroidMediaCodec *codec)
+bool droid_media_codec_loop(DroidMediaCodec *codec)
 {
     int err;
     android::MediaBuffer *buffer = NULL;
