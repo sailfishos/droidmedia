@@ -199,6 +199,9 @@ private:
         // In case dequeueInputBuffer() is waiting
         m_pendingBuffersCond.signal();
 
+        // In case read is waiting
+        m_pendingBuffersCond.signal();
+
         m_lock.unlock();
 
         // flush
