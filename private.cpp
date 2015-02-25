@@ -72,7 +72,10 @@ DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
 #endif
 {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-  // Nothing for now
+  // We need to acquire up to 2 buffers
+  // One is being rendered and the other one is waiting to be rendered.
+  // If we set the count to less than that then recording breaks too.
+  setMaxAcquiredBufferCount(2);
 #else
   setSynchronousMode(false);
 #endif
