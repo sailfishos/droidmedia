@@ -271,10 +271,10 @@ bool droid_media_camera_reconnect(DroidMediaCamera *camera) {
 
 void droid_media_camera_disconnect(DroidMediaCamera *camera)
 {
-    camera->m_camera->disconnect();
-
     camera->m_queue->setCallbacks(0, 0);
-
+    camera->m_queue->consumerDisconnect();
+    camera->m_camera->setPreviewCallbackFlags(CAMERA_FRAME_CALLBACK_FLAG_NOOP);
+    camera->m_camera->disconnect();
     delete camera;
 }
 
