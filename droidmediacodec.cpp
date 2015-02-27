@@ -631,8 +631,9 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
             ALOGE("DroidMediaCodec: Error 0x%x reading from codec", -err);
             if (codec->m_cb.error) {
                 codec->m_cb.error(codec->m_cb_data, err);
-                codec->m_src->unlock();
             }
+
+	    codec->m_src->unlock();
 
 	    return DROID_MEDIA_CODEC_LOOP_ERROR;
         }
