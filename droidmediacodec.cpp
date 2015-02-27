@@ -564,7 +564,7 @@ void droid_media_codec_destroy(DroidMediaCodec *codec)
     delete codec;
 }
 
-void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb)
+void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb)
 {
     InputBuffer *buffer = new InputBuffer(data->data.data, data->data.size, cb->data, cb->unref);
     buffer->meta_data()->setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
