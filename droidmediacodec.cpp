@@ -218,6 +218,16 @@ public:
         memset(&m_data_cb, 0x0, sizeof(m_data_cb));
     }
 
+    ~DroidMediaCodec() {
+        m_omx->disconnect();
+	delete m_omx; m_omx = 0;
+	m_codec.clear();
+	m_src.clear();
+	m_queue.clear();
+	m_window.clear();
+	m_thread.clear();
+    }
+
     void signalBufferReturned(android::MediaBuffer *buff)
     {
         InputBuffer *buffer = (InputBuffer *) buff;
