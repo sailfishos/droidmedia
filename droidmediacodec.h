@@ -36,6 +36,12 @@ typedef enum {
   DROID_MEDIA_CODEC_HW_ONLY = 0x4,
 } DroidMediaCodecFlags;
 
+typedef enum {
+  DROID_MEDIA_CODEC_LOOP_OK,
+  DROID_MEDIA_CODEC_LOOP_ERROR,
+  DROID_MEDIA_CODEC_LOOP_EOS,
+} DroidMediaCodecLoopReturn;
+
 typedef struct {
   const char *type;
   ssize_t width;
@@ -102,6 +108,7 @@ void droid_media_codec_destroy(DroidMediaCodec *codec);
 void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb);
 void droid_media_codec_flush(DroidMediaCodec *codec);
 void droid_media_codec_drain(DroidMediaCodec *codec);
+DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec);
 
 #ifdef __cplusplus
 };

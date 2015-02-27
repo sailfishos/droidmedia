@@ -36,10 +36,6 @@
 
 #define DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS 5
 
-extern "C" {
-static bool droid_media_codec_read(DroidMediaCodec *codec);
-}
-
 struct DroidMediaCodecMetaDataKey {
     const char *mime;
     int key;
@@ -295,7 +291,7 @@ public:
     }
 
     bool threadLoop() {
-        return droid_media_codec_read (m_codec);
+        return droid_media_codec_loop (m_codec) == DROID_MEDIA_CODEC_LOOP_OK ? true : false;
     }
 
 private:
@@ -594,26 +590,31 @@ void droid_media_codec_write(DroidMediaCodec *codec, DroidMediaCodecData *data, 
     }
 }
 
-static bool droid_media_codec_read(DroidMediaCodec *codec)
+DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 {
     int err;
     android::MediaBuffer *buffer = NULL;
+
     err = codec->m_codec->read(&buffer);
 
     if (err == android::INFO_FORMAT_CHANGED) {
         ALOGI("DroidMediaCodec: Format changed from codec");
-        return codec->notifySizeChanged();
+	if (codec->notifySizeChanged()) {
+	  return DROID_MEDIA_CODEC_LOOP_OK;
+	} else {
+	  return DROID_MEDIA_CODEC_LOOP_ERROR;
+	}
     }
 
     if (err == -EWOULDBLOCK) {
       ALOGI("DroidMediaCodec: retry reading again. error: 0x%x", -err);
-      return true;
+      return DROID_MEDIA_CODEC_LOOP_OK;
     }
 
 #if 0
     if (err == -EWOULDBLOCK || err == -ETIMEDOUT) {
       ALOGI("DroidMediaCodec: retry reading again. error: 0x%x", -err);
-      return true;
+      return DROID_MEDIA_CODEC_LOOP_OK;
     }
 #endif
 
@@ -624,21 +625,23 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
             if (codec->m_cb.signal_eos) {
                 codec->m_cb.signal_eos (codec->m_cb_data);
             }
+
+	    return DROID_MEDIA_CODEC_LOOP_EOS;
         } else {
             ALOGE("DroidMediaCodec: Error 0x%x reading from codec", -err);
             if (codec->m_cb.error) {
                 codec->m_cb.error(codec->m_cb_data, err);
                 codec->m_src->unlock();
             }
-        }
 
-        return false;
+	    return DROID_MEDIA_CODEC_LOOP_ERROR;
+        }
     }
 
     if (buffer->range_length() == 0) {
         buffer->release();
         buffer = NULL;
-        return true;
+	return DROID_MEDIA_CODEC_LOOP_OK;
     }
 
     android::sp<android::GraphicBuffer> buff = buffer->graphicBuffer();
@@ -710,7 +713,7 @@ static bool droid_media_codec_read(DroidMediaCodec *codec)
     buffer->release();
     buffer = NULL;
 
-    return true;
+    return DROID_MEDIA_CODEC_LOOP_OK;
 }
 
 void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data)
