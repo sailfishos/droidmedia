@@ -561,16 +561,6 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
 
 void droid_media_codec_destroy(DroidMediaCodec *codec)
 {
-//    int err;
-// TODO:
-    codec->m_omx->disconnect();
-/*
-    err = codec->m_looper->stop();
-    if (err != android::OK) {
-        ALOGE("DroidMediaCodec: Error 0x%x stopping looper", -err);
-    }
-*/
-    delete codec->m_omx;
     delete codec;
 }
 
