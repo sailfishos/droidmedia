@@ -218,13 +218,6 @@ public:
         memset(&m_data_cb, 0x0, sizeof(m_data_cb));
     }
 
-    android::sp<android::MediaSource> m_codec;
-    android::OMXClient *m_omx;
-    android::sp<Source> m_src;
-    android::sp<DroidMediaBufferQueue> m_queue;
-    android::sp<ANativeWindow> m_window;
-    android::sp<android::Thread> m_thread;
-
     void signalBufferReturned(android::MediaBuffer *buff)
     {
         InputBuffer *buffer = (InputBuffer *) buff;
@@ -276,6 +269,13 @@ public:
 
         return true;
     }
+
+    android::sp<android::MediaSource> m_codec;
+    android::OMXClient *m_omx;
+    android::sp<Source> m_src;
+    android::sp<DroidMediaBufferQueue> m_queue;
+    android::sp<ANativeWindow> m_window;
+    android::sp<android::Thread> m_thread;
 
     DroidMediaCodecCallbacks m_cb;
     void *m_cb_data;
