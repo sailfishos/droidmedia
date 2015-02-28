@@ -435,12 +435,6 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
 
     if (!is_encoder) {
         queue = new DroidMediaBufferQueue("DroidMediaCodecBufferQueue");
-	if (!queue->connectListener()) {
-	  ALOGE("Failed to connect buffer queue listener");
-	  queue.clear();
-	  delete omx;
-	  return NULL;
-	}
 
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
 	android::sp<android::IGraphicBufferProducer> texture = queue;
@@ -449,14 +443,6 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
         android::sp<android::ISurfaceTexture> texture = queue;
         window = new android::SurfaceTextureClient(texture);
 #endif
-
-	android::status_t err = native_window_api_connect(window.get(), NATIVE_WINDOW_API_MEDIA);
-	if (err != android::NO_ERROR) {
-	  ALOGE("DroidMediaCodec: Failed to connect window");
-	  omx->disconnect();
-	  delete omx;
-	  return NULL;
-	}
     }
 
     android::sp<android::MediaSource> codec
@@ -532,6 +518,20 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
 
 bool droid_media_codec_start(DroidMediaCodec *codec)
 {
+    if (codec->m_queue.get() != NULL) {
+        if (!codec->m_queue->connectListener()) {
+	    ALOGE("Failed to connect buffer queue listener");
+	    return false;
+	}
+
+	android::status_t err = native_window_api_connect(codec->m_window.get(),
+							  NATIVE_WINDOW_API_MEDIA);
+	if (err != android::NO_ERROR) {
+  	    ALOGE("DroidMediaCodec: Failed to connect window");
+	    return false;
+	}
+    }
+
     int err = codec->m_codec->start();
     if (err != android::OK) {
         ALOGE("DroidMediaCodec: error 0x%x starting codec", -err);
@@ -543,6 +543,10 @@ bool droid_media_codec_start(DroidMediaCodec *codec)
 
 void droid_media_codec_stop(DroidMediaCodec *codec)
 {
+    if (codec->m_queue.get()) {
+        codec->m_queue->disconnectListener();
+     }
+
     if (codec->m_thread != NULL) {
         int err = codec->m_thread->requestExitAndWait();
         if (err != android::NO_ERROR) {
