@@ -81,19 +81,18 @@ DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
 
   setConsumerName(android::String8(name));
   setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+
+  m_listener = new DroidMediaBufferQueueListener;
 }
 
 DroidMediaBufferQueue::~DroidMediaBufferQueue()
 {
+  disconnectListener();
   m_listener.clear();
 }
 
 bool DroidMediaBufferQueue::connectListener()
 {
-  assert(m_listener.get() == NULL);
-
-  m_listener = new DroidMediaBufferQueueListener;
-
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
   if (consumerConnect(m_listener, false) != android::NO_ERROR) {
 #else
@@ -101,12 +100,15 @@ bool DroidMediaBufferQueue::connectListener()
 #endif
     ALOGE("Failed to set buffer consumer");
 
-    m_listener.clear();
-
     return false;
   }
 
   return true;
+}
+
+void DroidMediaBufferQueue::disconnectListener()
+{
+  consumerDisconnect();
 }
 
 DroidMediaBuffer *DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCallbacks *cb)

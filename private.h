@@ -47,6 +47,8 @@ public:
   ~DroidMediaBufferQueue();
 
   bool connectListener();
+  void disconnectListener();
+
   DroidMediaBuffer *acquireMediaBuffer(DroidMediaBufferCallbacks *cb);
 
   void setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data);
