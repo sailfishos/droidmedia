@@ -42,6 +42,7 @@ struct DroidMediaCodecMetaDataKey {
     int type;
 } metaDataKeys[] = {
     {android::MEDIA_MIMETYPE_VIDEO_MPEG4, android::kKeyESDS, android::kTypeESDS},
+    {android::MEDIA_MIMETYPE_VIDEO_AVC, android::kKeyAVCC, android::kTypeAVCC},
     {NULL, 0, 0}
 };
 
