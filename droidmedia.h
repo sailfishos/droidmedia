@@ -34,14 +34,16 @@ typedef void DroidMediaBufferQueue;
 typedef void *EGLDisplay;
 typedef void *EGLSyncKHR;
 
+typedef void (*DroidMediaCallback)(void *data);
+
 typedef struct {
   void *data;
   ssize_t size;
 } DroidMediaData;
 
 typedef struct {
-  void (* ref)(void *data);
-  void (* unref)(void *data);
+  DroidMediaCallback ref;
+  DroidMediaCallback unref;
   void *data;
 } DroidMediaBufferCallbacks;
 

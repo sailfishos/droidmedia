@@ -196,7 +196,7 @@ private:
 
 class InputBuffer : public android::MediaBuffer {
 public:
-    InputBuffer(void *data, size_t size, void *cb_data, void (* unref)(void *)) :
+    InputBuffer(void *data, size_t size, void *cb_data, DroidMediaCallback unref) :
         android::MediaBuffer(data, size),
         m_cb_data(cb_data),
         m_unref(unref) {
@@ -206,7 +206,7 @@ public:
     }
 
     void *m_cb_data;
-    void (* m_unref)(void *);
+    DroidMediaCallback m_unref;
 };
 
 class DroidMediaCodec : public android::MediaBufferObserver

@@ -31,13 +31,13 @@ public:
   DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
 		   android::sp<DroidMediaBufferQueue> queue,
 		   void *data,
-		   void (* ref)(void *m_data),
-		   void (* unref)(void *m_data));
+		   DroidMediaCallback ref,
+		   DroidMediaCallback unref);
 
   DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer,
 		   void *data,
-		   void (* ref)(void *m_data),
-		   void (* unref)(void *m_data));
+		   DroidMediaCallback ref,
+		   DroidMediaCallback unref);
 
   ~DroidMediaBuffer();
 
@@ -56,8 +56,8 @@ public:
 
   int m_slot;
   void *m_data;
-  void (* m_ref)(void *m_data);
-  void (* m_unref)(void *m_data);
+  DroidMediaCallback m_ref;
+  DroidMediaCallback m_unref;
 };
 
 #endif /* DROID_MEDIA_BUFFER_H */

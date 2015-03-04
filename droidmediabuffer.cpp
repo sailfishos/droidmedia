@@ -22,8 +22,8 @@
 DroidMediaBuffer::DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
                                    android::sp<DroidMediaBufferQueue> queue,
                                    void *data,
-                                   void (* ref)(void *m_data),
-                                   void (* unref)(void *m_data)) :
+                                   DroidMediaCallback ref,
+                                   DroidMediaCallback unref) :
     m_buffer(buffer.mGraphicBuffer),
     m_queue(queue),
     m_transform(buffer.mTransform),
@@ -49,8 +49,8 @@ DroidMediaBuffer::DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
 
 DroidMediaBuffer::DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer,
 				   void *data,
-				   void (* ref)(void *m_data),
-				   void (* unref)(void *m_data)) :
+                                   DroidMediaCallback ref,
+                                   DroidMediaCallback unref) :
     m_buffer(buffer),
     m_transform(-1),
     m_scalingMode(-1),
