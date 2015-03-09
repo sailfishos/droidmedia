@@ -106,7 +106,7 @@ public:
     return BAD_VALUE;
   }
 
-#if ANDROID_MINOR == 4 && ANDROID_MICRO == 2
+#if ANDROID_MINOR == 4 && (ANDROID_MICRO >= 2)
   bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer>& surface) const {
     return true;
   }
