@@ -288,6 +288,8 @@ public:
     android::sp<ANativeWindow> m_window;
     android::sp<android::Thread> m_thread;
 
+    bool m_useExternalLoop;
+
     DroidMediaCodecCallbacks m_cb;
     void *m_cb_data;
     DroidMediaCodecDataCallbacks m_data_cb;
@@ -467,6 +469,8 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     mediaCodec->m_queue = queue;
     mediaCodec->m_window = window;
 
+    mediaCodec->m_useExternalLoop = (flags & DROID_MEDIA_CODEC_USE_EXTERNAL_LOOP) ? true : false;
+
     return mediaCodec;
 }
 
@@ -548,7 +552,7 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
         codec->m_queue->disconnectListener();
      }
 
-    if (codec->m_thread != NULL) {
+    if (!codec->m_useExternalLoop && codec->m_thread != NULL) {
         int err = codec->m_thread->requestExitAndWait();
         if (err != android::NO_ERROR) {
             ALOGE("DroidMediaCodec: Error 0x%x stopping thread", -err);
@@ -578,6 +582,10 @@ void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data, 
     buffer->set_range(0, data->data.size);
     buffer->add_ref();
     codec->m_src->add(buffer);
+
+    if (codec->m_useExternalLoop) {
+        return;
+    }
 
     // Now start our looping thread
     if (codec->m_thread == NULL) {
