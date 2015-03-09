@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include "droidmedia.h"
+#include "droidmediacameraconstants.h"
 #include <stdbool.h>
 
 #ifdef __cplusplus
