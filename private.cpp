@@ -169,6 +169,34 @@ void DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, voi
   m_listener->setCallbacks(cb, data);
 }
 
+void DroidMediaBufferQueue::acquireAndRelease() {
+  android::BufferQueue::BufferItem buffer;
+  int err = acquireBuffer(&buffer
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: UGLY!
+    , 0
+#endif
+    );
+
+  if (err != android::OK) {
+    ALOGE("DroidMediaBufferQueue: Failed to acquire buffer from the queue. Error 0x%x", -err);
+    return;
+  }
+
+  err = releaseBuffer(buffer.mBuf,
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
+                      buffer.mFrameNumber,
+#endif
+                      EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
+#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2) // TODO: fix this when we do video rendering
+                      , android::Fence::NO_FENCE
+#endif
+      );
+
+  if (err != android::NO_ERROR) {
+      ALOGE("DroidMediaBufferQueue: Error 0x%x releasing buffer", -err);
+  }
+}
+
 extern "C" {
 DroidMediaBuffer *droid_media_buffer_queue_acquire_buffer(DroidMediaBufferQueue *queue,
     DroidMediaBufferCallbacks *cb)
@@ -182,4 +210,10 @@ void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
 
   return queue->setCallbacks(cb, data);
 }
+
+void droid_media_buffer_queue_acquire_and_release(DroidMediaBufferQueue *queue)
+{
+  queue->acquireAndRelease();
+}
+
 };
