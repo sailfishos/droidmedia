@@ -31,11 +31,13 @@ LOCAL_SRC_FILES := droidmedia.cpp \
                    droidmediacamera.cpp \
                    droidmediacameraconstants.cpp \
                    droidmediacodec.cpp \
+                   droidmediaconvert.cpp \
                    allocator.cpp \
                    droidmediabuffer.cpp \
                    private.cpp
 
 LOCAL_SHARED_LIBRARIES := libc \
+                          libdl \
                           libutils \
                           libcutils \
                           libcamera_client \

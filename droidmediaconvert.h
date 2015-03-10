@@ -1,0 +1,40 @@
+/*
+ * Copyright (C) 2014-2015 Jolla Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
+ */
+
+#ifndef DROID_MEDIA_CONVERT_H
+#define DROID_MEDIA_CONVERT_H
+
+#ifdef __cplusplus
+extern "C" {
+#else
+typedef void DroidMediaConvert;
+#endif
+
+struct DroidMediaConvert;
+struct DroidMediaBuffer;
+
+DroidMediaConvert *droid_media_convert_create();
+void droid_media_convert_destroy(DroidMediaConvert *convert);
+
+bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaBuffer *in, void *out);
+
+#ifdef __cplusplus
+};
+#endif
+
+#endif /* DROID_MEDIA_CONVERT_H */
