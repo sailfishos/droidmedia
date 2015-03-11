@@ -36,7 +36,6 @@ public:
 
     ~DroidMediaConvert() {
         if (m_handle) {
-            closeColorConverterLib();
             dlclose(m_handle);
             m_handle = NULL;
         }
@@ -63,8 +62,6 @@ public:
         }
 
         func(this);
-
-        openColorConverterLib();
 
         return true;
     }
