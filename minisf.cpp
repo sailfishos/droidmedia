@@ -106,7 +106,7 @@ public:
     return BAD_VALUE;
   }
 
-#if ANDROID_MINOR == 4 && (ANDROID_MICRO >= 2)
+#if ANDROID_MINOR == 4 && (ANDROID_MICRO >= 2 && ANDROID_MICRO < 4)
   bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer>& surface) const {
     return true;
   }
@@ -117,7 +117,7 @@ public:
 			 uint32_t minLayerZ, uint32_t maxLayerZ, bool) {
     return BAD_VALUE;
   }
-#elif ANDROID_MINOR == 4
+#elif ANDROID_MINOR == 4 && ANDROID_MICRO == 4
   bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer>& surface) const {
     return true;
   }
