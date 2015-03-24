@@ -133,6 +133,12 @@ DroidMediaBuffer *DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCall
 
   if (buffer.mGraphicBuffer != NULL) {
     m_slots[num] = buffer;
+  } else {
+    m_slots[num].mTransform = buffer.mTransform;
+    m_slots[num].mScalingMode = buffer.mScalingMode;
+    m_slots[num].mTimestamp = buffer.mTimestamp;
+    m_slots[num].mFrameNumber = buffer.mFrameNumber;
+    m_slots[num].mCrop = buffer.mCrop;
   }
 
   if (m_slots[num].mGraphicBuffer == NULL) {
@@ -154,12 +160,6 @@ DroidMediaBuffer *DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCall
 
     return NULL;
   }
-
-  m_slots[num].mTransform = buffer.mTransform;
-  m_slots[num].mScalingMode = buffer.mScalingMode;
-  m_slots[num].mTimestamp = buffer.mTimestamp;
-  m_slots[num].mFrameNumber = buffer.mFrameNumber;
-  m_slots[num].mCrop = buffer.mCrop;
 
   return new DroidMediaBuffer(m_slots[num], this,
                               cb ? cb->data : NULL,
