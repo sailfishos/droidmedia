@@ -161,7 +161,10 @@ DroidMediaBuffer *DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCall
   m_slots[num].mFrameNumber = buffer.mFrameNumber;
   m_slots[num].mCrop = buffer.mCrop;
 
-  return new DroidMediaBuffer(m_slots[num], this, cb->data, cb->ref, cb->unref);
+  return new DroidMediaBuffer(m_slots[num], this,
+                              cb ? cb->data : NULL,
+                              cb ? cb->ref : NULL,
+                              cb ? cb->unref : NULL);
 }
 
 void DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data) {
@@ -170,30 +173,10 @@ void DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, voi
 }
 
 void DroidMediaBufferQueue::acquireAndRelease() {
-  android::BufferQueue::BufferItem buffer;
-  int err = acquireBuffer(&buffer
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: UGLY!
-    , 0
-#endif
-    );
+  DroidMediaBuffer *buff = acquireMediaBuffer(NULL);
 
-  if (err != android::OK) {
-    ALOGE("DroidMediaBufferQueue: Failed to acquire buffer from the queue. Error 0x%x", -err);
-    return;
-  }
-
-  err = releaseBuffer(buffer.mBuf,
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
-                      buffer.mFrameNumber,
-#endif
-                      EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2) // TODO: fix this when we do video rendering
-                      , android::Fence::NO_FENCE
-#endif
-      );
-
-  if (err != android::NO_ERROR) {
-      ALOGE("DroidMediaBufferQueue: Error 0x%x releasing buffer", -err);
+  if (buff) {
+    droid_media_buffer_release(buff, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
   }
 }
 
