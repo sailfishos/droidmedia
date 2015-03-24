@@ -146,8 +146,17 @@ void droid_media_buffer_release(DroidMediaBuffer *buffer,
 					     , android::Fence::NO_FENCE
 #endif
 );
-    if (err != android::NO_ERROR) {
-        ALOGE("DroidMediaBuffer: Error 0x%x releasing buffer", -err);
+    switch (err) {
+    case android::NO_ERROR:
+        break;
+
+    case android::BufferQueue::STALE_BUFFER_SLOT:
+        ALOGW("DroidMediaBuffer: Released stale buffer %d", buffer->m_slot);
+        break;
+
+    default:
+        ALOGE("DroidMediaBuffer: Error 0x%x releasing buffer %d", -err, buffer->m_slot);
+        break;
     }
 
     delete buffer;
