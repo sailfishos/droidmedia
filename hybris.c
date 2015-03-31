@@ -24,6 +24,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef LIB_DROID_MEDIA_PATH
+#define LIB_DROID_MEDIA_PATH "/usr/libexec/droid-hybris/system/lib/libdroidmedia.so"
+#endif
+
 void *android_dlopen(const char *name, int flags);
 void *android_dlsym(void *handle, const char *name);
 
@@ -31,7 +35,7 @@ static void *__handle = NULL;
 
 static inline void __load_library() {
   if (!__handle) {
-    __handle = android_dlopen("libdroidmedia.so", RTLD_NOW);
+    __handle = android_dlopen(LIB_DROID_MEDIA_PATH, RTLD_NOW);
     if (!__handle) {
       // calling abort() is bad but it does not matter anyway as we will crash.
       abort();
