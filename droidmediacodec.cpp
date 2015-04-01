@@ -150,7 +150,6 @@ private:
 
     android::sp<android::MetaData> getFormat() {
         // TODO: The only way to pass rotation is via a key here kKeyRotation
-        fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
         return android::sp<android::MetaData>(new android::MetaData);
     }
 
