@@ -25,168 +25,25 @@
 #include <binder/IPermissionController.h>
 #include <binder/MemoryHeapBase.h>
 #include "allocator.h"
+
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 1 && ANDROID_MICRO == 2
+#include "services/services_4_1_2.h"
+#endif
+
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 && ANDROID_MICRO == 4
+#include "services/services_4_4_4.h"
+#endif
+
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
 #include <binder/AppOpsManager.h>
 #include <binder/IAppOpsService.h>
-#endif
-
-using namespace android;
-
-class FakePermissionController : public BinderService<FakePermissionController>,
-                                 public BnPermissionController
-{
-public:
-    static char const *getServiceName() {
-        return "permission";
-    }
-
-    bool checkPermission(const String16& permission,
-                         int32_t pid, int32_t uid) {
-        return true; // DUH! :P
-    }
-};
-
-class MiniSurfaceFlinger : public BinderService<MiniSurfaceFlinger>,
-                           public BnSurfaceComposer,
-                           public IBinder::DeathRecipient
-{
-public:
-    static char const *getServiceName() {
-        return "SurfaceFlinger";
-    }
-
-    void binderDied(const wp<IBinder>& who) {
-        // Nothing
-    }
-
-    sp<ISurfaceComposerClient> createConnection() {
-        return sp<ISurfaceComposerClient>();
-    }
-
-    sp<IGraphicBufferAlloc> createGraphicBufferAlloc() {
-        sp<DroidMediaAllocator> gba(new DroidMediaAllocator());
-        return gba;
-    }
-
-    void bootFinished() {
-        // Nothing
-    }
-
-    sp<IDisplayEventConnection> createDisplayEventConnection() {
-        return sp<IDisplayEventConnection>();
-    }
-
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
-  sp<IBinder> createDisplay(const String8& displayName, bool secure) {
-    return NULL;
-  }
-
-  void destroyDisplay(const sp<IBinder>& display) {
-    // Nothing
-  }
-
-  void setTransactionState(const Vector<ComposerState>& state,
-			   const Vector<DisplayState>& displays, uint32_t flags) {
-    // Nothing
-  }
-
-  void blank(const sp<IBinder>& display) {
-    // Nothing
-  }
-
-  void unblank(const sp<IBinder>& display) {
-    // Nothing
-  }
-
-  virtual sp<IBinder> getBuiltInDisplay(int32_t id) {
-    return NULL;
-  }
-
-  status_t getDisplayInfo(const sp<IBinder>& display, DisplayInfo* info) {
-    return BAD_VALUE;
-  }
-
-#if ANDROID_MINOR == 4 && (ANDROID_MICRO >= 2 && ANDROID_MICRO < 4)
-  bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer>& surface) const {
-    return true;
-  }
-
-  status_t captureScreen(const sp<IBinder>& display,
-			 const sp<IGraphicBufferProducer>& producer,
-			 uint32_t reqWidth, uint32_t reqHeight,
-			 uint32_t minLayerZ, uint32_t maxLayerZ, bool) {
-    return BAD_VALUE;
-  }
-#elif ANDROID_MINOR == 4 && ANDROID_MICRO == 4
-  bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer>& surface) const {
-    return true;
-  }
-
-  status_t captureScreen(const sp<IBinder>& display,
-			 const sp<IGraphicBufferProducer>& producer,
-			 uint32_t reqWidth, uint32_t reqHeight,
-			 uint32_t minLayerZ, uint32_t maxLayerZ) {
-    return BAD_VALUE;
-  }
-#elif ANDROID_MINOR == 2
-  bool authenticateSurfaceTexture(const sp<ISurfaceTexture>& surface) const {
-    return true;
-  }
-
-  status_t captureScreen(const sp<IBinder>& display, sp<IMemoryHeap>* heap,
-                           uint32_t* width, uint32_t* height, PixelFormat* format,
-                           uint32_t reqWidth, uint32_t reqHeight,
-                           uint32_t minLayerZ, uint32_t maxLayerZ) {
-        return BAD_VALUE;
-  }
-#endif
-
-  bool isAnimationPermitted() {
-    return false;
-  }
-
-#else
-    sp<IMemoryHeap> getCblk() const {
-        static android::sp<android::MemoryHeapBase>
-            mem(new MemoryHeapBase(4096,
-                                   MemoryHeapBase::READ_ONLY, "SurfaceFlinger read-only heap"));
-        return mem;
-    }
-
-    void setTransactionState(const Vector<ComposerState>& state,
-                             int orientation, uint32_t flags) {
-        // Nothing
-    }
-
-    status_t captureScreen(DisplayID dpy, sp<IMemoryHeap> *heap,
-                           uint32_t* width, uint32_t* height, PixelFormat* format,
-                           uint32_t reqWidth, uint32_t reqHeight,
-                           uint32_t minLayerZ, uint32_t maxLayerZ) {
-        return BAD_VALUE;
-    }
-
-    virtual status_t turnElectronBeamOff(int32_t mode) {
-        return BAD_VALUE;
-    }
-
-    virtual status_t turnElectronBeamOn(int32_t mode) {
-        return BAD_VALUE;
-    }
-
-    bool authenticateSurfaceTexture(const sp<ISurfaceTexture>& surface) const {
-        return false;
-    }
-#endif
-};
-
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
 class FakeAppOps : public BinderService<FakeAppOps>,
 		   public BnAppOpsService
 {
 public:
-    static char const *getServiceName() {
-      return "appops";
-    }
+  static char const *getServiceName() {
+    return "appops";
+  }
 
   virtual int32_t checkOperation(int32_t code, int32_t uid, const String16& packageName) {
     return android::AppOpsManager::MODE_ALLOWED;
@@ -221,6 +78,22 @@ public:
 };
 
 #endif
+
+using namespace android;
+
+class FakePermissionController : public BinderService<FakePermissionController>,
+                                 public BnPermissionController
+{
+public:
+    static char const *getServiceName() {
+        return "permission";
+    }
+
+    bool checkPermission(const String16& permission,
+                         int32_t pid, int32_t uid) {
+        return true; // DUH! :P
+    }
+};
 
 int
 main(int argc, char* argv[])
