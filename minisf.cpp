@@ -91,7 +91,11 @@ public:
 
     bool checkPermission(const String16& permission,
                          int32_t pid, int32_t uid) {
-        return true; // DUH! :P
+      if (permission == String16("android.permission.CAMERA")) {
+	return true;
+      }
+
+      return false;
     }
 };
 
