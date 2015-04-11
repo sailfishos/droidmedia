@@ -48,6 +48,8 @@ typedef struct {
   ssize_t width;
   ssize_t height;
   int32_t fps;
+  int32_t channels;
+  int32_t sample_rate;
   DroidMediaCodecFlags flags;
 } DroidMediaCodecMetaData;
 
@@ -55,6 +57,7 @@ typedef struct {
   DroidMediaCodecMetaData parent;
 
   DroidMediaData codec_data;
+  int32_t aac_profile;
 } DroidMediaCodecDecoderMetaData;
 
 typedef struct {
