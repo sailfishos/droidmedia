@@ -509,6 +509,7 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
     uint32_t flags = 0;
 
     android::sp<android::MetaData> md(new android::MetaData);
+    md->setInt32(android::kKeyMaxInputSize, meta->max_input_size);
     md->setInt32(android::kKeyBitRate, meta->bitrate);
     md->setInt32(android::kKeyStride, meta->stride);
     md->setInt32(android::kKeySliceHeight, meta->slice_height);
