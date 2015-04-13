@@ -468,7 +468,7 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     mediaCodec->m_queue = queue;
     mediaCodec->m_window = window;
 
-    mediaCodec->m_useExternalLoop = (flags & DROID_MEDIA_CODEC_USE_EXTERNAL_LOOP) ? true : false;
+    mediaCodec->m_useExternalLoop = (meta->flags & DROID_MEDIA_CODEC_USE_EXTERNAL_LOOP) ? true : false;
 
     return mediaCodec;
 }
