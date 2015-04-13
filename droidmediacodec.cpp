@@ -69,8 +69,10 @@ public:
     void add(android::MediaBuffer *buffer) {
         m_framesReceived.lock.lock();
 
+        // drain buffer gets added without checking to avoid a deadlock
+
         // TODO: I am not sure this is the right approach here.
-        if (m_framesReceived.buffers.size() >= DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS) {
+        if (buffer && m_framesReceived.buffers.size() >= DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS) {
             // either get() will signal us or we will be signaled in case of an error
             m_framesReceived.cond.wait(m_framesReceived.lock);
         }
