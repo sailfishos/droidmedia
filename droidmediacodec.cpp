@@ -551,7 +551,7 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
         codec->m_queue->disconnectListener();
      }
 
-    if (!codec->m_useExternalLoop && codec->m_thread != NULL) {
+    if (codec->m_thread != NULL) {
         int err = codec->m_thread->requestExitAndWait();
         if (err != android::NO_ERROR) {
             ALOGE("DroidMediaCodec: Error 0x%x stopping thread", -err);
