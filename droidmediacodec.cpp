@@ -42,6 +42,7 @@ struct DroidMediaCodecMetaDataKey {
     int type;
 } metaDataKeys[] = {
     {android::MEDIA_MIMETYPE_VIDEO_MPEG4, android::kKeyESDS, android::kTypeESDS},
+    {android::MEDIA_MIMETYPE_AUDIO_AAC, android::kKeyESDS, android::kTypeESDS},
     {android::MEDIA_MIMETYPE_VIDEO_AVC, android::kKeyAVCC, android::kTypeAVCC},
     {NULL, 0, 0}
 };
@@ -433,6 +434,8 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     md->setInt32(android::kKeyWidth, meta->width);
     md->setInt32(android::kKeyHeight, meta->height);
     md->setInt32(android::kKeyFrameRate, meta->fps);
+    md->setInt32(android::kKeyChannelCount, meta->channels);
+    md->setInt32(android::kKeySampleRate, meta->sample_rate);
 
     android::sp<DroidMediaBufferQueue> queue;
     android::sp<ANativeWindow> window;
@@ -507,6 +510,7 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
     uint32_t flags = 0;
 
     android::sp<android::MetaData> md(new android::MetaData);
+    md->setInt32(android::kKeyMaxInputSize, meta->max_input_size);
     md->setInt32(android::kKeyBitRate, meta->bitrate);
     md->setInt32(android::kKeyStride, meta->stride);
     md->setInt32(android::kKeySliceHeight, meta->slice_height);
