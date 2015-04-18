@@ -36,6 +36,11 @@
 
 #define DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS 5
 
+#define SET_PARAM(k,v)					\
+  if (meta->v >= 0) {					\
+    md->setInt32(android::k, meta->v);			\
+  }
+
 struct DroidMediaCodecMetaDataKey {
     const char *mime;
     int key;
@@ -431,11 +436,11 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     android::sp<Source> src(new Source);
 
     md->setCString(android::kKeyMIMEType, meta->type);
-    md->setInt32(android::kKeyWidth, meta->width);
-    md->setInt32(android::kKeyHeight, meta->height);
-    md->setInt32(android::kKeyFrameRate, meta->fps);
-    md->setInt32(android::kKeyChannelCount, meta->channels);
-    md->setInt32(android::kKeySampleRate, meta->sample_rate);
+    SET_PARAM(kKeyWidth, width);
+    SET_PARAM(kKeyHeight, height);
+    SET_PARAM(kKeyFrameRate, fps);
+    SET_PARAM(kKeyChannelCount, channels);
+    SET_PARAM(kKeySampleRate, sample_rate);
 
     android::sp<DroidMediaBufferQueue> queue;
     android::sp<ANativeWindow> window;
@@ -510,10 +515,10 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
     uint32_t flags = 0;
 
     android::sp<android::MetaData> md(new android::MetaData);
-    md->setInt32(android::kKeyMaxInputSize, meta->max_input_size);
-    md->setInt32(android::kKeyBitRate, meta->bitrate);
-    md->setInt32(android::kKeyStride, meta->stride);
-    md->setInt32(android::kKeySliceHeight, meta->slice_height);
+    SET_PARAM(kKeyMaxInputSize, max_input_size);
+    SET_PARAM(kKeyBitRate, bitrate);
+    SET_PARAM(kKeyStride, stride);
+    SET_PARAM(kKeySliceHeight, slice_height);
 
     // TODO: This is hardcoded for now. Fix it.
     md->setInt32(android::kKeyIFramesInterval, 2);
