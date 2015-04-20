@@ -252,37 +252,14 @@ public:
     bool notifySizeChanged() {
         android::sp<android::MetaData> meta = m_codec->getFormat();
         int32_t width, height;
-        int32_t left, top, right, bottom; // crop
-        int32_t displayWidth = 0, displayHeight = 0, realWidth, realHeight;
 
         meta->findInt32(android::kKeyWidth, &width);
         meta->findInt32(android::kKeyHeight, &height);
 
-        if (!meta->findRect(android::kKeyCropRect, &left, &top, &right, &bottom)) {
-            left = top = 0;
-            right = width - 1;
-            bottom = height - 1;
-        }
-
-        meta->findInt32(android::kKeyDisplayWidth, &displayWidth);
-        meta->findInt32(android::kKeyDisplayHeight, &displayHeight);
-
-        if (displayWidth != 0) {
-            realWidth = displayWidth;
-        } else {
-            realWidth = right - left + 1;
-        }
-
-        if (displayHeight != 0) {
-            realHeight = displayHeight;
-        } else {
-            realHeight = bottom - top + 1;
-        }
-
-        ALOGI("DroidMediaCodec: notifySizeChanged: width = %d, height = %d", realWidth, realHeight);
+        ALOGI("DroidMediaCodec: notifySizeChanged: width = %d, height = %d", width, height);
 
         if (m_cb.size_changed) {
-            return m_cb.size_changed (m_cb_data, realWidth, realHeight) == 0 ? true : false;
+            return m_cb.size_changed (m_cb_data, width, height) == 0 ? true : false;
         }
 
         return true;
