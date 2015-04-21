@@ -113,6 +113,7 @@ void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data, 
 void droid_media_codec_flush(DroidMediaCodec *codec);
 void droid_media_codec_drain(DroidMediaCodec *codec);
 DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec);
+void droid_media_codec_get_output_info(DroidMediaCodec *codec, DroidMediaCodecMetaData *info, DroidMediaRect *crop);
 
 #ifdef __cplusplus
 };

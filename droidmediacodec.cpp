@@ -746,4 +746,23 @@ void droid_media_codec_drain(DroidMediaCodec *codec)
     codec->m_src->add(NULL);
 }
 
+void droid_media_codec_get_output_info(DroidMediaCodec *codec,
+				       DroidMediaCodecMetaData *info, DroidMediaRect *crop)
+{
+  android::sp<android::MetaData> md(codec->m_codec->getFormat());
+  // TODO: is there a way to set info->flags?
+  info->fps = 0; // TODO: is there a way to get that?
+
+  md->findInt32(android::kKeyWidth, &info->width);
+  md->findInt32(android::kKeyHeight, &info->height);
+  md->findInt32(android::kKeyChannelCount, &info->channels);
+  md->findInt32(android::kKeySampleRate, &info->sample_rate);
+
+  if (!md->findRect(android::kKeyCropRect, &crop->left, &crop->top, &crop->right, &crop->bottom)) {
+    crop->left = crop->top = 0;
+    crop->right = info->width - 1;
+    crop->bottom = info->height - 1;
+  }
+}
+
 };
