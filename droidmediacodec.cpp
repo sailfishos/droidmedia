@@ -760,8 +760,12 @@ void droid_media_codec_get_output_info(DroidMediaCodec *codec,
 
   if (!md->findRect(android::kKeyCropRect, &crop->left, &crop->top, &crop->right, &crop->bottom)) {
     crop->left = crop->top = 0;
-    crop->right = info->width - 1;
-    crop->bottom = info->height - 1;
+    crop->right = info->width;
+    crop->bottom = info->height;
+  } else {
+    // No idea why but OMXCodec.cpp deducts 1 from right and bottom
+    crop->right += 1;
+    crop->bottom += 1;
   }
 }
 
