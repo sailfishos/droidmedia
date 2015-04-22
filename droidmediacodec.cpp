@@ -61,7 +61,8 @@ public:
 
 class Source : public android::MediaSource {
 public:
-    Source() :
+    Source(android::sp<android::MetaData>& metaData) :
+        m_metaData(metaData),
         m_running(false)
     {
     }
@@ -158,7 +159,7 @@ private:
 
     android::sp<android::MetaData> getFormat() {
         // TODO: The only way to pass rotation is via a key here kKeyRotation
-        return android::sp<android::MetaData>(new android::MetaData);
+        return m_metaData;
     }
 
     android::status_t stop() {
@@ -196,6 +197,7 @@ private:
         }
     }
 
+    android::sp<android::MetaData> m_metaData;
     bool m_running;
     Buffers m_framesReceived;
     Buffers m_framesBeingProcessed;
@@ -410,7 +412,7 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
         flags |= android::OMXCodec::kHardwareCodecsOnly;
     }
 
-    android::sp<Source> src(new Source);
+    android::sp<Source> src(new Source(md));
 
     md->setCString(android::kKeyMIMEType, meta->type);
     SET_PARAM(kKeyWidth, width);
