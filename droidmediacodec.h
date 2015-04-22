@@ -45,8 +45,8 @@ typedef enum {
 
 typedef struct {
   const char *type;
-  ssize_t width;
-  ssize_t height;
+  int32_t width;
+  int32_t height;
   int32_t fps;
   int32_t channels;
   int32_t sample_rate;
