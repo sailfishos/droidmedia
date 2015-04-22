@@ -213,3 +213,4 @@ HYBRIS_WRAPPER_0_1(DroidMediaCameraConstants*,droid_media_camera_constants_init)
 HYBRIS_WRAPPER_1_0(DroidMediaConvert*,droid_media_convert_create);
 HYBRIS_WRAPPER_0_1(DroidMediaConvert*,droid_media_convert_destroy);
 HYBRIS_WRAPPER_1_3(bool,DroidMediaConvert*,DroidMediaBuffer*,void*,droid_media_convert_to_i420);
+HYBRIS_WRAPPER_0_2(DroidMediaConvert*,DroidMediaRect,droid_media_convert_set_crop_rect);

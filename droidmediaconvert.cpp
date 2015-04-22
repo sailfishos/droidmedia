@@ -31,7 +31,7 @@ class DroidMediaConvert : public II420ColorConverter
 public:
     DroidMediaConvert() :
         m_handle(NULL) {
-
+      m_crop.top = m_crop.left = m_crop.bottom = m_crop.right = -1;
     }
 
     ~DroidMediaConvert() {
@@ -66,8 +66,8 @@ public:
         return true;
     }
 
-private:
     void *m_handle;
+    DroidMediaRect m_crop;
 };
 
 DroidMediaConvert *droid_media_convert_create()
@@ -93,6 +93,22 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaBuffer *i
     // TODO: I am not sure those flags are the optimum
     uint32_t usage = android::GraphicBuffer::USAGE_SOFTWARE_MASK | android::GraphicBuffer::USAGE_HW_MASK;
 
+    if (convert->m_crop.left == -1 ||
+	convert->m_crop.top == -1 ||
+	convert->m_crop.right == -1 ||
+	convert->m_crop.bottom == -1) {
+
+      ALOGE("DroidMediaConvert: crop rectangle not set");
+
+      return false;
+    }
+
+    ARect rect;
+    rect.top = convert->m_crop.top;
+    rect.bottom = convert->m_crop.bottom;
+    rect.left = convert->m_crop.left;
+    rect.right = convert->m_crop.right;
+
     android::status_t err = in->m_buffer->lock(usage, &addr);
 
     if (err != android::NO_ERROR) {
@@ -102,7 +118,7 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaBuffer *i
 
     err = convert->convertDecoderOutputToI420(addr, in->m_buffer->getWidth(),
                                               in->m_buffer->getHeight(),
-                                              in->m_crop,
+					      rect,
                                               out);
 
     if (err != android::NO_ERROR) {
@@ -120,4 +136,10 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaBuffer *i
     return true;
 }
 
+void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRect rect)
+{
+    memcpy(&convert->m_crop, &rect, sizeof(rect));
+    convert->m_crop.right -= -1;
+    convert->m_crop.bottom -= -1;
+}
 };
