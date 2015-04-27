@@ -498,6 +498,7 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
     SET_PARAM(kKeyBitRate, bitrate);
     SET_PARAM(kKeyStride, stride);
     SET_PARAM(kKeySliceHeight, slice_height);
+    SET_PARAM(kKeyColorFormat, color_format);
 
     // TODO: This is hardcoded for now. Fix it.
     md->setInt32(android::kKeyIFramesInterval, 2);

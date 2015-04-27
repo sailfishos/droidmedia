@@ -62,6 +62,7 @@ typedef struct {
 typedef struct {
   DroidMediaCodecMetaData parent;
 
+  int32_t color_format;
   int32_t bitrate;
   bool meta_data;
   int32_t stride;
