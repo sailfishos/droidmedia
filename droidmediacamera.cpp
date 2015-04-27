@@ -19,10 +19,23 @@
 #include "droidmediacamera.h"
 #include "allocator.h"
 #include <camera/Camera.h>
+#include <camera/CameraParameters.h>
 #include <android/log.h>
 #include <utils/String8.h>
+#include <utils/Condition.h>
+#include <media/stagefright/CameraSource.h>
 #include "droidmediabuffer.h"
 #include "private.h"
+
+// This is really a hack
+namespace android {
+  class CameraSourceListener {
+  public:
+    static int32_t getColorFormat(android::CameraSource *src, android::CameraParameters p) {
+      return src->isCameraColorFormatSupported (p) == android::NO_ERROR ? src->mColorFormat : -1;
+    }
+  };
+};
 
 extern "C" {
 
@@ -409,6 +422,23 @@ bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
   int cmd = enable ? CAMERA_CMD_START_FACE_DETECTION : CAMERA_CMD_STOP_FACE_DETECTION;
 
   return droid_media_camera_send_command (camera, cmd, detection_type, 0);
+}
+
+int32_t droid_media_camera_get_video_color_format (DroidMediaCamera *camera)
+{
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 1
+  android::CameraSource *s = android::CameraSource::Create();
+#else
+  android::CameraSource *s = android::CameraSource::Create(android::String16(""));
+#endif
+
+  android::CameraParameters p(camera->m_camera->getParameters());
+
+  int32_t fmt = android::CameraSourceListener::getColorFormat(s, p);
+
+  delete s;
+
+  return fmt;
 }
 
 };

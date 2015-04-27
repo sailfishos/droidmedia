@@ -121,6 +121,8 @@ void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData 
 bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
 					      DroidMediaCameraFaceDetectionType type, bool enable);
 
+int32_t droid_media_camera_get_video_color_format (DroidMediaCamera *camera);
+
 #ifdef __cplusplus
 };
 #endif
