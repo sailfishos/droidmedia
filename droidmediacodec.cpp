@@ -422,9 +422,12 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     SET_PARAM(kKeySampleRate, sample_rate);
 
     android::sp<DroidMediaBufferQueue> queue;
-    android::sp<ANativeWindow> window;
+    android::sp<ANativeWindow> window = NULL;
 
-    if (!is_encoder) {
+    if (is_encoder
+        || meta->flags & DROID_MEDIA_CODEC_SW_ONLY) {
+        // Nothing
+    } else {
         queue = new DroidMediaBufferQueue("DroidMediaCodecBufferQueue");
 
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
@@ -441,7 +444,7 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
                                     md,
                                     is_encoder,
                                     src,
-                                    NULL, flags, is_encoder ? NULL : window);
+                                    NULL, flags, window);
 
     if (codec == NULL) {
         ALOGE("DroidMediaCodec: Failed to create codec");
