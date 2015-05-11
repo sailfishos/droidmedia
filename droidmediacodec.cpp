@@ -253,10 +253,13 @@ public:
 
     bool notifySizeChanged() {
         android::sp<android::MetaData> meta = m_codec->getFormat();
-        int32_t width, height;
+        int32_t width = 0, height = 0;
 
-        meta->findInt32(android::kKeyWidth, &width);
-        meta->findInt32(android::kKeyHeight, &height);
+        if (!meta->findInt32(android::kKeyWidth, &width) ||
+	    !meta->findInt32(android::kKeyHeight, &height)) {
+	  ALOGW("DroidMediaCodec: notifySizeChanged without dimensions");
+	  return true;
+	}
 
         ALOGI("DroidMediaCodec: notifySizeChanged: width = %d, height = %d", width, height);
 
