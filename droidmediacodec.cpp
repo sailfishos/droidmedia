@@ -428,7 +428,8 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     android::sp<ANativeWindow> window = NULL;
 
     if (is_encoder
-        || meta->flags & DROID_MEDIA_CODEC_SW_ONLY) {
+        || meta->flags & DROID_MEDIA_CODEC_SW_ONLY
+        || meta->flags & DROID_MEDIA_CODEC_NO_MEDIA_BUFFER) {
         // Nothing
     } else {
         queue = new DroidMediaBufferQueue("DroidMediaCodecBufferQueue");

@@ -35,6 +35,7 @@ typedef enum {
   DROID_MEDIA_CODEC_SW_ONLY = 0x1,
   DROID_MEDIA_CODEC_HW_ONLY = 0x2,
   DROID_MEDIA_CODEC_USE_EXTERNAL_LOOP = 0x4,
+  DROID_MEDIA_CODEC_NO_MEDIA_BUFFER = 0x8,
 } DroidMediaCodecFlags;
 
 typedef enum {
