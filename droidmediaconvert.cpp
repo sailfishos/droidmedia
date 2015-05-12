@@ -32,6 +32,7 @@ public:
     DroidMediaConvert() :
         m_handle(NULL) {
       m_crop.top = m_crop.left = m_crop.bottom = m_crop.right = -1;
+      m_width = m_height = 0;
     }
 
     ~DroidMediaConvert() {
@@ -68,6 +69,8 @@ public:
 
     void *m_handle;
     ARect m_crop;
+    int m_width;
+    int m_height;
 };
 
 DroidMediaConvert *droid_media_convert_create()
@@ -98,11 +101,8 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in,
       return false;
     }
 
-    int width = convert->m_crop.right - convert->m_crop.left + 1;
-    int height = convert->m_crop.bottom - convert->m_crop.top + 1;
-
-    android::status_t err = convert->convertDecoderOutputToI420(in->data, width,
-                                              height,
+    android::status_t err = convert->convertDecoderOutputToI420(in->data, convert->m_width,
+                                              convert->m_height,
 					      convert->m_crop,
                                               out);
 
@@ -120,5 +120,7 @@ void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRec
     convert->m_crop.top = rect.top;
     convert->m_crop.right = rect.right - 1;
     convert->m_crop.bottom = rect.bottom - 1;
+    convert->m_width = convert->m_crop.right - convert->m_crop.left + 1;
+    convert->m_height = convert->m_crop.bottom - convert->m_crop.top + 1;
 }
 };
