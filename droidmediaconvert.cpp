@@ -86,13 +86,8 @@ void droid_media_convert_destroy(DroidMediaConvert *convert)
     delete convert;
 }
 
-bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaBuffer *in, void *out)
+bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in, void *out)
 {
-    void *addr = NULL;
-
-    // TODO: I am not sure those flags are the optimum
-    uint32_t usage = android::GraphicBuffer::USAGE_SOFTWARE_MASK | android::GraphicBuffer::USAGE_HW_MASK;
-
     if (convert->m_crop.left == -1 ||
 	convert->m_crop.top == -1 ||
 	convert->m_crop.right == -1 ||
@@ -103,27 +98,16 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaBuffer *i
       return false;
     }
 
-    android::status_t err = in->m_buffer->lock(usage, &addr);
+    int width = convert->m_crop.right - convert->m_crop.left + 1;
+    int height = convert->m_crop.bottom - convert->m_crop.top + 1;
 
-    if (err != android::NO_ERROR) {
-        ALOGE("DroidMediaConvert: error 0x%x locking buffer", -err);
-        return false;
-    }
-
-    err = convert->convertDecoderOutputToI420(addr, in->m_buffer->getWidth(),
-                                              in->m_buffer->getHeight(),
+    android::status_t err = convert->convertDecoderOutputToI420(in->data, width,
+                                              height,
 					      convert->m_crop,
                                               out);
 
     if (err != android::NO_ERROR) {
         ALOGE("DroidMediaConvert: error 0x%x converting buffer", -err);
-        in->m_buffer->unlock();
-        return false;
-    }
-
-    err = in->m_buffer->unlock();
-    if (err != android::NO_ERROR) {
-        ALOGE("DroidMediaConvert: error 0x%x unlocking buffer", -err);
         return false;
     }
 

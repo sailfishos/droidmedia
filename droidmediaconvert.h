@@ -33,7 +33,7 @@ struct DroidMediaBuffer;
 DroidMediaConvert *droid_media_convert_create();
 void droid_media_convert_destroy(DroidMediaConvert *convert);
 
-bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaBuffer *in, void *out);
+bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in, void *out);
 void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRect rect);
 
 #ifdef __cplusplus
