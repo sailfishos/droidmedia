@@ -214,4 +214,4 @@ HYBRIS_WRAPPER_1_1(int32_t,DroidMediaCamera*,droid_media_camera_get_video_color_
 HYBRIS_WRAPPER_1_0(DroidMediaConvert*,droid_media_convert_create);
 HYBRIS_WRAPPER_0_1(DroidMediaConvert*,droid_media_convert_destroy);
 HYBRIS_WRAPPER_1_3(bool,DroidMediaConvert*,DroidMediaData*,void*,droid_media_convert_to_i420);
-HYBRIS_WRAPPER_0_2(DroidMediaConvert*,DroidMediaRect,droid_media_convert_set_crop_rect);
+HYBRIS_WRAPPER_0_4(DroidMediaConvert*,DroidMediaRect,int32_t,int32_t,droid_media_convert_set_crop_rect);
