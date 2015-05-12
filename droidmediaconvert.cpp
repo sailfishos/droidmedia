@@ -19,6 +19,7 @@
 #include "droidmediaconvert.h"
 #include "droidmediabuffer.h"
 #include <media/editor/II420ColorConverter.h>
+#include <media/openmax/OMX_IVCommon.h>
 #include <cutils/log.h>
 #include <dlfcn.h>
 
@@ -123,5 +124,9 @@ void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRec
     convert->m_crop.bottom = rect.bottom - 1;
     convert->m_width = width;
     convert->m_height = height;
+}
+
+bool droid_media_convert_is_i420(DroidMediaConvert *convert) {
+    return convert->getDecoderOutputFormat() == OMX_COLOR_FormatYUV420Planar;
 }
 };
