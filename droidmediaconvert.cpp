@@ -134,7 +134,7 @@ void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRec
 {
     convert->m_crop.left = rect.left;
     convert->m_crop.top = rect.top;
-    convert->m_crop.right = rect.right = 1;
+    convert->m_crop.right = rect.right - 1;
     convert->m_crop.bottom = rect.bottom - 1;
 }
 };
