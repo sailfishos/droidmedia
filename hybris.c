@@ -182,14 +182,6 @@ HYBRIS_WRAPPER_1_1(uint64_t,DroidMediaBuffer*,droid_media_buffer_get_frame_numbe
 HYBRIS_WRAPPER_1_1(DroidMediaRect,DroidMediaBuffer*,droid_media_buffer_get_crop_rect)
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer*,droid_media_buffer_get_width);
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer*,droid_media_buffer_get_height);
-HYBRIS_WRAPPER_1_2(ssize_t,const char *,int,droid_media_codec_find_by_type);
-HYBRIS_WRAPPER_1_1(ssize_t,const char *,droid_media_codec_find_by_name);
-HYBRIS_WRAPPER_1_0(size_t,droid_media_codec_count);
-HYBRIS_WRAPPER_1_1(const char *,size_t,droid_media_codec_get_name);
-HYBRIS_WRAPPER_1_1(int,size_t,droid_media_codec_is_encoder);
-HYBRIS_WRAPPER_1_2(int,size_t,const char *,droid_media_codec_has_quirk);
-HYBRIS_WRAPPER_1_2(char **,size_t,ssize_t *,droid_media_codec_get_supported_types);
-HYBRIS_WRAPPER_1_7(int,size_t,const char *,uint32_t **,uint32_t **,ssize_t *,uint32_t **,ssize_t *,droid_media_codec_get_capabilities);
 HYBRIS_WRAPPER_1_1(DroidMediaCodec*,DroidMediaCodecDecoderMetaData*,droid_media_codec_create_decoder);
 HYBRIS_WRAPPER_1_1(DroidMediaCodec*,DroidMediaCodecEncoderMetaData*,droid_media_codec_create_encoder);
 HYBRIS_WRAPPER_1_1(int,DroidMediaCodec*,droid_media_codec_start);

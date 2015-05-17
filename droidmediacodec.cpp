@@ -16,7 +16,6 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
-#include <media/stagefright/MediaCodecList.h>
 #include <media/stagefright/OMXClient.h>
 #include <media/stagefright/OMXCodec.h>
 #include <media/stagefright/MediaSource.h>
@@ -304,97 +303,6 @@ extern "C" {
 DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec)
 {
   return codec->m_queue.get();
-}
-
-ssize_t droid_media_codec_find_by_type(const char *type, int encoder)
-{
-    return android::MediaCodecList::getInstance()->findCodecByType(type, encoder);
-}
-
-ssize_t droid_media_codec_find_by_name(const char *name)
-{
-    return android::MediaCodecList::getInstance()->findCodecByName(name);
-}
-
-size_t droid_media_codec_count()
-{
-    return android::MediaCodecList::getInstance()->countCodecs();
-}
-
-const char *droid_media_codec_get_name(size_t index)
-{
-    return android::MediaCodecList::getInstance()->getCodecName(index);
-}
-
-int droid_media_codec_is_encoder(size_t index)
-{
-    return android::MediaCodecList::getInstance()->isEncoder(index) == true ? 1 : 0;
-}
-
-int droid_media_codec_has_quirk(size_t index, const char *quirkName)
-{
-    return android::MediaCodecList::getInstance()->codecHasQuirk(index, quirkName) == true ? 1 : 0;
-}
-
-char **droid_media_codec_get_supported_types(size_t index, ssize_t *size)
-{
-    android::Vector<android::AString> types;
-    if (android::MediaCodecList::getInstance()->getSupportedTypes(index, &types) != android::OK) {
-        return NULL;
-    }
-
-    char **out = (char **)malloc(types.size() + 1);
-    for (size_t x = 0; x < types.size(); x++) {
-        android::AString str = types[x];
-        out[x] = (char *)malloc(str.size() + 1);
-        memcpy(out[x], str.c_str(), str.size());
-        out[x][str.size()] = '\0';
-    }
-
-    out[types.size()] = NULL;
-
-    *size = types.size();
-
-    return out;
-}
-
-int droid_media_codec_get_capabilities(size_t index, const char *type,
-				       uint32_t **profiles, uint32_t **levels, ssize_t *profiles_levels_size,
-                                        uint32_t **color_formats, ssize_t *color_formats_size)
-{
-    android::Vector<android::MediaCodecList::ProfileLevel> profileLevels;
-    android::Vector<uint32_t> colorFormats;
-    // TODO: expose this to the API
-    uint32_t flags = 0;
-    int err;
-    err = android::MediaCodecList::getInstance()->getCodecCapabilities(index, type,
-                                                                     &profileLevels,
-                                                                     &colorFormats
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-								     , &flags
-#endif
-								       );
-    if (err != android::OK) {
-        ALOGE("DroidMediaCodec: Failed to get codec capabilities for %s", type);
-        return err;
-    }
-
-    *profiles_levels_size = profileLevels.size();
-    *profiles = (uint32_t *)malloc(*profiles_levels_size * sizeof(uint32_t));
-    *levels = (uint32_t *)malloc(*profiles_levels_size * sizeof(uint32_t));
-
-    for (ssize_t x = 0; x < *profiles_levels_size; x++) {
-        (*profiles)[x] = profileLevels[x].mProfile;
-        (*levels)[x] = profileLevels[x].mLevel;
-    }
-
-    *color_formats_size = colorFormats.size();
-    *color_formats = (uint32_t *)malloc(*color_formats_size * sizeof(uint32_t));
-    for (ssize_t x = 0; x < *color_formats_size; x++) {
-        (*color_formats)[x] = colorFormats[x];
-    }
-
-    return 0;
 }
 
 DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
