@@ -24,12 +24,10 @@
 
 #ifdef __cplusplus
 extern "C" {
-class DroidMediaBuffer;
-class DroidMediaBufferQueue;
-#else
-typedef void DroidMediaBuffer;
-typedef void DroidMediaBufferQueue;
 #endif
+
+typedef struct _DroidMediaBuffer DroidMediaBuffer;
+typedef struct _DroidMediaBufferQueue DroidMediaBufferQueue;
 
 typedef void *EGLDisplay;
 typedef void *EGLSyncKHR;

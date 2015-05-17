@@ -64,7 +64,7 @@ void DroidMediaBufferQueueListener::setCallbacks(DroidMediaBufferQueueCallbacks 
   m_lock.unlock();
 }
 
-DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
+_DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) :
 #if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
   android::BufferQueue()
 #else
@@ -85,13 +85,13 @@ DroidMediaBufferQueue::DroidMediaBufferQueue(const char *name) :
   m_listener = new DroidMediaBufferQueueListener;
 }
 
-DroidMediaBufferQueue::~DroidMediaBufferQueue()
+_DroidMediaBufferQueue::~_DroidMediaBufferQueue()
 {
   disconnectListener();
   m_listener.clear();
 }
 
-bool DroidMediaBufferQueue::connectListener()
+bool _DroidMediaBufferQueue::connectListener()
 {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
   if (consumerConnect(m_listener, false) != android::NO_ERROR) {
@@ -106,12 +106,12 @@ bool DroidMediaBufferQueue::connectListener()
   return true;
 }
 
-void DroidMediaBufferQueue::disconnectListener()
+void _DroidMediaBufferQueue::disconnectListener()
 {
   consumerDisconnect();
 }
 
-DroidMediaBuffer *DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCallbacks *cb)
+DroidMediaBuffer *_DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCallbacks *cb)
 {
   android::BufferQueue::BufferItem buffer;
   int num;
@@ -167,12 +167,12 @@ DroidMediaBuffer *DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCall
                               cb ? cb->unref : NULL);
 }
 
-void DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data) {
+void _DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data) {
   assert(m_listener.get());
   m_listener->setCallbacks(cb, data);
 }
 
-void DroidMediaBufferQueue::acquireAndRelease() {
+void _DroidMediaBufferQueue::acquireAndRelease() {
   DroidMediaBuffer *buff = acquireMediaBuffer(NULL);
 
   if (buff) {

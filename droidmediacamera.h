@@ -25,16 +25,12 @@
 
 #ifdef __cplusplus
 extern "C" {
-#else
-typedef void DroidMediaCamera;
-typedef void DroidMediaCameraRecordingData;
 #endif
 
 // From Timers.h
 typedef int64_t nsecs_t; // nano-seconds
-
-struct DroidMediaCamera;
-struct DroidMediaCameraRecordingData;
+typedef struct _DroidMediaCamera DroidMediaCamera;
+typedef struct _DroidMediaCameraRecordingData DroidMediaCameraRecordingData;
 
 #define DROID_MEDIA_CAMERA_FACING_FRONT 0
 #define DROID_MEDIA_CAMERA_FACING_BACK 1

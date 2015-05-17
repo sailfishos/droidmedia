@@ -27,16 +27,16 @@ typedef void (*_getI420ColorConverter)(II420ColorConverter *converter);
 
 extern "C" {
 
-class DroidMediaConvert : public II420ColorConverter
+struct _DroidMediaConvert : public II420ColorConverter
 {
 public:
-    DroidMediaConvert() :
+    _DroidMediaConvert() :
         m_handle(NULL) {
       m_crop.top = m_crop.left = m_crop.bottom = m_crop.right = -1;
       m_width = m_height = 0;
     }
 
-    ~DroidMediaConvert() {
+    ~_DroidMediaConvert() {
         if (m_handle) {
             dlclose(m_handle);
             m_handle = NULL;
