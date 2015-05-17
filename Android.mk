@@ -53,20 +53,6 @@ LOCAL_C_INCLUDES := frameworks/native/include/media/openmax
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := test_camera.cpp
-LOCAL_SHARED_LIBRARIES := libdroidmedia
-LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE := test_droidmedia_camera
-include $(BUILD_EXECUTABLE)
-
-include $(CLEAR_VARS)
-LOCAL_SRC_FILES := test_codec.cpp
-LOCAL_SHARED_LIBRARIES := libdroidmedia
-LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE := test_droidmedia_codec
-include $(BUILD_EXECUTABLE)
-
-include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minimedia.cpp
 LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice \
                     frameworks/av/media/libmediaplayerservice
