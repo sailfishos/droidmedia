@@ -218,17 +218,16 @@ public:
     DroidMediaCallback m_unref;
 };
 
-class DroidMediaCodec : public android::MediaBufferObserver
+struct _DroidMediaCodec : public android::MediaBufferObserver
 {
-public:
-    DroidMediaCodec() :
+    _DroidMediaCodec() :
         m_cb_data(0),
         m_data_cb_data(0) {
         memset(&m_cb, 0x0, sizeof(m_cb));
         memset(&m_data_cb, 0x0, sizeof(m_data_cb));
     }
 
-    ~DroidMediaCodec() {
+    ~_DroidMediaCodec() {
         m_omx->disconnect();
 	delete m_omx; m_omx = 0;
 	m_codec.clear();

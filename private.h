@@ -41,10 +41,10 @@ private:
   android::Mutex m_lock;
 };
 
-class DroidMediaBufferQueue : public android::BufferQueue {
+struct _DroidMediaBufferQueue : public android::BufferQueue {
 public:
-  DroidMediaBufferQueue(const char *name);
-  ~DroidMediaBufferQueue();
+  _DroidMediaBufferQueue(const char *name);
+  ~_DroidMediaBufferQueue();
 
   bool connectListener();
   void disconnectListener();

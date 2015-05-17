@@ -23,23 +23,21 @@
 #include <gui/BufferQueue.h>
 #include "droidmedia.h"
 
-class DroidMediaBufferQueue;
-
-class DroidMediaBuffer : public ANativeWindowBuffer
+struct _DroidMediaBuffer : public ANativeWindowBuffer
 {
 public:
-  DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
+  _DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
 		   android::sp<DroidMediaBufferQueue> queue,
 		   void *data,
 		   DroidMediaCallback ref,
 		   DroidMediaCallback unref);
 
-  DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer,
+  _DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer,
 		   void *data,
 		   DroidMediaCallback ref,
 		   DroidMediaCallback unref);
 
-  ~DroidMediaBuffer();
+  ~_DroidMediaBuffer();
 
   static void incRef(struct android_native_base_t* base);
   static void decRef(struct android_native_base_t* base);

@@ -19,11 +19,11 @@
 #include "droidmediabuffer.h"
 #include "private.h"
 
-DroidMediaBuffer::DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
-                                   android::sp<DroidMediaBufferQueue> queue,
-                                   void *data,
-                                   DroidMediaCallback ref,
-                                   DroidMediaCallback unref) :
+_DroidMediaBuffer::_DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
+				     android::sp<DroidMediaBufferQueue> queue,
+				     void *data,
+				     DroidMediaCallback ref,
+				     DroidMediaCallback unref) :
     m_buffer(buffer.mGraphicBuffer),
     m_queue(queue),
     m_transform(buffer.mTransform),
@@ -47,10 +47,10 @@ DroidMediaBuffer::DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
     common.decRef = decRef;
 }
 
-DroidMediaBuffer::DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer,
-				   void *data,
-                                   DroidMediaCallback ref,
-                                   DroidMediaCallback unref) :
+_DroidMediaBuffer::_DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer,
+				     void *data,
+				     DroidMediaCallback ref,
+				     DroidMediaCallback unref) :
     m_buffer(buffer),
     m_transform(-1),
     m_scalingMode(-1),
@@ -72,18 +72,18 @@ DroidMediaBuffer::DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer,
     common.decRef = decRef;
 }
 
-DroidMediaBuffer::~DroidMediaBuffer()
+_DroidMediaBuffer::~_DroidMediaBuffer()
 {
 
 }
 
-void DroidMediaBuffer::incRef(struct android_native_base_t* base)
+void _DroidMediaBuffer::incRef(struct android_native_base_t* base)
 {
     DroidMediaBuffer *self = reinterpret_cast<DroidMediaBuffer *>(base);
     self->m_ref(self->m_data);
 }
 
-void DroidMediaBuffer::decRef(struct android_native_base_t* base)
+void _DroidMediaBuffer::decRef(struct android_native_base_t* base)
 {
     DroidMediaBuffer *self = reinterpret_cast<DroidMediaBuffer *>(base);
     self->m_unref(self->m_data);

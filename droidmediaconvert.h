@@ -23,12 +23,9 @@
 
 #ifdef __cplusplus
 extern "C" {
-#else
-typedef void DroidMediaConvert;
 #endif
 
-struct DroidMediaConvert;
-struct DroidMediaBuffer;
+typedef struct _DroidMediaConvert DroidMediaConvert;
 
 DroidMediaConvert *droid_media_convert_create();
 void droid_media_convert_destroy(DroidMediaConvert *convert);

@@ -39,17 +39,15 @@ namespace android {
 
 extern "C" {
 
-class DroidMediaCameraRecordingData
+struct _DroidMediaCameraRecordingData
 {
-public:
     android::sp<android::IMemory> mem;
     nsecs_t ts;
 };
 
-class DroidMediaCamera
+struct _DroidMediaCamera
 {
-public:
-    DroidMediaCamera() :
+    _DroidMediaCamera() :
         m_cb_data(0) {
         memset(&m_cb, 0x0, sizeof(m_cb));
     }

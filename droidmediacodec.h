@@ -26,10 +26,9 @@
 
 #ifdef __cplusplus
 extern "C" {
-class DroidMediaCodec;
-#else
-typedef void DroidMediaCodec;
 #endif
+
+typedef struct _DroidMediaCodec DroidMediaCodec;
 
 typedef enum {
   DROID_MEDIA_CODEC_SW_ONLY = 0x1,
