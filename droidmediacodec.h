@@ -22,7 +22,6 @@
 #include "droidmedia.h"
 #include <sys/types.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,7 +64,7 @@ typedef struct {
 
   int32_t color_format;
   int32_t bitrate;
-  bool meta_data;
+  int meta_data;
   int32_t stride;
   int32_t slice_height;
   int32_t max_input_size;
@@ -75,8 +74,8 @@ typedef struct {
   DroidMediaData data;
   int64_t ts;
   int64_t decoding_ts;
-  bool sync; /* used for decoder input and encoder output */
-  bool codec_config; /* user for encoder output */
+  int sync; /* used for decoder input and encoder output */
+  int codec_config; /* user for encoder output */
 } DroidMediaCodecData;
 
 typedef struct {
@@ -90,14 +89,14 @@ typedef struct {
 } DroidMediaCodecDataCallbacks;
 
 DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec);
-ssize_t droid_media_codec_find_by_type(const char *type, bool encoder);
+ssize_t droid_media_codec_find_by_type(const char *type, int encoder);
 ssize_t droid_media_codec_find_by_name(const char *name);
 size_t droid_media_codec_count();
 const char *droid_media_codec_get_name(size_t index);
-bool droid_media_codec_is_encoder(size_t index);
-bool droid_media_codec_has_quirk(size_t index, const char *quirkName);
+int droid_media_codec_is_encoder(size_t index);
+int droid_media_codec_has_quirk(size_t index, const char *quirkName);
 char **droid_media_codec_get_supported_types(size_t index, ssize_t *size);
-bool droid_media_codec_get_capabilities(size_t index, const char *type,
+int droid_media_codec_get_capabilities(size_t index, const char *type,
                                         uint32_t **profiles, uint32_t **levels, ssize_t *profiles_levels_size,
                                         uint32_t **color_formats, ssize_t *color_formats_size);
 
@@ -108,7 +107,7 @@ void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCall
 void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec,
 					  DroidMediaCodecDataCallbacks *cb, void *data);
 
-bool droid_media_codec_start(DroidMediaCodec *codec);
+int droid_media_codec_start(DroidMediaCodec *codec);
 void droid_media_codec_stop(DroidMediaCodec *codec);
 void droid_media_codec_destroy(DroidMediaCodec *codec);
 void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb);

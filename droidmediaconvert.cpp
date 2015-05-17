@@ -90,7 +90,7 @@ void droid_media_convert_destroy(DroidMediaConvert *convert)
     delete convert;
 }
 
-bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in, void *out)
+int droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in, void *out)
 {
     if (convert->m_crop.left == -1 ||
 	convert->m_crop.top == -1 ||
@@ -99,7 +99,7 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in,
 
       ALOGE("DroidMediaConvert: crop rectangle not set");
 
-      return false;
+      return -EINVAL;
     }
 
     android::status_t err = convert->convertDecoderOutputToI420(in->data, convert->m_width,
@@ -109,10 +109,10 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in,
 
     if (err != android::NO_ERROR) {
         ALOGE("DroidMediaConvert: error 0x%x converting buffer", -err);
-        return false;
+        return err;
     }
 
-    return true;
+    return 0;
 }
 
 void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRect rect,
@@ -126,7 +126,7 @@ void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRec
     convert->m_height = height;
 }
 
-bool droid_media_convert_is_i420(DroidMediaConvert *convert) {
-    return convert->getDecoderOutputFormat() == OMX_COLOR_FormatYUV420Planar;
+int droid_media_convert_is_i420(DroidMediaConvert *convert) {
+    return convert->getDecoderOutputFormat() == OMX_COLOR_FormatYUV420Planar ? 1 : 0;
 }
 };

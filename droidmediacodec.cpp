@@ -307,7 +307,7 @@ DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *code
   return codec->m_queue.get();
 }
 
-ssize_t droid_media_codec_find_by_type(const char *type, bool encoder)
+ssize_t droid_media_codec_find_by_type(const char *type, int encoder)
 {
     return android::MediaCodecList::getInstance()->findCodecByType(type, encoder);
 }
@@ -327,14 +327,14 @@ const char *droid_media_codec_get_name(size_t index)
     return android::MediaCodecList::getInstance()->getCodecName(index);
 }
 
-bool droid_media_codec_is_encoder(size_t index)
+int droid_media_codec_is_encoder(size_t index)
 {
-    return android::MediaCodecList::getInstance()->isEncoder(index);
+    return android::MediaCodecList::getInstance()->isEncoder(index) == true ? 1 : 0;
 }
 
-bool droid_media_codec_has_quirk(size_t index, const char *quirkName)
+int droid_media_codec_has_quirk(size_t index, const char *quirkName)
 {
-    return android::MediaCodecList::getInstance()->codecHasQuirk(index, quirkName);
+    return android::MediaCodecList::getInstance()->codecHasQuirk(index, quirkName) == true ? 1 : 0;
 }
 
 char **droid_media_codec_get_supported_types(size_t index, ssize_t *size)
@@ -359,23 +359,25 @@ char **droid_media_codec_get_supported_types(size_t index, ssize_t *size)
     return out;
 }
 
-bool droid_media_codec_get_capabilities(size_t index, const char *type,
-                                        uint32_t **profiles, uint32_t **levels, ssize_t *profiles_levels_size,
+int droid_media_codec_get_capabilities(size_t index, const char *type,
+				       uint32_t **profiles, uint32_t **levels, ssize_t *profiles_levels_size,
                                         uint32_t **color_formats, ssize_t *color_formats_size)
 {
     android::Vector<android::MediaCodecList::ProfileLevel> profileLevels;
     android::Vector<uint32_t> colorFormats;
     // TODO: expose this to the API
     uint32_t flags = 0;
-    if (android::MediaCodecList::getInstance()->getCodecCapabilities(index, type,
+    int err;
+    err = android::MediaCodecList::getInstance()->getCodecCapabilities(index, type,
                                                                      &profileLevels,
                                                                      &colorFormats
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
 								     , &flags
 #endif
-) != android::OK) {
+								       );
+    if (err != android::OK) {
         ALOGE("DroidMediaCodec: Failed to get codec capabilities for %s", type);
-        return false;
+        return err;
     }
 
     *profiles_levels_size = profileLevels.size();
@@ -393,7 +395,7 @@ bool droid_media_codec_get_capabilities(size_t index, const char *type,
         (*color_formats)[x] = colorFormats[x];
     }
 
-    return true;
+    return 0;
 }
 
 DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
@@ -518,29 +520,29 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
     return droid_media_codec_create((DroidMediaCodecMetaData *)meta, md, true, flags);
 }
 
-bool droid_media_codec_start(DroidMediaCodec *codec)
+int droid_media_codec_start(DroidMediaCodec *codec)
 {
     if (codec->m_queue.get() != NULL) {
         if (!codec->m_queue->connectListener()) {
 	    ALOGE("Failed to connect buffer queue listener");
-	    return false;
+	    return -EINVAL;
 	}
 
 	android::status_t err = native_window_api_connect(codec->m_window.get(),
 							  NATIVE_WINDOW_API_MEDIA);
 	if (err != android::NO_ERROR) {
   	    ALOGE("DroidMediaCodec: Failed to connect window");
-	    return false;
+	    return err;
 	}
     }
 
     int err = codec->m_codec->start();
     if (err != android::OK) {
         ALOGE("DroidMediaCodec: error 0x%x starting codec", -err);
-        return false;
+        return err;
     }
 
-    return true;
+    return 0;
 }
 
 void droid_media_codec_stop(DroidMediaCodec *codec)

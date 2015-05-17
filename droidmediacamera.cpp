@@ -216,12 +216,12 @@ int droid_media_camera_get_number_of_cameras()
     return android::Camera::getNumberOfCameras();
 }
 
-bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
+int droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 {
     android::CameraInfo inf;
-
-    if (android::Camera::getCameraInfo(camera_number, &inf) != 0) {
-        return false;
+    int err = android::Camera::getCameraInfo(camera_number, &inf);
+    if (err != 0) {
+        return err;
     }
 
     info->orientation = inf.orientation;
@@ -231,7 +231,7 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
       info->facing = DROID_MEDIA_CAMERA_FACING_BACK;
     }
 
-    return true;
+    return 0;
 }
 
 DroidMediaCamera *droid_media_camera_connect(int camera_number)
@@ -278,8 +278,8 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     return cam;
 }
 
-bool droid_media_camera_reconnect(DroidMediaCamera *camera) {
-    return camera->m_camera->reconnect() == android::NO_ERROR;
+int droid_media_camera_reconnect(DroidMediaCamera *camera) {
+    return camera->m_camera->reconnect();
 }
 
 void droid_media_camera_disconnect(DroidMediaCamera *camera)
@@ -291,17 +291,17 @@ void droid_media_camera_disconnect(DroidMediaCamera *camera)
     delete camera;
 }
 
-bool droid_media_camera_lock(DroidMediaCamera *camera) {
-    return camera->m_camera->lock() == android::NO_ERROR;
+int droid_media_camera_lock(DroidMediaCamera *camera) {
+    return camera->m_camera->lock();
 }
 
-bool droid_media_camera_unlock(DroidMediaCamera *camera) {
-    return camera->m_camera->unlock() == android::NO_ERROR;
+int droid_media_camera_unlock(DroidMediaCamera *camera) {
+    return camera->m_camera->unlock();
 }
 
-bool droid_media_camera_start_preview(DroidMediaCamera *camera)
+int droid_media_camera_start_preview(DroidMediaCamera *camera)
 {
-    return camera->m_camera->startPreview() == android::NO_ERROR;
+    return camera->m_camera->startPreview();
 }
 
 void droid_media_camera_stop_preview(DroidMediaCamera *camera)
@@ -309,14 +309,14 @@ void droid_media_camera_stop_preview(DroidMediaCamera *camera)
     camera->m_camera->stopPreview();
 }
 
-bool droid_media_camera_is_preview_enabled(DroidMediaCamera *camera)
+int droid_media_camera_is_preview_enabled(DroidMediaCamera *camera)
 {
-    return camera->m_camera->previewEnabled();
+    return camera->m_camera->previewEnabled() == true ? 1 : 0;
 }
 
-bool droid_media_camera_start_recording(DroidMediaCamera *camera)
+int droid_media_camera_start_recording(DroidMediaCamera *camera)
 {
-    return camera->m_camera->startRecording() == android::NO_ERROR;
+    return camera->m_camera->startRecording();
 }
 
 void droid_media_camera_stop_recording(DroidMediaCamera *camera)
@@ -324,19 +324,19 @@ void droid_media_camera_stop_recording(DroidMediaCamera *camera)
     camera->m_camera->stopRecording();
 }
 
-bool droid_media_camera_is_recording_enabled(DroidMediaCamera *camera)
+int droid_media_camera_is_recording_enabled(DroidMediaCamera *camera)
 {
-    return camera->m_camera->recordingEnabled();
+    return camera->m_camera->recordingEnabled() == true ? 1 : 0;
 }
 
-bool droid_media_camera_start_auto_focus(DroidMediaCamera *camera)
+int droid_media_camera_start_auto_focus(DroidMediaCamera *camera)
 {
-    return camera->m_camera->autoFocus() == android::NO_ERROR;
+    return camera->m_camera->autoFocus();
 }
 
-bool droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera)
+int droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera)
 {
-    return camera->m_camera->cancelAutoFocus() == android::NO_ERROR;
+    return camera->m_camera->cancelAutoFocus();
 }
 
 void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb, void *data)
@@ -345,14 +345,14 @@ void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCamera
     camera->m_cb_data = data;
 }
 
-bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2)
+int droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2)
 {
-    return camera->m_camera->sendCommand(cmd, arg1, arg2) == android::NO_ERROR;
+    return camera->m_camera->sendCommand(cmd, arg1, arg2);
 }
 
-bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, bool enabled)
+int droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, int enabled)
 {
-    return camera->m_camera->storeMetaDataInBuffers(enabled) == android::NO_ERROR;
+    return camera->m_camera->storeMetaDataInBuffers(enabled);
 }
 
 void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera, int preview_callback_flag)
@@ -360,9 +360,9 @@ void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera, int
     camera->m_camera->setPreviewCallbackFlags(preview_callback_flag);
 }
 
-bool droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *params)
+int droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *params)
 {
-    return camera->m_camera->setParameters(android::String8(params)) == android::NO_ERROR;
+    return camera->m_camera->setParameters(android::String8(params));
 }
 
 char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
@@ -387,9 +387,9 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
     return params;
 }
 
-bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType)
+int droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType)
 {
-    return camera->m_camera->takePicture(msgType) == android::NO_ERROR;
+    return camera->m_camera->takePicture(msgType);
 }
 
 void droid_media_camera_release_recording_frame(DroidMediaCamera *camera, DroidMediaCameraRecordingData *data)
@@ -413,8 +413,8 @@ void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData 
     return data->mem->pointer();
 }
 
-bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
-					      DroidMediaCameraFaceDetectionType type, bool enable)
+int droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
+					     DroidMediaCameraFaceDetectionType type, int enable)
 {
   int detection_type = type == DROID_MEDIA_CAMERA_FACE_DETECTION_HW ? CAMERA_FACE_DETECTION_HW :
     CAMERA_FACE_DETECTION_SW;
