@@ -20,7 +20,8 @@
 #define DROID_MEDIA_H
 
 #include <sys/types.h>
-#include <stdint.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,9 +29,6 @@ extern "C" {
 
 typedef struct _DroidMediaBuffer DroidMediaBuffer;
 typedef struct _DroidMediaBufferQueue DroidMediaBufferQueue;
-
-typedef void *EGLDisplay;
-typedef void *EGLSyncKHR;
 
 typedef void (*DroidMediaCallback)(void *data);
 
