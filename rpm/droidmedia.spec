@@ -16,6 +16,7 @@ BuildRequires: ubu-trusty
 BuildRequires: sudo-for-abuild
 BuildRequires: droid-bin-src-full
 Source0:       %{name}-%{version}.tgz
+AutoReqProv:   no
 
 %description
 %{summary}
