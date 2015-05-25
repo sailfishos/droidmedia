@@ -24,6 +24,7 @@ Source0:       %{name}-%{version}.tgz
 Summary:       droidmedia development headers
 Group:         System/Libraries
 Requires:      droidmedia = %{version}-%{release}
+BuildArch:     noarch
 
 %description   devel
 %{summary}
