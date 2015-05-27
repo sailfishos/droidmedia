@@ -426,7 +426,7 @@ bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
 
 int32_t droid_media_camera_get_video_color_format (DroidMediaCamera *camera)
 {
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 1
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR <= 2
   android::CameraSource *s = android::CameraSource::Create();
 #else
   android::CameraSource *s = android::CameraSource::Create(android::String16(""));
