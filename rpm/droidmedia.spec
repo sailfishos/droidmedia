@@ -41,8 +41,6 @@ tar -zxf %SOURCE0
 mv droidmedia* droidmedia
 popd
 
-sudo chmod +x droid-make
-
 %build
 droid-make -j4 libdroidmedia minimediaservice minisfservice
 
