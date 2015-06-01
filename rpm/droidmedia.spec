@@ -34,8 +34,8 @@ BuildArch:     noarch
 %prep
 
 %setup -T -c -n droidmedia
-sudo chown -R abuild:abuild /home/abuild/droid/
-mv /home/abuild/droid/* .
+sudo chown -R abuild:abuild /home/abuild/src/droid/
+mv /home/abuild/src/droid/* .
 mkdir -p external
 pushd external
 tar -zxf %SOURCE0
@@ -45,7 +45,7 @@ popd
 sudo chmod +x droid-make
 
 %build
-ubu-chroot -r /srv/mer/sdks/ubu "cd /parentroot/home/abuild/rpmbuild/BUILD/droidmedia/ && ./droid-make -j4 libdroidmedia minimediaservice minisfservice"
+droid-make -j4 libdroidmedia minimediaservice minisfservice
 
 %install
 
