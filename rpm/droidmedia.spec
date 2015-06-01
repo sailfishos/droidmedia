@@ -4,8 +4,7 @@
 %global debug_package       %{nil}
 %define __provides_exclude_from ^.*$
 
-# TODO: pick this up from OBS
-%define _target_cpu armv7hl
+%define _target_cpu %{device_rpm_architecture_string}
 
 Name:          droidmedia
 Summary:       Android media wrapper library
