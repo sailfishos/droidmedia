@@ -32,6 +32,11 @@ BuildArch:     noarch
 
 %prep
 
+%if %{?device_rpm_architecture_string:0}%{!?device_rpm_architecture_string:1}
+echo "device_rpm_architecture_string is not defined"
+exit -1
+%endif
+
 %setup -T -c -n droidmedia
 sudo chown -R abuild:abuild /home/abuild/src/droid/
 mv /home/abuild/src/droid/* .
