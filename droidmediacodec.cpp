@@ -419,6 +419,8 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     md->setCString(android::kKeyMIMEType, meta->type);
     SET_PARAM(kKeyWidth, width);
     SET_PARAM(kKeyHeight, height);
+    SET_PARAM(kKeyDisplayWidth, width);
+    SET_PARAM(kKeyDisplayHeight, height);
     SET_PARAM(kKeyFrameRate, fps);
     SET_PARAM(kKeyChannelCount, channels);
     SET_PARAM(kKeySampleRate, sample_rate);
