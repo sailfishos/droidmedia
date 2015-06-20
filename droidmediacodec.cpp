@@ -188,13 +188,23 @@ private:
 
     android::status_t read(android::MediaBuffer **buffer,
                            const android::MediaSource::ReadOptions *options = NULL) {
+        android::status_t ret;
         *buffer = get();
 
         if (*buffer) {
-            return android::OK;
+	    ret = android::OK;
         } else {
-            return android::NOT_ENOUGH_DATA;
+	    m_framesReceived.lock.lock();
+	    if (m_running) {
+	        ret = android::NOT_ENOUGH_DATA;
+	    } else {
+	        ret = android::ERROR_END_OF_STREAM;
+	    }
+
+	    m_framesReceived.lock.unlock();
         }
+
+	return ret;
     }
 
     android::sp<android::MetaData> m_metaData;
