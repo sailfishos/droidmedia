@@ -106,33 +106,37 @@ public:
     void postData(int32_t msgType, const android::sp<android::IMemory>& dataPtr,
                   camera_frame_metadata_t *metadata)
     {
+        int32_t dataMsgType = msgType & ~CAMERA_MSG_PREVIEW_METADATA;
         DroidMediaData mem;
-        mem.size = dataPtr->size();
-        mem.data = dataPtr->pointer();
 
-        switch (msgType) {
+        switch (dataMsgType) {
             case CAMERA_MSG_RAW_IMAGE:
+                mem.size = dataPtr->size();
+                mem.data = dataPtr->pointer();
+
                 if (m_cam->m_cb.raw_image_cb) {
                     m_cam->m_cb.raw_image_cb(m_cam->m_cb_data, &mem);
                 }
                 break;
 
             case CAMERA_MSG_COMPRESSED_IMAGE:
+                mem.size = dataPtr->size();
+                mem.data = dataPtr->pointer();
+
                 if (m_cam->m_cb.compressed_image_cb) {
                     m_cam->m_cb.compressed_image_cb(m_cam->m_cb_data, &mem);
                 }
                 break;
 
             case CAMERA_MSG_POSTVIEW_FRAME:
+                mem.size = dataPtr->size();
+                mem.data = dataPtr->pointer();
                 if (m_cam->m_cb.postview_frame_cb) {
                     m_cam->m_cb.postview_frame_cb(m_cam->m_cb_data, &mem);
                 }
                 break;
 
             case CAMERA_MSG_PREVIEW_METADATA:
-                if (m_cam->m_cb.preview_metadata_cb) {
-                    sendPreviewMetadata(metadata);
-                }
                 break;
 
             case CAMERA_MSG_RAW_IMAGE_NOTIFY:
@@ -142,6 +146,8 @@ public:
                 break;
 
             case CAMERA_MSG_PREVIEW_FRAME:
+                mem.size = dataPtr->size();
+                mem.data = dataPtr->pointer();
                 if (m_cam->m_cb.preview_frame_cb) {
                     m_cam->m_cb.preview_frame_cb(m_cam->m_cb_data, &mem);
                 }
@@ -150,6 +156,11 @@ public:
             default:
                 ALOGW("DroidMediaCamera: unknown postData message 0x%x", msgType);
                 break;
+        }
+
+        if (metadata && (msgType & CAMERA_MSG_PREVIEW_METADATA)
+            && m_cam->m_cb.preview_metadata_cb) {
+            sendPreviewMetadata(metadata);
         }
     }
 
