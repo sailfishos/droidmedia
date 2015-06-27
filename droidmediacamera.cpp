@@ -150,6 +150,10 @@ public:
                 }
                 break;
 
+            case 0:
+              // Nothing
+              break;
+
             default:
                 ALOGW("DroidMediaCamera: unknown postData message 0x%x", dataMsgType);
                 break;
