@@ -151,7 +151,7 @@ public:
                 break;
 
             default:
-                ALOGW("DroidMediaCamera: unknown postData message 0x%x", msgType);
+                ALOGW("DroidMediaCamera: unknown postData message 0x%x", dataMsgType);
                 break;
         }
 
