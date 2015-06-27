@@ -136,9 +136,6 @@ public:
                 }
                 break;
 
-            case CAMERA_MSG_PREVIEW_METADATA:
-                break;
-
             case CAMERA_MSG_RAW_IMAGE_NOTIFY:
                 if (m_cam->m_cb.raw_image_notify_cb) {
                     m_cam->m_cb.raw_image_notify_cb(m_cam->m_cb_data);
