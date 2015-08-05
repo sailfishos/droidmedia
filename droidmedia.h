@@ -63,6 +63,7 @@ void droid_media_deinit();
 
 /* droidmediabuffer.cpp */
 DroidMediaBuffer *droid_media_buffer_create_from_yv12_data(uint32_t w, uint32_t h,
+							   uint32_t strideY, uint32_t strideUV,
 							   DroidMediaData *data,
 							   DroidMediaBufferCallbacks *cb);
 uint32_t droid_media_buffer_get_transform(DroidMediaBuffer * buffer);

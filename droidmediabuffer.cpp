@@ -91,9 +91,15 @@ void _DroidMediaBuffer::decRef(struct android_native_base_t* base)
 
 extern "C" {
 DroidMediaBuffer *droid_media_buffer_create_from_yv12_data(uint32_t w, uint32_t h,
+							   uint32_t strideY, uint32_t strideUV,
 							   DroidMediaData *data,
 							   DroidMediaBufferCallbacks *cb)
 {
+  void *addr = NULL;
+  uint32_t width, height, dstStride;
+  uint8_t *dst;
+  uint8_t *src;
+
   android::sp<android::GraphicBuffer>
     buffer(new android::GraphicBuffer(w, h, HAL_PIXEL_FORMAT_YV12,
 				      android::GraphicBuffer::USAGE_HW_TEXTURE));
@@ -106,8 +112,6 @@ DroidMediaBuffer *droid_media_buffer_create_from_yv12_data(uint32_t w, uint32_t 
     return NULL;
   }
 
-  void *addr = NULL;
-
   err = buffer->lock(android::GraphicBuffer::USAGE_SW_READ_RARELY
 		     | android::GraphicBuffer::USAGE_SW_WRITE_RARELY, &addr);
   if (err != android::NO_ERROR) {
@@ -116,8 +120,35 @@ DroidMediaBuffer *droid_media_buffer_create_from_yv12_data(uint32_t w, uint32_t 
     return NULL;
   }
 
-  memcpy(addr, data->data, data->size);
+  dstStride = buffer->getStride();
 
+  if (strideY == dstStride) {
+    memcpy(addr, data->data, data->size);
+    goto out;
+  }
+
+  dst = (uint8_t *)addr;
+  src = (uint8_t *)data->data;
+
+  // Y
+  height = h;
+  while (height-- > 0) {
+    memcpy(dst, src, w);
+    dst += dstStride;
+    src += strideY;
+  }
+
+  dstStride /= 2;
+  height = h; // U and V together so we are not dividing height by 2
+  width = w / 2;
+
+  while (height-- > 0) {
+    memcpy(dst, src, width);
+    dst += dstStride;
+    src += strideUV;
+  }
+
+out:
   err = buffer->unlock();
   if (err != android::NO_ERROR) {
     ALOGE("DroidMediaBuffer: Error 0x%x unlocking buffer", -err);

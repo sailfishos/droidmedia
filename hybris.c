@@ -97,6 +97,14 @@ static inline void *__resolve_sym(const char *sym)
     return _sym(_arg0,_arg1, _arg2, _arg3);			     \
   }								     \
 
+#define HYBRIS_WRAPPER_1_6(ret,arg0,arg1,arg2,arg3,arg4,arg5,sym)	\
+  ret sym(arg0 _arg0, arg1 _arg1, arg2 _arg2, arg3 _arg3, arg4 _arg4, arg5 _arg5) { \
+    static ret (* _sym)(arg0, arg1, arg2, arg3, arg4, arg5) = NULL;	\
+    if (!_sym)								\
+      _sym = __resolve_sym(#sym);					\
+    return _sym(_arg0,_arg1, _arg2, _arg3, _arg4, _arg5);		\
+  }									\
+
 #define HYBRIS_WRAPPER_1_7(ret,arg0,arg1,arg2,arg3,arg4,arg5,arg6,sym)	\
   ret sym(arg0 _arg0, arg1 _arg1, arg2 _arg2, arg3 _arg3, arg4 _arg4, arg5 _arg5, arg6 _arg6) { \
     static ret (* _sym)(arg0, arg1, arg2, arg3, arg4, arg5, arg6) = NULL; \
@@ -174,7 +182,7 @@ HYBRIS_WRAPPER_1_1(nsecs_t,DroidMediaCameraRecordingData*,droid_media_camera_rec
 HYBRIS_WRAPPER_1_1(size_t,DroidMediaCameraRecordingData*,droid_media_camera_recording_frame_get_size)
 HYBRIS_WRAPPER_1_1(void*,DroidMediaCameraRecordingData*,droid_media_camera_recording_frame_get_data)
 HYBRIS_WRAPPER_1_3(bool,DroidMediaCamera*,DroidMediaCameraFaceDetectionType,bool,droid_media_camera_enable_face_detection)
-HYBRIS_WRAPPER_1_4(DroidMediaBuffer*,uint32_t,uint32_t,DroidMediaData*,DroidMediaBufferCallbacks*,droid_media_buffer_create_from_yv12_data);
+HYBRIS_WRAPPER_1_6(DroidMediaBuffer*,uint32_t,uint32_t,uint32_t,uint32_t,DroidMediaData*,DroidMediaBufferCallbacks*,droid_media_buffer_create_from_yv12_data);
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer*,droid_media_buffer_get_transform)
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer*,droid_media_buffer_get_scaling_mode)
 HYBRIS_WRAPPER_1_1(int64_t,DroidMediaBuffer*,droid_media_buffer_get_timestamp)
