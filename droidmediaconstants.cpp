@@ -16,8 +16,9 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
-#include "droidmediacameraconstants.h"
+#include "droidmediaconstants.h"
 #include <system/camera.h>
+#include <system/graphics.h>
 
 extern "C" {
 
@@ -58,4 +59,12 @@ void droid_media_camera_constants_init(DroidMediaCameraConstants *c)
     c->CAMERA_FACE_DETECTION_HW = CAMERA_FACE_DETECTION_HW;
     c->CAMERA_FACE_DETECTION_SW = CAMERA_FACE_DETECTION_SW;
 }
+
+void droid_media_pixel_format_constants_init(DroidMediaPixelFormatConstants *c)
+{
+  c->HAL_PIXEL_FORMAT_YV12 = HAL_PIXEL_FORMAT_YV12;
+  c->HAL_PIXEL_FORMAT_RAW_SENSOR = HAL_PIXEL_FORMAT_RAW_SENSOR;
+  c->HAL_PIXEL_FORMAT_YCrCb_420_SP = HAL_PIXEL_FORMAT_YCrCb_420_SP;
+}
+
 };

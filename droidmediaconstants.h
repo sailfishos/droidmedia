@@ -16,13 +16,12 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
-#ifndef DROID_MEDIA_CAMERA_CONSTANTS_H
-#define DROID_MEDIA_CAMERA_CONSTANTS_H
+#ifndef DROID_MEDIA_CONSTANTS_H
+#define DROID_MEDIA_CONSTANTS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 
 typedef struct {
   int CAMERA_FRAME_CALLBACK_FLAG_ENABLE_MASK;
@@ -61,10 +60,17 @@ typedef struct {
   int CAMERA_FACE_DETECTION_SW;
 } DroidMediaCameraConstants;
 
+typedef struct {
+  int HAL_PIXEL_FORMAT_YV12;
+  int HAL_PIXEL_FORMAT_RAW_SENSOR;
+  int HAL_PIXEL_FORMAT_YCrCb_420_SP;
+} DroidMediaPixelFormatConstants;
+
 void droid_media_camera_constants_init(DroidMediaCameraConstants *c);
+void droid_media_pixel_format_constants_init(DroidMediaPixelFormatConstants *c);
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif /* DROID_MEDIA_CAMERA_CONSTANTS_H */
+#endif /* DROID_MEDIA_CONSTANTS_H */

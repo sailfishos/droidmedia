@@ -29,7 +29,7 @@ endif
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := droidmedia.cpp \
                    droidmediacamera.cpp \
-                   droidmediacameraconstants.cpp \
+                   droidmediaconstants.cpp \
                    droidmediacodec.cpp \
                    droidmediaconvert.cpp \
                    allocator.cpp \
