@@ -90,10 +90,11 @@ void _DroidMediaBuffer::decRef(struct android_native_base_t* base)
 }
 
 extern "C" {
-DroidMediaBuffer *droid_media_buffer_create_from_yv12_data(uint32_t w, uint32_t h,
-							   uint32_t strideY, uint32_t strideUV,
-							   DroidMediaData *data,
-							   DroidMediaBufferCallbacks *cb)
+DroidMediaBuffer *droid_media_buffer_create_from_raw_data(uint32_t w, uint32_t h,
+							  uint32_t strideY, uint32_t strideUV,
+							  uint32_t format,
+							  DroidMediaData *data,
+							  DroidMediaBufferCallbacks *cb)
 {
   void *addr = NULL;
   uint32_t width, height, dstStride;
@@ -101,7 +102,7 @@ DroidMediaBuffer *droid_media_buffer_create_from_yv12_data(uint32_t w, uint32_t 
   uint8_t *src;
 
   android::sp<android::GraphicBuffer>
-    buffer(new android::GraphicBuffer(w, h, HAL_PIXEL_FORMAT_YV12,
+    buffer(new android::GraphicBuffer(w, h, format,
 				      android::GraphicBuffer::USAGE_HW_TEXTURE));
 
   android::status_t err = buffer->initCheck();
