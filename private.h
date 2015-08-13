@@ -53,7 +53,7 @@ public:
 
   void setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data);
 
-  void acquireAndRelease();
+  bool acquireAndRelease(DroidMediaBufferInfo *info);
 
 private:
   android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];

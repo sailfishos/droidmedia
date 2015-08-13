@@ -172,12 +172,19 @@ void _DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, vo
   m_listener->setCallbacks(cb, data);
 }
 
-void _DroidMediaBufferQueue::acquireAndRelease() {
+bool _DroidMediaBufferQueue::acquireAndRelease(DroidMediaBufferInfo *info) {
   DroidMediaBuffer *buff = acquireMediaBuffer(NULL);
 
   if (buff) {
+    if (info) {
+      droid_media_buffer_get_info (buff, info);
+    }
+
     droid_media_buffer_release(buff, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
+    return true;
   }
+
+  return false;
 }
 
 extern "C" {
@@ -194,9 +201,9 @@ void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
   return queue->setCallbacks(cb, data);
 }
 
-void droid_media_buffer_queue_acquire_and_release(DroidMediaBufferQueue *queue)
+bool droid_media_buffer_queue_acquire_and_release(DroidMediaBufferQueue *queue, DroidMediaBufferInfo *info)
 {
-  queue->acquireAndRelease();
+  return queue->acquireAndRelease(info);
 }
 
 };

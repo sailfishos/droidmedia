@@ -94,7 +94,7 @@ DroidMediaBuffer *droid_media_buffer_queue_acquire_buffer(DroidMediaBufferQueue 
 							  DroidMediaBufferCallbacks *cb);
 void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
 					    DroidMediaBufferQueueCallbacks *cb, void *data);
-void droid_media_buffer_queue_acquire_and_release(DroidMediaBufferQueue *queue);
+bool droid_media_buffer_queue_acquire_and_release(DroidMediaBufferQueue *queue, DroidMediaBufferInfo *info);
 
 #ifdef __cplusplus
 };
