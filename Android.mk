@@ -23,7 +23,8 @@ $(error *** ANDROID_MINOR undefined)
 endif
 
 ifeq ($(strip $(ANDROID_MICRO)),)
-$(error *** ANDROID_MICRO undefined)
+$(warning *** ANDROID_MICRO undefined. Assuming 0)
+ANDROID_MICRO = 0
 endif
 
 include $(CLEAR_VARS)
