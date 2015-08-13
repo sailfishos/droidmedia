@@ -147,7 +147,7 @@ public:
     }
 
 private:
-    android::status_t start(android::MetaData *meta) {
+    android::status_t start(android::MetaData *meta DM_UNUSED) {
         m_running = true;
         return android::OK;
     }
@@ -182,7 +182,7 @@ private:
     }
 
     android::status_t read(android::MediaBuffer **buffer,
-                           const android::MediaSource::ReadOptions *options = NULL) {
+                           const android::MediaSource::ReadOptions *options DM_UNUSED = NULL) {
         *buffer = get();
 
         if (*buffer) {

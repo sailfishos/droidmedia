@@ -25,6 +25,7 @@
 #include <binder/IPermissionController.h>
 #include <binder/MemoryHeapBase.h>
 #include "allocator.h"
+#include "droidmedia.h" // for DM_UNUSED
 
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 1 && ANDROID_MICRO == 2
 #include "services/services_4_1_2.h"
@@ -94,7 +95,7 @@ public:
     }
 
     bool checkPermission(const String16& permission,
-                         int32_t pid, int32_t uid) {
+                         int32_t pid DM_UNUSED, int32_t uid DM_UNUSED) {
       if (permission == String16("android.permission.CAMERA")) {
 	return true;
       }
@@ -104,7 +105,7 @@ public:
 };
 
 int
-main(int argc, char* argv[])
+main(int argc DM_UNUSED, char* argv[] DM_UNUSED)
 {
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();

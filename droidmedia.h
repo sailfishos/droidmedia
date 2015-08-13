@@ -27,6 +27,8 @@
 extern "C" {
 #endif
 
+#define DM_UNUSED __attribute__((unused))
+
 typedef struct _DroidMediaBuffer DroidMediaBuffer;
 typedef struct _DroidMediaBufferQueue DroidMediaBufferQueue;
 

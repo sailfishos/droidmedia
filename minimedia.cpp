@@ -22,13 +22,14 @@
 #include <CameraService.h>
 #include <binder/MemoryHeapBase.h>
 #include <MediaPlayerService.h>
+#include "droidmedia.h" // for DM_UNUSED
 
 // echo "persist.camera.shutter.disable=1" >> /system/build.prop
 
 using namespace android;
 
 int
-main(int argc, char* argv[])
+main(int argc DM_UNUSED, char* argv[] DM_UNUSED)
 {
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();
