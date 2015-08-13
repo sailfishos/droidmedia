@@ -235,4 +235,15 @@ uint32_t droid_media_buffer_get_height(DroidMediaBuffer * buffer)
     return buffer->height;
 }
 
+void droid_media_buffer_get_info(DroidMediaBuffer *buffer, DroidMediaBufferInfo *info)
+{
+    info->width = buffer->width;
+    info->height = buffer->height;
+    info->transform = buffer->m_transform;
+    info->scaling_mode = buffer->m_scalingMode;
+    info->timestamp = buffer->m_timestamp;
+    info->frame_number = buffer->m_frameNumber;
+    info->crop_rect = droid_media_buffer_get_crop_rect(buffer);
+}
+
 };
