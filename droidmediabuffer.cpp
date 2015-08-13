@@ -169,15 +169,8 @@ void droid_media_buffer_release(DroidMediaBuffer *buffer,
       return;
     }
 
-    int err = buffer->m_queue->releaseBuffer(buffer->m_slot,
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
-					     buffer->m_frameNumber,
-#endif
-					     display, fence
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2) // TODO: fix this when we do video rendering
-					     , android::Fence::NO_FENCE
-#endif
-);
+    int err = buffer->m_queue->releaseMediaBuffer(buffer, display, fence);
+
     switch (err) {
     case android::NO_ERROR:
         break;

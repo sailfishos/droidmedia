@@ -24,11 +24,6 @@
 #include <media/stagefright/foundation/ALooper.h>
 #include <media/stagefright/MediaDefs.h>
 #include <gui/BufferQueue.h>
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-#include <gui/Surface.h>
-#else
-#include <gui/SurfaceTextureClient.h>
-#endif
 #include "droidmediacodec.h"
 #include "allocator.h"
 #include "private.h"
@@ -434,14 +429,7 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
         // Nothing
     } else {
         queue = new DroidMediaBufferQueue("DroidMediaCodecBufferQueue");
-
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-	android::sp<android::IGraphicBufferProducer> texture = queue;
-        window = new android::Surface(texture, true);
-#else
-        android::sp<android::ISurfaceTexture> texture = queue;
-        window = new android::SurfaceTextureClient(texture);
-#endif
+	window = queue->window();
     }
 
     android::sp<android::MediaSource> codec

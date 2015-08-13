@@ -21,6 +21,7 @@
 
 #include "droidmedia.h"
 #include <gui/BufferQueue.h>
+#include <camera/Camera.h>
 
 class DroidMediaBufferQueueListener :
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
@@ -41,13 +42,18 @@ private:
   android::Mutex m_lock;
 };
 
-struct _DroidMediaBufferQueue : public android::BufferQueue {
+struct _DroidMediaBufferQueue : public android::RefBase {
 public:
   _DroidMediaBufferQueue(const char *name);
   ~_DroidMediaBufferQueue();
 
   bool connectListener();
   void disconnectListener();
+
+  void attachToCamera(android::sp<android::Camera>& camera);
+  ANativeWindow *window();
+
+  int releaseMediaBuffer(DroidMediaBuffer *buffer, EGLDisplay dpy, EGLSyncKHR fence);
 
   DroidMediaBuffer *acquireMediaBuffer(DroidMediaBufferCallbacks *cb);
 
@@ -56,6 +62,7 @@ public:
   bool acquireAndRelease(DroidMediaBufferInfo *info);
 
 private:
+  android::sp<android::BufferQueue> m_queue;
   android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
 
   android::sp<DroidMediaBufferQueueListener> m_listener;

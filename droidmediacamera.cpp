@@ -277,11 +277,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 
     cam->m_queue = queue;
 
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-    cam->m_camera->setPreviewTarget(cam->m_queue);
-#else
-    cam->m_camera->setPreviewTexture(cam->m_queue);
-#endif
+    cam->m_queue->attachToCamera(cam->m_camera);
 
     cam->m_camera->setListener(new CameraListener(cam));
 

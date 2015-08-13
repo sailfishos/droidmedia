@@ -18,6 +18,11 @@
 
 #include "private.h"
 #include "droidmediabuffer.h"
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#include <gui/Surface.h>
+#else
+#include <gui/SurfaceTextureClient.h>
+#endif
 
 DroidMediaBufferQueueListener::DroidMediaBufferQueueListener() :
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
@@ -64,23 +69,23 @@ void DroidMediaBufferQueueListener::setCallbacks(DroidMediaBufferQueueCallbacks 
   m_lock.unlock();
 }
 
-_DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) :
+_DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) {
 #if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
-  android::BufferQueue()
+  m_queue = new android::BufferQueue();
 #else
-  android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS)
+  m_queue = new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS);
 #endif
-{
+
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
   // We need to acquire up to 2 buffers
   // One is being rendered and the other one is waiting to be rendered.
-  setMaxAcquiredBufferCount(2);
+  m_queue->setMaxAcquiredBufferCount(2);
 #else
-  setSynchronousMode(false);
+  m_queue->setSynchronousMode(false);
 #endif
 
-  setConsumerName(android::String8(name));
-  setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+  m_queue->setConsumerName(android::String8(name));
+  m_queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
 
   m_listener = new DroidMediaBufferQueueListener;
 }
@@ -94,9 +99,9 @@ _DroidMediaBufferQueue::~_DroidMediaBufferQueue()
 bool _DroidMediaBufferQueue::connectListener()
 {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
-  if (consumerConnect(m_listener, false) != android::NO_ERROR) {
+  if (m_queue->consumerConnect(m_listener, false) != android::NO_ERROR) {
 #else
-  if (consumerConnect(m_listener) != android::NO_ERROR) {
+  if (m_queue->consumerConnect(m_listener) != android::NO_ERROR) {
 #endif
     ALOGE("Failed to set buffer consumer");
 
@@ -108,14 +113,32 @@ bool _DroidMediaBufferQueue::connectListener()
 
 void _DroidMediaBufferQueue::disconnectListener()
 {
-  consumerDisconnect();
+  m_queue->consumerDisconnect();
+}
+
+void _DroidMediaBufferQueue::attachToCamera(android::sp<android::Camera>& camera) {
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+    camera->setPreviewTarget(m_queue);
+#else
+    camera->setPreviewTexture(m_queue);
+#endif
+}
+
+ANativeWindow *_DroidMediaBufferQueue::window() {
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+    android::sp<android::IGraphicBufferProducer> texture = m_queue;
+    return new android::Surface(texture, true);
+#else
+    android::sp<android::ISurfaceTexture> texture = m_queue;
+    return new android::SurfaceTextureClient(texture);
+#endif
 }
 
 DroidMediaBuffer *_DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCallbacks *cb)
 {
   android::BufferQueue::BufferItem buffer;
   int num;
-  int err = acquireBuffer(&buffer
+  int err = m_queue->acquireBuffer(&buffer
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: UGLY!
     , 0
 #endif
@@ -142,17 +165,10 @@ DroidMediaBuffer *_DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCal
   }
 
   if (m_slots[num].mGraphicBuffer == NULL) {
-    int err;
     ALOGE("DroidMediaBufferQueue: Got a buffer without real data");
-    err = releaseBuffer(buffer.mBuf,
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: fix this when we do video rendering
-    buffer.mFrameNumber,
-#endif
-    EGL_NO_DISPLAY, EGL_NO_SYNC_KHR
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2) // TODO: fix this when we do video rendering
-    , android::Fence::NO_FENCE
-#endif
-    );
+
+    DroidMediaBuffer *buffer = new DroidMediaBuffer(m_slots[num], this, NULL, NULL, NULL);
+    err = releaseMediaBuffer(buffer, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
 
     if (err != android::NO_ERROR) {
       ALOGE("DroidMediaBufferQueue: error releasing buffer. Error 0x%x", -err);
@@ -165,6 +181,24 @@ DroidMediaBuffer *_DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCal
                               cb ? cb->data : NULL,
                               cb ? cb->ref : NULL,
                               cb ? cb->unref : NULL);
+}
+
+int _DroidMediaBufferQueue::releaseMediaBuffer(DroidMediaBuffer *buffer,
+					       EGLDisplay dpy, EGLSyncKHR fence) {
+
+    int err = m_queue->releaseBuffer(buffer->m_slot,
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+    // TODO: fix this when we do video rendering
+    buffer->m_frameNumber,
+#endif
+    dpy, fence
+#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+					     // TODO: fix this when we do video rendering
+    , android::Fence::NO_FENCE
+#endif
+					     );
+
+    return err;
 }
 
 void _DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data) {
