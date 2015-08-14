@@ -25,7 +25,6 @@
 #include <binder/IPermissionController.h>
 #include <binder/MemoryHeapBase.h>
 #include "allocator.h"
-#include "droidmedia.h" // for DM_UNUSED
 
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 1 && ANDROID_MICRO == 2
 #include "services/services_4_1_2.h"
@@ -54,34 +53,32 @@ public:
     return "appops";
   }
 
-  virtual int32_t checkOperation(int32_t code, int32_t uid, const String16& packageName) {
+  virtual int32_t checkOperation(int32_t, int32_t, const String16&) {
     return android::AppOpsManager::MODE_ALLOWED;
   }
 
-  virtual int32_t noteOperation(int32_t code, int32_t uid, const String16& packageName) {
+  virtual int32_t noteOperation(int32_t, int32_t, const String16&) {
     return android::AppOpsManager::MODE_ALLOWED;
   }
 
-  virtual int32_t startOperation(const sp<IBinder>& token, int32_t code, int32_t uid,
-				 const String16& packageName) {
+  virtual int32_t startOperation(const sp<IBinder>&, int32_t, int32_t,
+				 const String16&) {
     return android::AppOpsManager::MODE_ALLOWED;
   }
 
-  virtual void finishOperation(const sp<IBinder>& token, int32_t code, int32_t uid,
-			       const String16& packageName) {
+  virtual void finishOperation(const sp<IBinder>&, int32_t, int32_t, const String16&) {
     // Nothing
   }
 
-  virtual void startWatchingMode(int32_t op, const String16& packageName,
-				 const sp<IAppOpsCallback>& callback) {
+  virtual void startWatchingMode(int32_t, const String16&, const sp<IAppOpsCallback>&) {
     // Nothing
   }
 
-  void stopWatchingMode(const sp<IAppOpsCallback>& callback) {
+  void stopWatchingMode(const sp<IAppOpsCallback>&) {
     // Nothing
   }
 
-  virtual sp<IBinder> getToken(const sp<IBinder>& clientToken) {
+  virtual sp<IBinder> getToken(const sp<IBinder>&) {
     return NULL;
   }
 };
@@ -98,8 +95,7 @@ public:
         return "permission";
     }
 
-    bool checkPermission(const String16& permission,
-                         int32_t pid DM_UNUSED, int32_t uid DM_UNUSED) {
+    bool checkPermission(const String16& permission, int32_t, int32_t) {
       if (permission == String16("android.permission.CAMERA")) {
 	return true;
       }
@@ -109,7 +105,7 @@ public:
 };
 
 int
-main(int argc DM_UNUSED, char* argv[] DM_UNUSED)
+main(int, char**)
 {
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();

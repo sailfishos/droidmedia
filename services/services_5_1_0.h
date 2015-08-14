@@ -29,7 +29,7 @@ public:
         return "SurfaceFlinger";
     }
 
-    void binderDied(const wp<IBinder>& who) {
+    void binderDied(const wp<IBinder>&) {
         // Nothing
     }
 
@@ -46,20 +46,19 @@ public:
         return sp<IDisplayEventConnection>();
     }
 
-    sp<IBinder> createDisplay(const String8& displayName, bool secure) {
+    sp<IBinder> createDisplay(const String8&, bool) {
         return NULL;
     }
 
-    void destroyDisplay(const sp<IBinder>& display) {
+    void destroyDisplay(const sp<IBinder>&) {
         // Nothing
     }
 
-    virtual sp<IBinder> getBuiltInDisplay(int32_t id) {
+    virtual sp<IBinder> getBuiltInDisplay(int32_t) {
         return NULL;
     }
 
-    void setTransactionState(const Vector<ComposerState>& state,
-			   const Vector<DisplayState>& displays, uint32_t flags) {
+    void setTransactionState(const Vector<ComposerState>&, const Vector<DisplayState>&, uint32_t) {
         // Nothing
     }
 
@@ -67,38 +66,33 @@ public:
       // Nothing
     }
 
-    bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer>& surface) const {
+    bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer>&) const {
         return true;
     }
 
-    void setPowerMode(const sp<IBinder>& display, int mode) {
+    void setPowerMode(const sp<IBinder>&, int) {
 
     }
 
-    status_t getDisplayConfigs(const sp<IBinder>& display,
-			       Vector<DisplayInfo>* configs) {
+    status_t getDisplayConfigs(const sp<IBinder>&, Vector<DisplayInfo>*) {
         return BAD_VALUE;
     }
 
-    status_t getDisplayStats(const sp<IBinder>& display,
-			     DisplayStatInfo* stats) {
+    status_t getDisplayStats(const sp<IBinder>&, DisplayStatInfo*) {
         return BAD_VALUE;
     }
 
-    int getActiveConfig(const sp<IBinder>& display) {
+    int getActiveConfig(const sp<IBinder>&) {
         return 0;
     }
 
-    status_t setActiveConfig(const sp<IBinder>& display, int id) {
+    status_t setActiveConfig(const sp<IBinder>&, int) {
         return BAD_VALUE;
     }
 
-    status_t captureScreen(const sp<IBinder>& display,
-			   const sp<IGraphicBufferProducer>& producer,
-			   Rect sourceCrop, uint32_t reqWidth, uint32_t reqHeight,
-			   uint32_t minLayerZ, uint32_t maxLayerZ,
-			   bool useIdentityTransform,
-			   Rotation rotation) {
+    status_t captureScreen(const sp<IBinder>&, const sp<IGraphicBufferProducer>&,
+			   Rect, uint32_t, uint32_t, uint32_t, uint32_t,
+			   bool, Rotation) {
         return BAD_VALUE;
     }
 
@@ -106,7 +100,7 @@ public:
         return BAD_VALUE;
     }
 
-    status_t getAnimationFrameStats(FrameStats* outStats) const {
+    status_t getAnimationFrameStats(FrameStats*) const {
         return BAD_VALUE;
     }
 };
