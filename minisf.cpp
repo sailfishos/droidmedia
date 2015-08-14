@@ -39,7 +39,11 @@
 #include "services/services_4_4_4.h"
 #endif
 
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if ANDROID_MAJOR == 5 && ANDROID_MINOR == 1 && ANDROID_MICRO == 0
+#include "services/services_5_1_0.h"
+#endif
+
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
 #include <binder/AppOpsManager.h>
 #include <binder/IAppOpsService.h>
 class FakeAppOps : public BinderService<FakeAppOps>,

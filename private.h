@@ -24,7 +24,7 @@
 #include <camera/Camera.h>
 
 class DroidMediaBufferQueueListener :
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
 public android::BufferQueue::ProxyConsumerListener {
 #else
 public android::BufferQueue::ConsumerListener {
@@ -34,6 +34,12 @@ public:
   void onFrameAvailable();
   void onBuffersReleased();
   void setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data);
+
+#warning PORT!
+#if ANDROID_MAJOR == 5 && ANDROID_MINOR == 1
+  void onFrameAvailable(const android::BufferItem&) { onFrameAvailable(); }
+  void onSidebandStreamChanged() {}
+#endif
 
 private:
   DroidMediaBufferQueueCallbacks m_cb;
@@ -62,7 +68,12 @@ public:
   bool acquireAndRelease(DroidMediaBufferInfo *info);
 
 private:
+#if ANDROID_MAJOR == 5
+  android::sp<android::IGraphicBufferProducer> m_producer;
+  android::sp<android::IGraphicBufferConsumer> m_queue;
+#else
   android::sp<android::BufferQueue> m_queue;
+#endif
   android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
 
   android::sp<DroidMediaBufferQueueListener> m_listener;

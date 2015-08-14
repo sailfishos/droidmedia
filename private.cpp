@@ -18,14 +18,14 @@
 
 #include "private.h"
 #include "droidmediabuffer.h"
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
 #include <gui/Surface.h>
 #else
 #include <gui/SurfaceTextureClient.h>
 #endif
 
 DroidMediaBufferQueueListener::DroidMediaBufferQueueListener() :
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
   ProxyConsumerListener(NULL),
 #endif
   m_data(0)
@@ -70,13 +70,15 @@ void DroidMediaBufferQueueListener::setCallbacks(DroidMediaBufferQueueCallbacks 
 }
 
 _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) {
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+#if ANDROID_MAJOR == 5
+  android::BufferQueue::createBufferQueue(&m_producer, &m_queue);
+#elif ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
   m_queue = new android::BufferQueue();
 #else
   m_queue = new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS);
 #endif
 
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
   // We need to acquire up to 2 buffers
   // One is being rendered and the other one is waiting to be rendered.
   m_queue->setMaxAcquiredBufferCount(2);
@@ -98,7 +100,7 @@ _DroidMediaBufferQueue::~_DroidMediaBufferQueue()
 
 bool _DroidMediaBufferQueue::connectListener()
 {
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
   if (m_queue->consumerConnect(m_listener, false) != android::NO_ERROR) {
 #else
   if (m_queue->consumerConnect(m_listener) != android::NO_ERROR) {
@@ -117,7 +119,9 @@ void _DroidMediaBufferQueue::disconnectListener()
 }
 
 void _DroidMediaBufferQueue::attachToCamera(android::sp<android::Camera>& camera) {
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if ANDROID_MAJOR == 5
+    camera->setPreviewTarget(m_producer);
+#elif ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
     camera->setPreviewTarget(m_queue);
 #else
     camera->setPreviewTexture(m_queue);
@@ -125,7 +129,10 @@ void _DroidMediaBufferQueue::attachToCamera(android::sp<android::Camera>& camera
 }
 
 ANativeWindow *_DroidMediaBufferQueue::window() {
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if ANDROID_MAJOR == 5
+    android::sp<android::IGraphicBufferProducer> texture = m_producer;
+    return new android::Surface(texture, true);
+#elif ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
     android::sp<android::IGraphicBufferProducer> texture = m_queue;
     return new android::Surface(texture, true);
 #else
@@ -138,11 +145,12 @@ DroidMediaBuffer *_DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCal
 {
   android::BufferQueue::BufferItem buffer;
   int num;
-  int err = m_queue->acquireBuffer(&buffer
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4 // TODO: UGLY!
-    , 0
+
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
+  int err = m_queue->acquireBuffer(&buffer, 0);
+#else
+  int err = m_queue->acquireBuffer(&buffer);
 #endif
-    );
 
   if (err != android::OK) {
     ALOGE("DroidMediaBufferQueue: Failed to acquire buffer from the queue. Error 0x%x", -err);
@@ -187,12 +195,12 @@ int _DroidMediaBufferQueue::releaseMediaBuffer(DroidMediaBuffer *buffer,
 					       EGLDisplay dpy, EGLSyncKHR fence) {
 
     int err = m_queue->releaseBuffer(buffer->m_slot,
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
     // TODO: fix this when we do video rendering
     buffer->m_frameNumber,
 #endif
     dpy, fence
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+#if (ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)) || ANDROID_MAJOR == 5
 					     // TODO: fix this when we do video rendering
     , android::Fence::NO_FENCE
 #endif

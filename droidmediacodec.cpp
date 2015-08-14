@@ -318,25 +318,42 @@ size_t droid_media_codec_count()
 
 const char *droid_media_codec_get_name(size_t index)
 {
+#if ANDROID_MAJOR == 5
+    return android::MediaCodecList::getInstance()->getCodecInfo(index)->getCodecName();
+#else
     return android::MediaCodecList::getInstance()->getCodecName(index);
+#endif
 }
 
 bool droid_media_codec_is_encoder(size_t index)
 {
+#if ANDROID_MAJOR == 5
+    return android::MediaCodecList::getInstance()->getCodecInfo(index)->isEncoder();
+#else
     return android::MediaCodecList::getInstance()->isEncoder(index);
+#endif
 }
 
 bool droid_media_codec_has_quirk(size_t index, const char *quirkName)
 {
+#if ANDROID_MAJOR == 5
+    return android::MediaCodecList::getInstance()->getCodecInfo(index)->hasQuirk(quirkName);
+#else
     return android::MediaCodecList::getInstance()->codecHasQuirk(index, quirkName);
+#endif
 }
 
 char **droid_media_codec_get_supported_types(size_t index, ssize_t *size)
 {
     android::Vector<android::AString> types;
+
+#if ANDROID_MAJOR == 5
+    android::MediaCodecList::getInstance()->getCodecInfo(index)->getSupportedMimes(&types);
+#else
     if (android::MediaCodecList::getInstance()->getSupportedTypes(index, &types) != android::OK) {
         return NULL;
     }
+#endif
 
     char **out = (char **)malloc(types.size() + 1);
     for (size_t x = 0; x < types.size(); x++) {
@@ -353,6 +370,8 @@ char **droid_media_codec_get_supported_types(size_t index, ssize_t *size)
     return out;
 }
 
+#warning PORT!
+#if 0
 bool droid_media_codec_get_capabilities(size_t index, const char *type,
                                         uint32_t **profiles, uint32_t **levels, ssize_t *profiles_levels_size,
                                         uint32_t **color_formats, ssize_t *color_formats_size)
@@ -389,6 +408,7 @@ bool droid_media_codec_get_capabilities(size_t index, const char *type,
 
     return true;
 }
+#endif
 
 DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
                                           android::sp<android::MetaData>& md, bool is_encoder, uint32_t flags)
@@ -703,7 +723,7 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
         }
 
         int err = codec->m_window->queueBuffer(codec->m_window.get(), buff.get()
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR == 5
 				     , -1 /* TODO: Where do we get the fence from? */
 #endif
 );

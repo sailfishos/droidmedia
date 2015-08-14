@@ -19,6 +19,12 @@
 #include "droidmediabuffer.h"
 #include "private.h"
 
+#if ANDROID_MAJOR == 5
+static const int staleBuffer = android::IGraphicBufferConsumer::STALE_BUFFER_SLOT;
+#else
+static const int staleBuffer = android::BufferQueue::STALE_BUFFER_SLOT;
+#endif
+
 _DroidMediaBuffer::_DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
 				     android::sp<DroidMediaBufferQueue> queue,
 				     void *data,
@@ -175,7 +181,7 @@ void droid_media_buffer_release(DroidMediaBuffer *buffer,
     case android::NO_ERROR:
         break;
 
-    case android::BufferQueue::STALE_BUFFER_SLOT:
+    case staleBuffer:
         ALOGW("DroidMediaBuffer: Released stale buffer %d", buffer->m_slot);
         break;
 

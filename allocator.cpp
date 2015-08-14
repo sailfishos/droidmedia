@@ -37,7 +37,7 @@ DroidMediaAllocator::createGraphicBuffer(uint32_t w, uint32_t h,
 {
     // Copied from SurfaceFlinger.cpp
     android::sp<android::GraphicBuffer>
-#if ANDROID_MAJOR == 4 && (ANDROID_MINOR == 4 || ANDROID_MINOR == 2)
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR == 5
         graphicBuffer(new android::GraphicBuffer(w, h, format,
                                                  usage));
 #else

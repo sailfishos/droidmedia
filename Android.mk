@@ -46,7 +46,8 @@ LOCAL_SHARED_LIBRARIES := libc \
                           libui \
                           libbinder \
                           libstagefright \
-                          libstagefright_foundation
+                          libstagefright_foundation \
+                          libmedia
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO)
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
@@ -70,7 +71,8 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minimedia.cpp
 LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice \
-                    frameworks/av/media/libmediaplayerservice
+                    frameworks/av/media/libmediaplayerservice \
+                    system/media/camera/include
 LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libmediaplayerservice \
                           libutils \
