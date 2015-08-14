@@ -117,7 +117,7 @@ main(int argc DM_UNUSED, char* argv[] DM_UNUSED)
     FakePermissionController::instantiate();
     MiniSurfaceFlinger::instantiate();
 
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
     FakeAppOps::instantiate();
 #endif
 
