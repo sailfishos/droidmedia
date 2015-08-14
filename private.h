@@ -35,8 +35,7 @@ public:
   void onBuffersReleased();
   void setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data);
 
-#warning PORT!
-#if ANDROID_MAJOR == 5 && ANDROID_MINOR == 1
+#if ANDROID_MAJOR == 5
   void onFrameAvailable(const android::BufferItem&) { onFrameAvailable(); }
   void onSidebandStreamChanged() {}
 #endif

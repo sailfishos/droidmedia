@@ -370,16 +370,28 @@ char **droid_media_codec_get_supported_types(size_t index, ssize_t *size)
     return out;
 }
 
-#warning PORT!
-#if 0
 bool droid_media_codec_get_capabilities(size_t index, const char *type,
                                         uint32_t **profiles, uint32_t **levels, ssize_t *profiles_levels_size,
                                         uint32_t **color_formats, ssize_t *color_formats_size)
 {
+#if ANDROID_MAJOR == 5
+    android::Vector<android::MediaCodecInfo::ProfileLevel> profileLevels;
+#else
     android::Vector<android::MediaCodecList::ProfileLevel> profileLevels;
+#endif
+
     android::Vector<uint32_t> colorFormats;
-    // TODO: expose this to the API
+
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR == 4
     uint32_t flags = 0;
+#endif
+
+#if ANDROID_MAJOR == 5
+    const android::sp<android::MediaCodecInfo::Capabilities> caps =
+      android::MediaCodecList::getInstance()->getCodecInfo(index)->getCapabilitiesFor(type);
+    caps->getSupportedProfileLevels(&profileLevels);
+    caps->getSupportedColorFormats(&colorFormats);
+#else
     if (android::MediaCodecList::getInstance()->getCodecCapabilities(index, type,
                                                                      &profileLevels,
                                                                      &colorFormats
@@ -390,6 +402,7 @@ bool droid_media_codec_get_capabilities(size_t index, const char *type,
         ALOGE("DroidMediaCodec: Failed to get codec capabilities for %s", type);
         return false;
     }
+#endif
 
     *profiles_levels_size = profileLevels.size();
     *profiles = (uint32_t *)malloc(*profiles_levels_size * sizeof(uint32_t));
@@ -408,7 +421,6 @@ bool droid_media_codec_get_capabilities(size_t index, const char *type,
 
     return true;
 }
-#endif
 
 DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
                                           android::sp<android::MetaData>& md, bool is_encoder, uint32_t flags)
