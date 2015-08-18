@@ -38,7 +38,7 @@
 #include "services/services_4_4_4.h"
 #endif
 
-#if ANDROID_MAJOR == 5 && ANDROID_MINOR == 1 && ANDROID_MICRO == 0
+#if ANDROID_MAJOR == 5 && ANDROID_MINOR == 1
 #include "services/services_5_1_0.h"
 #endif
 
