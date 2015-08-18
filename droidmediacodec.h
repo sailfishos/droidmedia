@@ -89,17 +89,6 @@ typedef struct {
 } DroidMediaCodecDataCallbacks;
 
 DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec);
-ssize_t droid_media_codec_find_by_type(const char *type, bool encoder);
-ssize_t droid_media_codec_find_by_name(const char *name);
-size_t droid_media_codec_count();
-const char *droid_media_codec_get_name(size_t index);
-bool droid_media_codec_is_encoder(size_t index);
-bool droid_media_codec_has_quirk(size_t index, const char *quirkName);
-char **droid_media_codec_get_supported_types(size_t index, ssize_t *size);
-bool droid_media_codec_get_capabilities(size_t index, const char *type,
-                                        uint32_t **profiles, uint32_t **levels, ssize_t *profiles_levels_size,
-                                        uint32_t **color_formats, ssize_t *color_formats_size);
-
 DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData *meta);
 DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta);
 
