@@ -92,7 +92,11 @@ public:
 
     status_t captureScreen(const sp<IBinder>&, const sp<IGraphicBufferProducer>&,
 			   Rect, uint32_t, uint32_t, uint32_t, uint32_t,
-			   bool, Rotation) {
+			   bool, Rotation
+#ifdef CM_BUILD
+			   , bool
+#endif
+			   ) {
         return BAD_VALUE;
     }
 
