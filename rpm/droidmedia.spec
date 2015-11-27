@@ -11,7 +11,7 @@ Summary:       Android media wrapper library
 Version:       0.0.0
 Release:       1
 Group:         System/Libraries
-License:       TBD
+License:       ASL 2.0
 BuildRequires: ubu-trusty
 BuildRequires: sudo-for-abuild
 BuildRequires: droid-bin-src-full
@@ -23,7 +23,6 @@ AutoReqProv:   no
 
 %package       devel
 Summary:       droidmedia development headers
-Group:         System/Libraries
 Requires:      droidmedia = %{version}-%{release}
 BuildArch:     noarch
 
