@@ -20,6 +20,7 @@
 #include <binder/ProcessState.h>
 #include <binder/IServiceManager.h>
 #include <CameraService.h>
+#include <AudioPolicyService.h>
 #include <binder/MemoryHeapBase.h>
 #include <MediaPlayerService.h>
 
@@ -35,6 +36,7 @@ main(int, char**)
 
     MediaPlayerService::instantiate();
     CameraService::instantiate();
+    AudioPolicyService::instantiate();
 
     ProcessState::self()->startThreadPool();
     IPCThreadState::self()->joinThreadPool();
