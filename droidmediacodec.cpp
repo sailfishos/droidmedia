@@ -222,8 +222,6 @@ struct _DroidMediaCodec : public android::MediaBufferObserver
     }
 
     ~_DroidMediaCodec() {
-        m_omx->disconnect();
-	delete m_omx; m_omx = 0;
 	m_codec.clear();
 	m_src.clear();
 	m_queue.clear();
@@ -264,7 +262,6 @@ struct _DroidMediaCodec : public android::MediaBufferObserver
     }
 
     android::sp<android::MediaSource> m_codec;
-    android::OMXClient *m_omx;
     android::sp<Source> m_src;
     android::sp<DroidMediaBufferQueue> m_queue;
     android::sp<ANativeWindow> m_window;
@@ -303,10 +300,9 @@ DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *code
 DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
                                           android::sp<android::MetaData>& md, bool is_encoder, uint32_t flags)
 {
-    android::OMXClient *omx = new android::OMXClient;
-    if (omx->connect() != android::OK) {
+    android::OMXClient omx;
+    if (omx.connect() != android::OK) {
         ALOGE("DroidMediaCodec: Failed to connect to OMX");
-        delete omx;
         return NULL;
     }
 
@@ -343,7 +339,7 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
     }
 
     android::sp<android::MediaSource> codec
-        = android::OMXCodec::Create(omx->interface(),
+        = android::OMXCodec::Create(omx.interface(),
                                     md,
                                     is_encoder,
                                     src,
@@ -351,14 +347,12 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
 
     if (codec == NULL) {
         ALOGE("DroidMediaCodec: Failed to create codec");
-        omx->disconnect();
-        delete omx;
+        omx.disconnect();
         return NULL;
     }
 
     DroidMediaCodec *mediaCodec = new DroidMediaCodec;
     mediaCodec->m_codec = codec;
-    mediaCodec->m_omx = omx;
     mediaCodec->m_src = src;
     mediaCodec->m_queue = queue;
     mediaCodec->m_window = window;
