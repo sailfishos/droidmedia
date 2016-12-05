@@ -22,6 +22,7 @@
 #include "droidmedia.h"
 #include <gui/BufferQueue.h>
 #include <camera/Camera.h>
+#include "droidmediacamera.h"
 
 class DroidMediaBufferQueueListener :
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
@@ -77,5 +78,7 @@ private:
 
   android::sp<DroidMediaBufferQueueListener> m_listener;
 };
+
+android::sp<android::Camera> droid_media_camera_get_camera(DroidMediaCamera *camera);
 
 #endif /* DROID_MEDIA_PRIVATE_H */

@@ -448,3 +448,7 @@ int32_t droid_media_camera_get_video_color_format (DroidMediaCamera *camera)
 }
 
 };
+
+android::sp<android::Camera> droid_media_camera_get_camera (DroidMediaCamera *camera) {
+  return camera->m_camera;
+}
