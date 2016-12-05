@@ -429,6 +429,13 @@ private:
   DroidMediaCodecDecoderMetaData *m_dec;
 };
 
+android::sp<android::MediaSource> droid_media_codec_create_encoder_raw(DroidMediaCodecEncoderMetaData *meta,
+							      android::sp<android::MediaSource> src)
+{
+  DroidMediaCodecBuilder builder(meta);
+  return builder.createCodec(src, NULL);
+}
+
 extern "C" {
 
 DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec)
