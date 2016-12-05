@@ -692,7 +692,7 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
         }
 
         int err = codec->m_window->queueBuffer(codec->m_window.get(), buff.get()
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR == 5
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR == 5 || ANDROID_MAJOR == 6
 				     , -1 /* TODO: Where do we get the fence from? */
 #endif
 );

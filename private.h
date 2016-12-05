@@ -27,7 +27,7 @@
 #include "droidmediacodec.h"
 
 class DroidMediaBufferQueueListener :
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5 || ANDROID_MAJOR == 6
 public android::BufferQueue::ProxyConsumerListener {
 #else
 public android::BufferQueue::ConsumerListener {
@@ -38,7 +38,7 @@ public:
   void onBuffersReleased();
   void setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data);
 
-#if ANDROID_MAJOR == 5
+#if ANDROID_MAJOR == 5 || ANDROID_MAJOR == 6
   void onFrameAvailable(const android::BufferItem&) { onFrameAvailable(); }
   void onSidebandStreamChanged() {}
 #endif
@@ -70,13 +70,18 @@ public:
   bool acquireAndRelease(DroidMediaBufferInfo *info);
 
 private:
-#if ANDROID_MAJOR == 5
+#if ANDROID_MAJOR == 5 || ANDROID_MAJOR == 6
   android::sp<android::IGraphicBufferProducer> m_producer;
   android::sp<android::IGraphicBufferConsumer> m_queue;
 #else
   android::sp<android::BufferQueue> m_queue;
 #endif
+
+#if ANDROID_MAJOR == 6
+  android::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
+#else
   android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
+#endif
 
   android::sp<DroidMediaBufferQueueListener> m_listener;
 };

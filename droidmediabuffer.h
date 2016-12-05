@@ -26,7 +26,11 @@
 struct _DroidMediaBuffer : public ANativeWindowBuffer
 {
 public:
+#if ANDROID_MAJOR == 6
+  _DroidMediaBuffer(android::BufferItem& buffer,
+#else
   _DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
+#endif
 		   android::sp<DroidMediaBufferQueue> queue,
 		   void *data,
 		   DroidMediaCallback ref,
