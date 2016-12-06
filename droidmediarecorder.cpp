@@ -21,6 +21,9 @@
 #include <media/stagefright/MetaData.h>
 #include "droidmediarecorder.h"
 #include "private.h"
+#if !((ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5)
+#include <gui/Surface.h>
+#endif
 
 struct _DroidMediaRecorder {
   _DroidMediaRecorder() :
@@ -108,8 +111,10 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
   recorder->m_src = android::CameraSource::CreateFromCamera(cam->remote(),
 							    cam->getRecordingProxy(), // proxy
 							    -1, // cameraId
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
 							    android::String16(), // clientName
 							    -1, // clientUid
+#endif
 							    size,  // videoSize
 							    camFrameRate, // frameRate
 							    NULL, // surface
