@@ -33,6 +33,7 @@ LOCAL_SRC_FILES := droidmedia.cpp \
                    droidmediaconstants.cpp \
                    droidmediacodec.cpp \
                    droidmediaconvert.cpp \
+                   droidmediarecorder.cpp \
                    allocator.cpp \
                    droidmediabuffer.cpp \
                    private.cpp

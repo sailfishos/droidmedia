@@ -20,6 +20,7 @@
 #include "droidmediacodec.h"
 #include "droidmediaconvert.h"
 #include "droidmediaconstants.h"
+#include "droidmediarecorder.h"
 #include <dlfcn.h>
 #include <assert.h>
 #include <stdio.h>
@@ -97,6 +98,14 @@ static inline void *__resolve_sym(const char *sym)
       _sym = __resolve_sym(#sym);				     \
     return _sym(_arg0,_arg1, _arg2, _arg3);			     \
   }								     \
+
+#define HYBRIS_WRAPPER_1_5(ret,arg0,arg1,arg2,arg3,arg4,sym)		\
+  ret sym(arg0 _arg0, arg1 _arg1, arg2 _arg2, arg3 _arg3, arg4 _arg4) { \
+    static ret (* _sym)(arg0, arg1, arg2, arg3, arg4) = NULL;		\
+    if (!_sym)								\
+      _sym = __resolve_sym(#sym);					\
+    return _sym(_arg0,_arg1, _arg2, _arg3, _arg4);			\
+  }									\
 
 #define HYBRIS_WRAPPER_1_6(ret,arg0,arg1,arg2,arg3,arg4,arg5,sym)	\
   ret sym(arg0 _arg0, arg1 _arg1, arg2 _arg2, arg3 _arg3, arg4 _arg4, arg5 _arg5) { \
@@ -219,3 +228,9 @@ HYBRIS_WRAPPER_0_1(DroidMediaConvert*,droid_media_convert_destroy);
 HYBRIS_WRAPPER_1_3(bool,DroidMediaConvert*,DroidMediaData*,void*,droid_media_convert_to_i420);
 HYBRIS_WRAPPER_0_4(DroidMediaConvert*,DroidMediaRect,int32_t,int32_t,droid_media_convert_set_crop_rect);
 HYBRIS_WRAPPER_1_1(bool,DroidMediaConvert*,droid_media_convert_is_i420);
+
+HYBRIS_WRAPPER_1_5(DroidMediaRecorder*,DroidMediaCamera*,DroidMediaCodecEncoderMetaData*,int,int,int32_t,droid_media_recorder_create);
+HYBRIS_WRAPPER_0_1(DroidMediaRecorder*,droid_media_recorder_destroy);
+HYBRIS_WRAPPER_1_1(bool,DroidMediaRecorder*,droid_media_recorder_start);
+HYBRIS_WRAPPER_0_1(DroidMediaRecorder*,droid_media_recorder_stop);
+HYBRIS_WRAPPER_0_3(DroidMediaRecorder*,DroidMediaCodecDataCallbacks*,void*,droid_media_recorder_set_data_callbacks);
