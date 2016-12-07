@@ -102,9 +102,9 @@ struct _DroidMediaRecorder {
 };
 
 extern "C" {
-DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidMediaCodecEncoderMetaData *meta, int camWidth, int camHeight, int32_t camFrameRate) {
+DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidMediaCodecEncoderMetaData *meta) {
 
-  android::Size size(camWidth, camHeight);
+  android::Size size(meta->parent.width, meta->parent.height);
   DroidMediaRecorder *recorder = new DroidMediaRecorder;
   recorder->m_cam = camera;
   android::sp<android::Camera> cam(droid_media_camera_get_camera (camera));
@@ -116,7 +116,7 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 							    -1, // clientUid
 #endif
 							    size,  // videoSize
-							    camFrameRate, // frameRate
+							    meta->parent.fps, // frameRate
 							    NULL, // surface
 							    meta->meta_data// storeMetaDataInVideoBuffers
 							    );

@@ -30,7 +30,7 @@ extern "C" {
 
 typedef struct _DroidMediaRecorder DroidMediaRecorder;
 
-DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidMediaCodecEncoderMetaData *meta, int camWidth, int camHeight, int32_t camFrameRate);
+DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidMediaCodecEncoderMetaData *meta);
 void droid_media_recorder_destroy(DroidMediaRecorder *recorder);
 
 bool droid_media_recorder_start(DroidMediaRecorder *recorder);
