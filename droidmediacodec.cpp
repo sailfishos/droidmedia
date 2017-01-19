@@ -612,7 +612,7 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 #endif
 
     if (err != android::OK) {
-        if (err == android::ERROR_END_OF_STREAM) {
+        if (err == android::ERROR_END_OF_STREAM || err == -ENODATA) {
             ALOGE("DroidMediaCodec: Got EOS");
 
             if (codec->m_cb.signal_eos) {

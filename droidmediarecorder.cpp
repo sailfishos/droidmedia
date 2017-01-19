@@ -84,7 +84,6 @@ struct _DroidMediaRecorder {
     while (m_running && err == android::OK) {
       err = tick();
     }
-
     return NULL;
   }
 
@@ -157,6 +156,11 @@ void droid_media_recorder_stop(DroidMediaRecorder *recorder) {
   recorder->m_running = false;
   void *dummy;
   pthread_join(recorder->m_thread, &dummy);
+
+  int err = recorder->m_codec->stop();
+  if (err != android::OK) {
+      ALOGE("DroidMediaRecorder: error 0x%x stopping codec", -err);
+  }
 }
 
 void droid_media_recorder_set_data_callbacks(DroidMediaRecorder *recorder,
