@@ -20,6 +20,7 @@
 #include "droidmediacodec.h"
 #include "droidmediaconvert.h"
 #include "droidmediaconstants.h"
+#include "droidmediarecorder.h"
 #include <dlfcn.h>
 #include <assert.h>
 #include <stdio.h>
@@ -219,3 +220,9 @@ HYBRIS_WRAPPER_0_1(DroidMediaConvert*,droid_media_convert_destroy);
 HYBRIS_WRAPPER_1_3(bool,DroidMediaConvert*,DroidMediaData*,void*,droid_media_convert_to_i420);
 HYBRIS_WRAPPER_0_4(DroidMediaConvert*,DroidMediaRect,int32_t,int32_t,droid_media_convert_set_crop_rect);
 HYBRIS_WRAPPER_1_1(bool,DroidMediaConvert*,droid_media_convert_is_i420);
+
+HYBRIS_WRAPPER_1_2(DroidMediaRecorder*,DroidMediaCamera*,DroidMediaCodecEncoderMetaData*,droid_media_recorder_create);
+HYBRIS_WRAPPER_0_1(DroidMediaRecorder*,droid_media_recorder_destroy);
+HYBRIS_WRAPPER_1_1(bool,DroidMediaRecorder*,droid_media_recorder_start);
+HYBRIS_WRAPPER_0_1(DroidMediaRecorder*,droid_media_recorder_stop);
+HYBRIS_WRAPPER_0_3(DroidMediaRecorder*,DroidMediaCodecDataCallbacks*,void*,droid_media_recorder_set_data_callbacks);

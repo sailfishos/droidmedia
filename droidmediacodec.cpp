@@ -222,8 +222,6 @@ struct _DroidMediaCodec : public android::MediaBufferObserver
     }
 
     ~_DroidMediaCodec() {
-        m_omx->disconnect();
-	delete m_omx; m_omx = 0;
 	m_codec.clear();
 	m_src.clear();
 	m_queue.clear();
@@ -264,7 +262,6 @@ struct _DroidMediaCodec : public android::MediaBufferObserver
     }
 
     android::sp<android::MediaSource> m_codec;
-    android::OMXClient *m_omx;
     android::sp<Source> m_src;
     android::sp<DroidMediaBufferQueue> m_queue;
     android::sp<ANativeWindow> m_window;
@@ -293,112 +290,68 @@ private:
     DroidMediaCodec *m_codec;
 };
 
-extern "C" {
+class DroidMediaCodecBuilder {
+public:
+  DroidMediaCodecBuilder(DroidMediaCodecEncoderMetaData *meta) :
+    m_enc(meta), m_dec(NULL) {}
+  DroidMediaCodecBuilder(DroidMediaCodecDecoderMetaData *meta) :
+    m_enc(NULL), m_dec(meta) {}
 
-DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec)
-{
-  return codec->m_queue.get();
-}
-
-DroidMediaCodec *droid_media_codec_create(DroidMediaCodecMetaData *meta,
-                                          android::sp<android::MetaData>& md, bool is_encoder, uint32_t flags)
-{
-    android::OMXClient *omx = new android::OMXClient;
-    if (omx->connect() != android::OK) {
-        ALOGE("DroidMediaCodec: Failed to connect to OMX");
-        delete omx;
-        return NULL;
+  android::sp<android::MediaSource> createCodec(android::sp<android::MediaSource> src,
+						android::sp<ANativeWindow> window,
+						android::sp<android::MetaData> md = NULL) {
+    android::OMXClient omx;
+    if (omx.connect() != android::OK) {
+      ALOGE("DroidMediaCodec: Failed to connect to OMX");
+      return NULL;
     }
 
-    // We will not do any validation for the flags. Stagefright should take care of that.
-    if (meta->flags & DROID_MEDIA_CODEC_SW_ONLY) {
-        flags |= android::OMXCodec::kSoftwareCodecsOnly;
+    if (md == NULL) {
+      md = buildMetaData();
     }
 
-    if (meta->flags & DROID_MEDIA_CODEC_HW_ONLY) {
-        flags |= android::OMXCodec::kHardwareCodecsOnly;
+    if (md == NULL) {
+      return NULL;
     }
 
-    android::sp<Source> src(new Source(md));
+    return android::OMXCodec::Create(omx.interface(),
+				     md,
+				     isEncoder(),
+				     src,
+				     NULL, flags(), window);
 
-    md->setCString(android::kKeyMIMEType, meta->type);
-    SET_PARAM(kKeyWidth, width);
-    SET_PARAM(kKeyHeight, height);
-    SET_PARAM(kKeyDisplayWidth, width);
-    SET_PARAM(kKeyDisplayHeight, height);
-    SET_PARAM(kKeyFrameRate, fps);
-    SET_PARAM(kKeyChannelCount, channels);
-    SET_PARAM(kKeySampleRate, sample_rate);
+  }
 
-    android::sp<DroidMediaBufferQueue> queue;
-    android::sp<ANativeWindow> window = NULL;
+  bool isEncoder() { return m_enc != NULL; }
 
-    if (is_encoder
-        || meta->flags & DROID_MEDIA_CODEC_SW_ONLY
-        || meta->flags & DROID_MEDIA_CODEC_NO_MEDIA_BUFFER) {
-        // Nothing
+  DroidMediaCodecMetaData *meta() {
+    if (m_enc) {
+      return (DroidMediaCodecMetaData *)m_enc;
+    } else if (m_dec) {
+      return (DroidMediaCodecMetaData *)m_dec;
     } else {
-        queue = new DroidMediaBufferQueue("DroidMediaCodecBufferQueue");
-	window = queue->window();
+      return NULL;
     }
+  }
 
-    android::sp<android::MediaSource> codec
-        = android::OMXCodec::Create(omx->interface(),
-                                    md,
-                                    is_encoder,
-                                    src,
-                                    NULL, flags, window);
-
-    if (codec == NULL) {
-        ALOGE("DroidMediaCodec: Failed to create codec");
-        omx->disconnect();
-        delete omx;
-        return NULL;
+  android::sp<android::MetaData> buildMetaData() {
+    if (isEncoder()) {
+      return buildMetaData(m_enc);
+    } else {
+      return buildMetaData(m_dec);
     }
+  }
 
-    DroidMediaCodec *mediaCodec = new DroidMediaCodec;
-    mediaCodec->m_codec = codec;
-    mediaCodec->m_omx = omx;
-    mediaCodec->m_src = src;
-    mediaCodec->m_queue = queue;
-    mediaCodec->m_window = window;
-
-    mediaCodec->m_useExternalLoop = (meta->flags & DROID_MEDIA_CODEC_USE_EXTERNAL_LOOP) ? true : false;
-
-    return mediaCodec;
-}
-
-DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData *meta)
-{
-    android::sp<android::MetaData> md(new android::MetaData);
-
-    if (meta->codec_data.size > 0) {
-        const char *mime = ((DroidMediaCodecMetaData *)meta)->type;
-        DroidMediaCodecMetaDataKey *key = metaDataKeys;
-        bool found = false;
-
-        while (key->mime) {
-            if (!strcmp (key->mime, mime)) {
-                md->setData(key->key, key->type, meta->codec_data.data, meta->codec_data.size);
-                found = true;
-                break;
-            }
-            ++key;
-        }
-
-        if (!found) {
-            ALOGE("DroidMediaCodec: No handler for codec data for %s", ((DroidMediaCodecMetaData *)meta)->type);
-            return NULL;
-        }
+  uint32_t flags() {
+    if (isEncoder()) {
+      return flags(m_enc);
+    } else {
+      return flags(m_dec);
     }
+  }
 
-    return droid_media_codec_create((DroidMediaCodecMetaData *)meta, md, false, 0);
-}
-
-DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta)
-{
-    uint32_t flags = 0;
-
+private:
+  android::sp<android::MetaData> buildMetaData(DroidMediaCodecEncoderMetaData *meta) {
     android::sp<android::MetaData> md(new android::MetaData);
     SET_PARAM(kKeyMaxInputSize, max_input_size);
     SET_PARAM(kKeyBitRate, bitrate);
@@ -410,11 +363,137 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
     md->setInt32(android::kKeyIFramesInterval, 2);
 
     // TODO: kKeyHFR, kKeyColorFormat
-    if (meta->meta_data) {
-        flags |= android::OMXCodec::kStoreMetaDataInVideoBuffers;
+
+    return buildMetaData((DroidMediaCodecMetaData *)meta, md);
+  }
+
+  android::sp<android::MetaData> buildMetaData(DroidMediaCodecDecoderMetaData *meta) {
+    android::sp<android::MetaData> md(new android::MetaData);
+
+    if (meta->codec_data.size > 0) {
+      const char *mime = ((DroidMediaCodecMetaData *)meta)->type;
+      DroidMediaCodecMetaDataKey *key = metaDataKeys;
+
+      while (key->mime) {
+	if (!strcmp (key->mime, mime)) {
+	  md->setData(key->key, key->type, meta->codec_data.data, meta->codec_data.size);
+	  return buildMetaData((DroidMediaCodecMetaData *)meta, md);
+	}
+	++key;
+      }
+
+      ALOGE("DroidMediaCodec: No handler for codec data for %s", ((DroidMediaCodecMetaData *)meta)->type);
+      return NULL;
     }
 
-    return droid_media_codec_create((DroidMediaCodecMetaData *)meta, md, true, flags);
+    return buildMetaData((DroidMediaCodecMetaData *)meta, md);
+  }
+
+  uint32_t flags(DroidMediaCodecEncoderMetaData *meta) {
+    return flags((DroidMediaCodecMetaData *)meta,
+		 meta->meta_data ? android::OMXCodec::kStoreMetaDataInVideoBuffers : 0);
+  }
+
+  uint32_t flags(DroidMediaCodecDecoderMetaData *meta) {
+    return flags((DroidMediaCodecMetaData *)meta, 0);
+  }
+
+  android::sp<android::MetaData> buildMetaData(DroidMediaCodecMetaData *meta,
+					       android::sp<android::MetaData> md) {
+    md->setCString(android::kKeyMIMEType, meta->type);
+    SET_PARAM(kKeyWidth, width);
+    SET_PARAM(kKeyHeight, height);
+    SET_PARAM(kKeyDisplayWidth, width);
+    SET_PARAM(kKeyDisplayHeight, height);
+    SET_PARAM(kKeyFrameRate, fps);
+    SET_PARAM(kKeyChannelCount, channels);
+    SET_PARAM(kKeySampleRate, sample_rate);
+
+    return md;
+  }
+
+  uint32_t flags(DroidMediaCodecMetaData *meta, uint32_t currentFlags) {
+    // We will not do any validation for the flags. Stagefright should take care of that.
+    if (meta->flags & DROID_MEDIA_CODEC_SW_ONLY) {
+      currentFlags |= android::OMXCodec::kSoftwareCodecsOnly;
+    }
+
+    if (meta->flags & DROID_MEDIA_CODEC_HW_ONLY) {
+      currentFlags |= android::OMXCodec::kHardwareCodecsOnly;
+    }
+
+    return currentFlags;
+  }
+
+  DroidMediaCodecEncoderMetaData *m_enc;
+  DroidMediaCodecDecoderMetaData *m_dec;
+};
+
+android::sp<android::MediaSource> droid_media_codec_create_encoder_raw(DroidMediaCodecEncoderMetaData *meta,
+							      android::sp<android::MediaSource> src)
+{
+  DroidMediaCodecBuilder builder(meta);
+  return builder.createCodec(src, NULL);
+}
+
+extern "C" {
+
+DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec)
+{
+  return codec->m_queue.get();
+}
+
+DroidMediaCodec *droid_media_codec_create(DroidMediaCodecBuilder& builder)
+{
+  android::sp<android::MetaData> md(builder.buildMetaData());
+  if (md == NULL) {
+    return NULL;
+  }
+
+  android::sp<Source> src(new Source(md));
+  android::sp<DroidMediaBufferQueue> queue;
+  android::sp<ANativeWindow> window = NULL;
+  DroidMediaCodecMetaData *meta = builder.meta();
+
+  if (builder.isEncoder()
+      || meta->flags & DROID_MEDIA_CODEC_SW_ONLY
+      || meta->flags & DROID_MEDIA_CODEC_NO_MEDIA_BUFFER) {
+    // Nothing
+  } else {
+    queue = new DroidMediaBufferQueue("DroidMediaCodecBufferQueue");
+    window = queue->window();
+  }
+
+  android::sp<android::MediaSource> codec = builder.createCodec(src, window, md);
+
+  if (codec == NULL) {
+    ALOGE("DroidMediaCodec: Failed to create codec");
+    return NULL;
+  }
+
+  DroidMediaCodec *mediaCodec = new DroidMediaCodec;
+  mediaCodec->m_codec = codec;
+  mediaCodec->m_src = src;
+  mediaCodec->m_queue = queue;
+  mediaCodec->m_window = window;
+
+  mediaCodec->m_useExternalLoop = (meta->flags & DROID_MEDIA_CODEC_USE_EXTERNAL_LOOP) ? true : false;
+
+  return mediaCodec;
+}
+
+DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData *meta)
+{
+  DroidMediaCodecBuilder builder(meta);
+
+  return droid_media_codec_create(builder);
+}
+
+DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta)
+{
+  DroidMediaCodecBuilder builder(meta);
+
+  return droid_media_codec_create(builder);
 }
 
 bool droid_media_codec_start(DroidMediaCodec *codec)
@@ -533,7 +612,7 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 #endif
 
     if (err != android::OK) {
-        if (err == android::ERROR_END_OF_STREAM) {
+        if (err == android::ERROR_END_OF_STREAM || err == -ENODATA) {
             ALOGE("DroidMediaCodec: Got EOS");
 
             if (codec->m_cb.signal_eos) {
