@@ -22,10 +22,39 @@
 #include <CameraService.h>
 #include <binder/MemoryHeapBase.h>
 #include <MediaPlayerService.h>
+#if ANDROID_MAJOR >= 6
+#include <binder/BinderService.h>
+#include <camera/ICameraService.h>
+#include <binder/IInterface.h>
+#include <cutils/multiuser.h>
+#endif
 
 // echo "persist.camera.shutter.disable=1" >> /system/build.prop
 
 using namespace android;
+
+#define BINDER_SERVICE_CHECK_INTERVAL 500000
+
+
+#if ANDROID_MAJOR >= 6
+
+#include <camera/ICameraServiceProxy.h>
+
+class FakeCameraServiceProxy : public BinderService<FakeCameraServiceProxy>,
+                        public BnCameraServiceProxy
+{
+public:
+    static char const *getServiceName() {
+        return "media.camera.proxy";
+    }
+
+    void pingForUserUpdate() {
+    }
+
+    void notifyCameraState(String16 cameraId, CameraState newCameraState) {
+    }
+};
+#endif
 
 int
 main(int, char**)
@@ -35,6 +64,26 @@ main(int, char**)
 
     MediaPlayerService::instantiate();
     CameraService::instantiate();
+
+#if ANDROID_MAJOR >= 6
+    FakeCameraServiceProxy::instantiate();
+    // Camera service needs to be told which users may use the camera
+    sp<IBinder> binder;
+    do {
+    	binder = sm->getService(String16("media.camera"));
+        if (binder != NULL) {
+            break;
+        }
+        ALOGW("DroidMedia: Camera service is not yet available, waiting...");
+        usleep(BINDER_SERVICE_CHECK_INTERVAL);
+    } while (true);
+
+    sp<ICameraService> gCameraService = interface_cast<ICameraService>(binder);
+    ALOGD("DroidMedia: Allowing use of the camera for users root and bin");
+    int32_t users[2];
+    users[0] = 0; users[1] = 1;
+    gCameraService->notifySystemEvent(1, users, 2);
+#endif
 
     ProcessState::self()->startThreadPool();
     IPCThreadState::self()->joinThreadPool();

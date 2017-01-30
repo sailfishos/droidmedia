@@ -46,7 +46,7 @@
 #include "services/services_6_0_0.h"
 #endif
 
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5 || ANDROID_MAJOR == 6
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
 #include <binder/AppOpsManager.h>
 #include <binder/IAppOpsService.h>
 class FakeAppOps : public BinderService<FakeAppOps>,
@@ -86,13 +86,33 @@ public:
     return NULL;
   }
 
-#if ANDROID_MAJOR == 6
+#if ANDROID_MAJOR >= 6
   virtual int32_t permissionToOpCode(const String16& permission) {
     return 0;
   }
 #endif
 };
 
+#endif
+
+#if ANDROID_MAJOR >= 6
+
+#include <binder/IProcessInfoService.h>
+
+class FakeProcessInfoService : public BinderService<FakeProcessInfoService>,
+                        public BnProcessInfoService
+{
+public:
+    static char const *getServiceName() {
+        return "processinfo";
+    }
+
+    status_t getProcessStatesFromPids(size_t length, int32_t* pids, int32_t* states) {
+    	for (int i=0; i< length; i++)
+    		states[i] = 0;
+    	return 0;
+    }
+};
 #endif
 
 using namespace android;
@@ -113,7 +133,7 @@ public:
       return false;
     }
 
-#if ANDROID_MAJOR == 6
+#if ANDROID_MAJOR >= 6
     void getPackagesForUid(const uid_t uid, Vector<String16> &packages) {
       }
 
@@ -132,8 +152,12 @@ main(int, char**)
     FakePermissionController::instantiate();
     MiniSurfaceFlinger::instantiate();
 
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5 || ANDROID_MAJOR == 6
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
     FakeAppOps::instantiate();
+#endif
+
+#if ANDROID_MAJOR >= 6
+    FakeProcessInfoService::instantiate();
 #endif
 
     ProcessState::self()->startThreadPool();

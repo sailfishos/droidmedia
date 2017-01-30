@@ -62,6 +62,7 @@ LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice \
                     system/media/camera/include
 LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libmediaplayerservice \
+                          libcamera_client \
                           libutils \
                           libbinder \
                           libgui \

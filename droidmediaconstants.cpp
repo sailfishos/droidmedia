@@ -63,10 +63,10 @@ void droid_media_camera_constants_init(DroidMediaCameraConstants *c)
 void droid_media_pixel_format_constants_init(DroidMediaPixelFormatConstants *c)
 {
   c->HAL_PIXEL_FORMAT_YV12 = HAL_PIXEL_FORMAT_YV12;
-#if ANDROID_MAJOR == 6
-  c->HAL_PIXEL_FORMAT_RAW_SENSOR = HAL_PIXEL_FORMAT_RAW16;
-#else
+#if ANDROID_MAJOR < 6
   c->HAL_PIXEL_FORMAT_RAW_SENSOR = HAL_PIXEL_FORMAT_RAW_SENSOR;
+#else
+  c->HAL_PIXEL_FORMAT_RAW_SENSOR = HAL_PIXEL_FORMAT_RAW16;
 #endif
   c->HAL_PIXEL_FORMAT_YCrCb_420_SP = HAL_PIXEL_FORMAT_YCrCb_420_SP;
 }

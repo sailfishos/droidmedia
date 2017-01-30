@@ -26,10 +26,10 @@
 struct _DroidMediaBuffer : public ANativeWindowBuffer
 {
 public:
-#if ANDROID_MAJOR == 6
-  _DroidMediaBuffer(android::BufferItem& buffer,
-#else
+#if ANDROID_MAJOR < 6
   _DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
+#else
+  _DroidMediaBuffer(android::BufferItem& buffer,
 #endif
 		   android::sp<DroidMediaBufferQueue> queue,
 		   void *data,
