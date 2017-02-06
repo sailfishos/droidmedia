@@ -19,13 +19,17 @@
 #include "droidmediabuffer.h"
 #include "private.h"
 
-#if ANDROID_MAJOR == 5
-static const int staleBuffer = android::IGraphicBufferConsumer::STALE_BUFFER_SLOT;
-#else
+#if ANDROID_MAJOR < 5
 static const int staleBuffer = android::BufferQueue::STALE_BUFFER_SLOT;
+#else
+static const int staleBuffer = android::IGraphicBufferConsumer::STALE_BUFFER_SLOT;
 #endif
 
+#if ANDROID_MAJOR < 6
 _DroidMediaBuffer::_DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
+#else
+_DroidMediaBuffer::_DroidMediaBuffer(android::BufferItem& buffer,
+#endif
 				     android::sp<DroidMediaBufferQueue> queue,
 				     void *data,
 				     DroidMediaCallback ref,
