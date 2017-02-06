@@ -25,6 +25,15 @@
 #include <gui/Surface.h>
 #endif
 
+namespace android {
+  class CameraSourceListener {
+  public:
+    static int32_t getColorFormat(android::sp<android::CameraSource> src, android::CameraParameters p) {
+      return src->isCameraColorFormatSupported (p) == android::NO_ERROR ? src->mColorFormat : -1;
+    }
+  };
+};
+
 struct _DroidMediaRecorder {
   _DroidMediaRecorder() :
     m_cb_data(0),
@@ -111,19 +120,22 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 							    cam->getRecordingProxy(), // proxy
 							    -1, // cameraId
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
-							    android::String16(), // clientName
-							    -1, // clientUid
+							    android::String16("droidmedia"), // clientName
+								android::Camera::USE_CALLING_UID, // clientUid
 #endif
 							    size,  // videoSize
 							    meta->parent.fps, // frameRate
 							    NULL, // surface
-							    meta->meta_data// storeMetaDataInVideoBuffers
+								meta->meta_data // storeMetaDataInVideoBuffers
 							    );
-
+  // fetch the colour format
+  recorder->m_src->getFormat()->findInt32(android::kKeyColorFormat, &meta->color_format);
+  
   // Now the encoder:
   recorder->m_codec = (droid_media_codec_create_encoder_raw(meta, recorder->m_src));
 
   return recorder;
+
 }
 
 void droid_media_recorder_destroy(DroidMediaRecorder *recorder) {
