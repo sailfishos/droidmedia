@@ -24,18 +24,43 @@
 #include <utils/String8.h>
 #include <utils/Condition.h>
 #include <media/stagefright/CameraSource.h>
+#include <media/openmax/OMX_IVCommon.h>
 #include "droidmediabuffer.h"
 #include "private.h"
 
-// This is really a hack
 namespace android {
-  class CameraSourceListener {
-  public:
-    static int32_t getColorFormat(android::CameraSource *src, android::CameraParameters p) {
-      return src->isCameraColorFormatSupported (p) == android::NO_ERROR ? src->mColorFormat : -1;
-    }
-  };
-};
+	int32_t getColorFormat(const char* colorFormat) {
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV420P)) {
+		   return OMX_COLOR_FormatYUV420Planar;
+		}
+
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV422SP)) {
+		   return OMX_COLOR_FormatYUV422SemiPlanar;
+		}
+
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV420SP)) {
+			return OMX_COLOR_FormatYUV420SemiPlanar;
+		}
+
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV422I)) {
+			return OMX_COLOR_FormatYCbYCr;
+		}
+
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_RGB565)) {
+		   return OMX_COLOR_Format16bitRGB565;
+		}
+
+		if (!strcmp(colorFormat, "OMX_TI_COLOR_FormatYUV420PackedSemiPlanar")) {
+		   return OMX_TI_COLOR_FormatYUV420PackedSemiPlanar;
+		}
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR >= 5
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_ANDROID_OPAQUE)) {
+			return OMX_COLOR_FormatAndroidOpaque;
+		}
+#endif
+		return -1;
+	}
+}
 
 extern "C" {
 
@@ -435,19 +460,10 @@ bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
 
 int32_t droid_media_camera_get_video_color_format (DroidMediaCamera *camera)
 {
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR <= 2
-  android::CameraSource *s = android::CameraSource::Create();
-#else
-  android::CameraSource *s = android::CameraSource::Create(android::String16(""));
-#endif
 
   android::CameraParameters p(camera->m_camera->getParameters());
 
-  int32_t fmt = android::CameraSourceListener::getColorFormat(s, p);
-
-  delete s;
-
-  return fmt;
+  return android::getColorFormat(p.get(android::CameraParameters::KEY_VIDEO_FRAME_FORMAT));
 }
 
 };
