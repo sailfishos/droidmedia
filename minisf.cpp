@@ -113,6 +113,32 @@ public:
     	return 0;
     }
 };
+
+#include <binder/IBatteryStats.h>
+
+class FakeBatteryStats : public BinderService<FakeBatteryStats>,
+                                public BnBatteryStats
+{
+public:
+    static char const *getServiceName() {
+        return "batterystats";
+    }
+    void noteStartSensor(int uid, int sensor) {  }
+    void noteStopSensor(int uid, int sensor) {  }
+    void noteStartVideo(int uid) {  }
+    void noteStopVideo(int uid) {  }
+    void noteStartAudio(int uid) {  }
+    void noteStopAudio(int uid) {  }
+    void noteResetVideo() {  }
+    void noteResetAudio() {  }
+    void noteFlashlightOn(int uid) {  }
+    void noteFlashlightOff(int uid) {  }
+    void noteStartCamera(int uid) {  }
+    void noteStopCamera(int uid) {  }
+    void noteResetCamera() {  }
+    void noteResetFlashlight() {  }
+};
+
 #endif
 
 using namespace android;
@@ -158,6 +184,7 @@ main(int, char**)
 
 #if ANDROID_MAJOR >= 6
     FakeProcessInfoService::instantiate();
+    FakeBatteryStats::instantiate();
 #endif
 
     ProcessState::self()->startThreadPool();
