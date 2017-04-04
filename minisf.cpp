@@ -139,6 +139,55 @@ public:
     void noteResetFlashlight() {  }
 };
 
+
+#include <gui/ISensorServer.h>
+#include <gui/ISensorEventConnection.h>
+#include <gui/Sensor.h>
+#include <gui/BitTube.h>
+
+class FakeSensorEventConnection : public BnSensorEventConnection
+{
+    sp<BitTube> mChannel;
+public:
+    FakeSensorEventConnection()
+    {
+        mChannel = new BitTube(0);
+    }
+    sp<BitTube> getSensorChannel() const {
+        return mChannel;
+    }
+    status_t enableDisable(int handle, bool enabled, nsecs_t samplingPeriodNs,
+                            nsecs_t maxBatchReportLatencyNs, int reservedFlags) {
+        return 0;
+    }
+    status_t setEventRate(int handle, nsecs_t ns) {
+        return 0;
+    }
+    status_t flush() {
+        return 0;
+    }
+};
+class FakeSensorServer : public BinderService<FakeSensorServer>,
+                         public BnSensorServer
+{
+public:
+    static char const *getServiceName() {
+        return "sensorservice";
+    }
+
+    Vector<Sensor> getSensorList(const String16& opPackageName) {
+        return Vector<Sensor>();
+    }
+
+    sp<ISensorEventConnection> createSensorEventConnection(const String8& packageName,
+                        int mode, const String16& opPackageName) {
+        return sp<ISensorEventConnection>(new FakeSensorEventConnection);
+    }
+
+    int32_t isDataInjectionEnabled() {
+        return 0;
+    }
+};
 #endif
 
 using namespace android;
@@ -185,6 +234,7 @@ main(int, char**)
 #if ANDROID_MAJOR >= 6
     FakeProcessInfoService::instantiate();
     FakeBatteryStats::instantiate();
+    FakeSensorServer::instantiate();
 #endif
 
     ProcessState::self()->startThreadPool();
