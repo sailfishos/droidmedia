@@ -409,7 +409,7 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
 
     size_t len = p.length();
 
-    char *params = (char *)malloc(len + 1);
+    char *params = (char *)glibc_malloc(len + 1);
     if (!params) {
         ALOGE("Failed to allocate enough memory for camera parameters");
         return NULL;
