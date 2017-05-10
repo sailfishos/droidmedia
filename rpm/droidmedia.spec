@@ -8,7 +8,7 @@
 
 Name:          droidmedia
 Summary:       Android media wrapper library
-Version:       0.0.0
+Version:       0.20170214.0
 Release:       1
 Group:         System/Libraries
 License:       ASL 2.0
