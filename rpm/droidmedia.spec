@@ -8,7 +8,7 @@
 
 Name:          droidmedia
 Summary:       Android media wrapper library
-Version:       0.0.0
+Version:       0.20170214.0
 Release:       1
 Group:         System/Libraries
 License:       ASL 2.0
@@ -46,7 +46,11 @@ mv droidmedia* droidmedia
 popd
 
 %build
+if (grep -qi '^BOARD_QTI_CAMERA_32BIT_ONLY := true' %{android_root}/device/*/*/*.mk); then
+droid-make -j4 libdroidmedia_32 minimediaservice minisfservice
+else
 droid-make -j4 libdroidmedia minimediaservice minisfservice
+fi
 
 %install
 
