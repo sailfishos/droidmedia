@@ -370,3 +370,31 @@ public:
         return 0;
     }
 };
+
+#include <media/IResourceManagerService.h>
+#include <media/IResourceManagerClient.h>
+#include <media/MediaResource.h>
+#include <media/MediaResourcePolicy.h>
+
+class FakeResourceManagerService : public BinderService<FakeResourceManagerService>,
+                         public BnResourceManagerService
+{
+public:
+    static char const *getServiceName() {
+        return "media.resource_manager";
+    }
+    void config(const Vector<MediaResourcePolicy> &policies) {
+    }
+
+    void addResource(int pid, int64_t clientId, const sp<IResourceManagerClient> client,
+        const Vector<MediaResource> &resources) {
+    }
+
+    void removeResource(int pid, int64_t clientId) {
+    }
+
+    bool reclaimResource(int callingPid, const Vector<MediaResource> &resources) {
+    	return true;
+    }
+};
+

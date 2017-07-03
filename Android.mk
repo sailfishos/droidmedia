@@ -90,6 +90,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minisf.cpp allocator.cpp
 LOCAL_SHARED_LIBRARIES := libutils \
                           libbinder \
+                          libmedia \
                           libgui \
                           libcutils \
                           libui

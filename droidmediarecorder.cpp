@@ -24,6 +24,9 @@
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
 #include <gui/Surface.h>
 #endif
+#if ANDROID_MAJOR >=5
+#include <media/stagefright/foundation/ALooper.h>
+#endif
 
 namespace android {
   class CameraSourceListener {
@@ -51,33 +54,30 @@ struct _DroidMediaRecorder {
       data.data.size = buffer->range_length();
       data.ts = 0;
       data.decoding_ts = 0;
-
-      if (!buffer->meta_data()->findInt64(android::kKeyTime, &data.ts)) {
-	// I really don't know what to do here and I doubt we will reach that anyway.
-	ALOGE("DroidMediaRecorder: Received a buffer without a timestamp!");
-      } else {
-	// Convert timestamp from useconds to nseconds
-	data.ts *= 1000;
+      int32_t codecConfig = 0;
+      data.codec_config = false;
+      if (buffer->meta_data()->findInt32(android::kKeyIsCodecConfig, &codecConfig)
+      && codecConfig) {
+        data.codec_config = true;
       }
 
-      buffer->meta_data()->findInt64(android::kKeyDecodingTime, &data.decoding_ts);
-      if (data.decoding_ts) {
-	// Convert from usec to nsec.
-	data.decoding_ts *= 1000;
+      if (buffer->meta_data()->findInt64(android::kKeyTime, &data.ts)) {
+        // Convert timestamp from useconds to nseconds
+        data.ts *= 1000;
+      } else {
+        if (!data.codec_config) ALOGE("DroidMediaRecorder: Received a buffer without a timestamp!");
+      }
+
+      if (buffer->meta_data()->findInt64(android::kKeyDecodingTime, &data.decoding_ts)) {
+        // Convert from usec to nsec.
+        data.decoding_ts *= 1000;
       }
 
       int32_t sync = 0;
       data.sync = false;
       buffer->meta_data()->findInt32(android::kKeyIsSyncFrame, &sync);
       if (sync) {
-	data.sync = true;
-      }
-
-      int32_t codecConfig = 0;
-      data.codec_config = false;
-      if (buffer->meta_data()->findInt32(android::kKeyIsCodecConfig, &codecConfig)
-	  && codecConfig) {
-	data.codec_config = true;
+        data.sync = true;
       }
 
       m_cb.data_available (m_cb_data, &data);
@@ -105,6 +105,9 @@ struct _DroidMediaRecorder {
   void *m_cb_data;
   android::sp<android::CameraSource> m_src;
   android::sp<android::MediaSource> m_codec;
+#if ANDROID_MAJOR >= 5
+  android::sp<android::ALooper> m_looper = NULL;
+#endif
   bool m_running;
   pthread_t m_thread;
 };
@@ -116,6 +119,12 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
   DroidMediaRecorder *recorder = new DroidMediaRecorder;
   recorder->m_cam = camera;
   android::sp<android::Camera> cam(droid_media_camera_get_camera (camera));
+#if ANDROID_MAJOR >= 5
+  recorder->m_looper = new android::ALooper;
+  recorder->m_looper->setName("DroidMediaRecorderLooper");
+  recorder->m_looper->start();
+#endif
+
   recorder->m_src = android::CameraSource::CreateFromCamera(cam->remote(),
 							    cam->getRecordingProxy(), // proxy
 							    -1, // cameraId
@@ -131,11 +140,22 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 							    NULL, // surface
 								meta->meta_data // storeMetaDataInVideoBuffers
 							    );
+
+  // set metadata storage in codec according to whether the camera request was successful
+#if ANDROID_MAJOR >= 7
+  meta->meta_data = recorder->m_src->metaDataStoredInVideoBuffers();
+#else
+  meta->meta_data = recorder->m_src->isMetaDataStoredInVideoBuffers();
+#endif
   // fetch the colour format
   recorder->m_src->getFormat()->findInt32(android::kKeyColorFormat, &meta->color_format);
   
   // Now the encoder:
-  recorder->m_codec = (droid_media_codec_create_encoder_raw(meta, recorder->m_src));
+#if ANDROID_MAJOR >= 5
+  recorder->m_codec = droid_media_codec_create_encoder_raw(meta, recorder->m_looper, recorder->m_src);
+#else
+  recorder->m_codec = droid_media_codec_create_encoder_raw(meta, recorder->m_src);
+#endif
 
   return recorder;
 
@@ -144,13 +164,15 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 void droid_media_recorder_destroy(DroidMediaRecorder *recorder) {
   recorder->m_codec.clear();
   recorder->m_src.clear();
-
+#if ANDROID_MAJOR >= 5
+  recorder->m_looper->stop();
+#endif
   delete recorder;
 }
 
 bool droid_media_recorder_start(DroidMediaRecorder *recorder) {
-  recorder->m_running = true;
 
+  recorder->m_running = true;
   int err = recorder->m_codec->start();
 
   if (err != android::OK) {
