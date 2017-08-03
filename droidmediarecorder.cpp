@@ -122,6 +122,9 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
 							    android::String16("droidmedia"), // clientName
 								android::Camera::USE_CALLING_UID, // clientUid
+#if ANDROID_MAJOR >= 7
+								android::Camera::USE_CALLING_PID, //clientPid
+#endif
 #endif
 							    size,  // videoSize
 							    meta->parent.fps, // frameRate

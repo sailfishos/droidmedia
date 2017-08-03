@@ -211,6 +211,12 @@ public:
                 break;
         }
     }
+#if ANDROID_MAJOR >= 7
+    void postRecordingFrameHandleTimestamp(nsecs_t timestamp, native_handle_t* handle) 
+    {
+        // Ignore for now
+    }
+#endif
 
     void sendPreviewMetadata(camera_frame_metadata_t *metadata)
     {
@@ -296,6 +302,9 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 #else
     cam->m_camera = android::Camera::connect(camera_number, android::String16("droidmedia"),
 					     android::Camera::USE_CALLING_UID, android::Camera::USE_CALLING_PID);
+// This would open a HAL1 camera, but everything seems to work with default HAL3 
+//    android::Camera::connectLegacy(camera_number, 1 << 8, android::String16("droidmedia"),
+//					     android::Camera::USE_CALLING_UID, cam->m_camera);
 #endif
     if (cam->m_camera.get() == NULL) {
         delete cam;
@@ -386,7 +395,12 @@ bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int3
 
 bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, bool enabled)
 {
+#if ANDROID_MAJOR < 7
     return camera->m_camera->storeMetaDataInBuffers(enabled) == android::NO_ERROR;
+#else
+    // TODO: assess whether we should still support this in Android 7. Lots of cameras seem to not support it
+    return false;
+#endif
 }
 
 void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera, int preview_callback_flag)

@@ -24,7 +24,11 @@
 #include <MediaPlayerService.h>
 #if ANDROID_MAJOR >= 6
 #include <binder/BinderService.h>
+#if ANDROID_MAJOR < 7
 #include <camera/ICameraService.h>
+#else
+#include <android/hardware/ICameraService.h>
+#endif
 #include <binder/IInterface.h>
 #include <cutils/multiuser.h>
 #endif
@@ -77,12 +81,17 @@ main(int, char**)
         ALOGW("DroidMedia: Camera service is not yet available, waiting...");
         usleep(BINDER_SERVICE_CHECK_INTERVAL);
     } while (true);
-
-    sp<ICameraService> gCameraService = interface_cast<ICameraService>(binder);
     ALOGD("DroidMedia: Allowing use of the camera for users root and bin");
+#if ANDROID_MAJOR >= 7
+    sp<hardware::ICameraService> gCameraService = interface_cast<hardware::ICameraService>(binder);
+    std::vector<int32_t> users = {0, 1};
+    gCameraService->notifySystemEvent(1, users);
+#else
+    sp<ICameraService> gCameraService = interface_cast<ICameraService>(binder);
     int32_t users[2];
     users[0] = 0; users[1] = 1;
     gCameraService->notifySystemEvent(1, users, 2);
+#endif
 #endif
 
     ProcessState::self()->startThreadPool();

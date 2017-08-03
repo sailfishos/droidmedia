@@ -46,11 +46,17 @@
 #include "services/services_6_0_0.h"
 #endif
 
+#if ANDROID_MAJOR == 7 && ANDROID_MINOR == 1
+#include "services/services_7_1_0.h"
+#endif
+
+using namespace android;
+
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
 #include <binder/AppOpsManager.h>
 #include <binder/IAppOpsService.h>
 class FakeAppOps : public BinderService<FakeAppOps>,
-		   public BnAppOpsService
+           public BnAppOpsService
 {
 public:
   static char const *getServiceName() {
@@ -66,7 +72,7 @@ public:
   }
 
   virtual int32_t startOperation(const sp<IBinder>&, int32_t, int32_t,
-				 const String16&) {
+                 const String16&) {
     return android::AppOpsManager::MODE_ALLOWED;
   }
 
@@ -99,6 +105,84 @@ public:
 
 #include <binder/IProcessInfoService.h>
 
+#if ANDROID_MAJOR >= 7
+
+class BnProcessInfoService : public BnInterface<IProcessInfoService> {
+public:
+    virtual status_t    onTransact( uint32_t code,
+                                    const Parcel& data,
+                                    Parcel* reply,
+                                    uint32_t flags = 0);
+};
+
+status_t BnProcessInfoService::onTransact( uint32_t code, const Parcel& data, Parcel* reply,
+        uint32_t flags) {
+    switch(code) {
+        case GET_PROCESS_STATES_FROM_PIDS: {
+            CHECK_INTERFACE(IProcessInfoService, data, reply);
+            int32_t arrayLen = data.readInt32();
+            if (arrayLen <= 0) {
+                reply->writeNoException();
+                reply->writeInt32(0);
+                reply->writeInt32(NOT_ENOUGH_DATA);
+                return NO_ERROR;
+            }
+
+            size_t len = static_cast<size_t>(arrayLen);
+            int32_t pids[len];
+            status_t res = data.read(pids, len * sizeof(*pids));
+
+            // Ignore output array length returned in the parcel here, as the states array must
+            // always be the same length as the input PIDs array.
+            int32_t states[len];
+            for (size_t i = 0; i < len; i++) states[i] = -1;
+            if (res == NO_ERROR) {
+                res = getProcessStatesFromPids(len, /*in*/ pids, /*out*/ states);
+            }
+            reply->writeNoException();
+            reply->writeInt32Array(len, states);
+            reply->writeInt32(res);
+            return NO_ERROR;
+        } break;
+        case GET_PROCESS_STATES_AND_OOM_SCORES_FROM_PIDS: {
+            CHECK_INTERFACE(IProcessInfoService, data, reply);
+            int32_t arrayLen = data.readInt32();
+            if (arrayLen <= 0) {
+                reply->writeNoException();
+                reply->writeInt32(0);
+                reply->writeInt32(NOT_ENOUGH_DATA);
+                return NO_ERROR;
+            }
+
+            size_t len = static_cast<size_t>(arrayLen);
+            int32_t pids[len];
+            status_t res = data.read(pids, len * sizeof(*pids));
+
+            // Ignore output array length returned in the parcel here, as the
+            // states array must always be the same length as the input PIDs array.
+            int32_t states[len];
+            int32_t scores[len];
+            for (size_t i = 0; i < len; i++) {
+                states[i] = -1;
+                scores[i] = -10000;
+            }
+            if (res == NO_ERROR) {
+                res = getProcessStatesAndOomScoresFromPids(
+                        len, /*in*/ pids, /*out*/ states, /*out*/ scores);
+            }
+            reply->writeNoException();
+            reply->writeInt32Array(len, states);
+            reply->writeInt32Array(len, scores);
+            reply->writeInt32(res);
+            return NO_ERROR;
+        } break;
+        default:
+            return BBinder::onTransact(code, data, reply, flags);
+    }
+}
+#endif
+
+
 class FakeProcessInfoService : public BinderService<FakeProcessInfoService>,
                         public BnProcessInfoService
 {
@@ -108,9 +192,16 @@ public:
     }
 
     status_t getProcessStatesFromPids(size_t length, int32_t* pids, int32_t* states) {
-    	for (int i=0; i< length; i++)
-    		states[i] = 0;
-    	return 0;
+        for (int i=0; i< length; i++)
+            states[i] = 0;
+        return 0;
+    }
+    status_t getProcessStatesAndOomScoresFromPids( size_t length, int32_t* pids, int32_t* states, int32_t* scores) {
+        for (int i=0; i< length; i++) {
+            states[i] = 0;
+            scores[i] = 0;
+        }
+        return 0;
     }
 };
 
@@ -179,6 +270,12 @@ public:
         return Vector<Sensor>();
     }
 
+#if ANDROID_MAJOR >= 7
+    Vector<Sensor> getDynamicSensorList(const String16& opPackageName) {
+        return Vector<Sensor>();
+    }
+#endif
+
     sp<ISensorEventConnection> createSensorEventConnection(const String8& packageName,
                         int mode, const String16& opPackageName) {
         return sp<ISensorEventConnection>(new FakeSensorEventConnection);
@@ -190,8 +287,6 @@ public:
 };
 #endif
 
-using namespace android;
-
 class FakePermissionController : public BinderService<FakePermissionController>,
                                  public BnPermissionController
 {
@@ -201,20 +296,20 @@ public:
     }
 
     bool checkPermission(const String16& permission, int32_t, int32_t) {
-      if (permission == String16("android.permission.CAMERA")) {
-	return true;
-      }
+        if (permission == String16("android.permission.CAMERA")) {
+            return true;
+        }
 
-      return false;
+        return false;
     }
 
 #if ANDROID_MAJOR >= 6
     void getPackagesForUid(const uid_t uid, Vector<String16> &packages) {
-      }
+    }
 
     bool isRuntimePermission(const String16& permission) {
          return false;
-      }
+    }
 #endif
 };
 
@@ -230,7 +325,7 @@ main(int, char**)
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
     FakeAppOps::instantiate();
 #endif
-
+   
 #if ANDROID_MAJOR >= 6
     FakeProcessInfoService::instantiate();
     FakeBatteryStats::instantiate();
