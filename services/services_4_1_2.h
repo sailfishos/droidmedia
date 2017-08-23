@@ -79,3 +79,21 @@ public:
         return false;
     }
 };
+
+class FakePermissionController : public BinderService<FakePermissionController>,
+                                 public BnPermissionController
+{
+public:
+    static char const *getServiceName() {
+        return "permission";
+    }
+
+    bool checkPermission(const String16& permission, int32_t, int32_t) {
+        if (permission == String16("android.permission.CAMERA")) {
+            return true;
+        }
+
+        return false;
+    }
+
+};

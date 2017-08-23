@@ -101,3 +101,62 @@ public:
   }
 #endif
 };
+
+class FakePermissionController : public BinderService<FakePermissionController>,
+                                 public BnPermissionController
+{
+public:
+    static char const *getServiceName() {
+        return "permission";
+    }
+
+    bool checkPermission(const String16& permission, int32_t, int32_t) {
+        if (permission == String16("android.permission.CAMERA")) {
+            return true;
+        }
+
+        return false;
+    }
+
+};
+
+#include <binder/AppOpsManager.h>
+#include <binder/IAppOpsService.h>
+class FakeAppOps : public BinderService<FakeAppOps>,
+           public BnAppOpsService
+{
+public:
+  static char const *getServiceName() {
+    return "appops";
+  }
+
+  virtual int32_t checkOperation(int32_t, int32_t, const String16&) {
+    return android::AppOpsManager::MODE_ALLOWED;
+  }
+
+  virtual int32_t noteOperation(int32_t, int32_t, const String16&) {
+    return android::AppOpsManager::MODE_ALLOWED;
+  }
+
+  virtual int32_t startOperation(const sp<IBinder>&, int32_t, int32_t,
+                 const String16&) {
+    return android::AppOpsManager::MODE_ALLOWED;
+  }
+
+  virtual void finishOperation(const sp<IBinder>&, int32_t, int32_t, const String16&) {
+    // Nothing
+  }
+
+  virtual void startWatchingMode(int32_t, const String16&, const sp<IAppOpsCallback>&) {
+    // Nothing
+  }
+
+  void stopWatchingMode(const sp<IAppOpsCallback>&) {
+    // Nothing
+  }
+
+  virtual sp<IBinder> getToken(const sp<IBinder>&) {
+    return NULL;
+  }
+};
+

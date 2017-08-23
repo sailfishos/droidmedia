@@ -164,7 +164,7 @@ DroidMediaBuffer *_DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCal
   // TODO: Here we are working around the fact that BufferQueue will send us an mGraphicBuffer
   // only when it changes. We can integrate SurfaceTexture but thart needs a lot of
   // change in the whole stack
-#if ANDROID_MAJOR >= 5
+#if ANDROID_MAJOR >= 6
   num = buffer.mSlot;
 #else
   num = buffer.mBuf;
