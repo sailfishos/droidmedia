@@ -108,3 +108,163 @@ public:
         return BAD_VALUE;
     }
 };
+
+class FakePermissionController : public BinderService<FakePermissionController>,
+                                 public BnPermissionController
+{
+public:
+    static char const *getServiceName() {
+        return "permission";
+    }
+
+    bool checkPermission(const String16& permission, int32_t, int32_t) {
+        if (permission == String16("android.permission.CAMERA")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    void getPackagesForUid(const uid_t uid, Vector<String16> &packages) {
+    }
+
+    bool isRuntimePermission(const String16& permission) {
+         return false;
+    }
+};
+
+#include <binder/AppOpsManager.h>
+#include <binder/IAppOpsService.h>
+class FakeAppOps : public BinderService<FakeAppOps>,
+           public BnAppOpsService
+{
+public:
+  static char const *getServiceName() {
+    return "appops";
+  }
+
+  virtual int32_t checkOperation(int32_t, int32_t, const String16&) {
+    return android::AppOpsManager::MODE_ALLOWED;
+  }
+
+  virtual int32_t noteOperation(int32_t, int32_t, const String16&) {
+    return android::AppOpsManager::MODE_ALLOWED;
+  }
+
+  virtual int32_t startOperation(const sp<IBinder>&, int32_t, int32_t,
+                 const String16&) {
+    return android::AppOpsManager::MODE_ALLOWED;
+  }
+
+  virtual void finishOperation(const sp<IBinder>&, int32_t, int32_t, const String16&) {
+    // Nothing
+  }
+
+  virtual void startWatchingMode(int32_t, const String16&, const sp<IAppOpsCallback>&) {
+    // Nothing
+  }
+
+  void stopWatchingMode(const sp<IAppOpsCallback>&) {
+    // Nothing
+  }
+
+  virtual sp<IBinder> getToken(const sp<IBinder>&) {
+    return NULL;
+  }
+  
+  virtual int32_t permissionToOpCode(const String16& permission) {
+    return 0;
+  }  
+};
+
+#include <binder/IProcessInfoService.h>
+
+class FakeProcessInfoService : public BinderService<FakeProcessInfoService>,
+                        public BnProcessInfoService
+{
+public:
+    static char const *getServiceName() {
+        return "processinfo";
+    }
+
+    status_t getProcessStatesFromPids(size_t length, int32_t* pids, int32_t* states) {
+        for (int i=0; i< length; i++)
+            states[i] = 0;
+        return 0;
+    }
+};
+
+#include <binder/IBatteryStats.h>
+
+class FakeBatteryStats : public BinderService<FakeBatteryStats>,
+                                public BnBatteryStats
+{
+public:
+    static char const *getServiceName() {
+        return "batterystats";
+    }
+    void noteStartSensor(int uid, int sensor) {  }
+    void noteStopSensor(int uid, int sensor) {  }
+    void noteStartVideo(int uid) {  }
+    void noteStopVideo(int uid) {  }
+    void noteStartAudio(int uid) {  }
+    void noteStopAudio(int uid) {  }
+    void noteResetVideo() {  }
+    void noteResetAudio() {  }
+    void noteFlashlightOn(int uid) {  }
+    void noteFlashlightOff(int uid) {  }
+    void noteStartCamera(int uid) {  }
+    void noteStopCamera(int uid) {  }
+    void noteResetCamera() {  }
+    void noteResetFlashlight() {  }
+};
+
+
+#include <gui/ISensorServer.h>
+#include <gui/ISensorEventConnection.h>
+#include <gui/Sensor.h>
+#include <gui/BitTube.h>
+
+class FakeSensorEventConnection : public BnSensorEventConnection
+{
+    sp<BitTube> mChannel;
+public:
+    FakeSensorEventConnection()
+    {
+        mChannel = new BitTube(0);
+    }
+    sp<BitTube> getSensorChannel() const {
+        return mChannel;
+    }
+    status_t enableDisable(int handle, bool enabled, nsecs_t samplingPeriodNs,
+                            nsecs_t maxBatchReportLatencyNs, int reservedFlags) {
+        return 0;
+    }
+    status_t setEventRate(int handle, nsecs_t ns) {
+        return 0;
+    }
+    status_t flush() {
+        return 0;
+    }
+};
+class FakeSensorServer : public BinderService<FakeSensorServer>,
+                         public BnSensorServer
+{
+public:
+    static char const *getServiceName() {
+        return "sensorservice";
+    }
+
+    Vector<Sensor> getSensorList(const String16& opPackageName) {
+        return Vector<Sensor>();
+    }
+
+    sp<ISensorEventConnection> createSensorEventConnection(const String8& packageName,
+                        int mode, const String16& opPackageName) {
+        return sp<ISensorEventConnection>(new FakeSensorEventConnection);
+    }
+
+    int32_t isDataInjectionEnabled() {
+        return 0;
+    }
+};

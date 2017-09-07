@@ -17,7 +17,11 @@
  */
 
 #include <media/stagefright/OMXClient.h>
+#if ANDROID_MAJOR < 7
 #include <media/stagefright/OMXCodec.h>
+#else
+#include <media/stagefright/MediaCodecList.h>
+#endif
 #include <media/stagefright/MediaSource.h>
 #include <media/stagefright/MetaData.h>
 #include <media/stagefright/foundation/ALooper.h>
@@ -313,12 +317,16 @@ public:
     if (md == NULL) {
       return NULL;
     }
-
+#if ANDROID_MAJOR < 7
     return android::OMXCodec::Create(omx.interface(),
 				     md,
 				     isEncoder(),
 				     src,
 				     NULL, flags(), window);
+#else
+// HACK: won't work, but will let it build
+     return src;
+#endif
 
   }
 
@@ -391,7 +399,12 @@ private:
 
   uint32_t flags(DroidMediaCodecEncoderMetaData *meta) {
     return flags((DroidMediaCodecMetaData *)meta,
+#if ANDROID_MAJOR < 7
 		 meta->meta_data ? android::OMXCodec::kStoreMetaDataInVideoBuffers : 0);
+#else
+    // TODO: assess whether we should still support this in Android 7. Lots of cameras seem to not support it
+    0);
+#endif
   }
 
   uint32_t flags(DroidMediaCodecDecoderMetaData *meta) {
@@ -415,11 +428,19 @@ private:
   uint32_t flags(DroidMediaCodecMetaData *meta, uint32_t currentFlags) {
     // We will not do any validation for the flags. Stagefright should take care of that.
     if (meta->flags & DROID_MEDIA_CODEC_SW_ONLY) {
+#if ANDROID_MAJOR < 7
       currentFlags |= android::OMXCodec::kSoftwareCodecsOnly;
+#else
+      currentFlags |= android::MediaCodecList::kPreferSoftwareCodecs;
+#endif
     }
 
     if (meta->flags & DROID_MEDIA_CODEC_HW_ONLY) {
+#if ANDROID_MAJOR < 7
       currentFlags |= android::OMXCodec::kHardwareCodecsOnly;
+#else
+      currentFlags |= android::MediaCodecList::kHardwareCodecsOnly;
+#endif
     }
 
     return currentFlags;

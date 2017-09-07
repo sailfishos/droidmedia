@@ -41,7 +41,11 @@ _DroidMediaBuffer::_DroidMediaBuffer(android::BufferItem& buffer,
     m_timestamp(buffer.mTimestamp),
     m_frameNumber(buffer.mFrameNumber),
     m_crop(buffer.mCrop),
+#if ANDROID_MAJOR >= 6
+    m_slot(buffer.mSlot),
+#else
     m_slot(buffer.mBuf),
+#endif
     m_data(data),
     m_ref(ref),
     m_unref(unref)

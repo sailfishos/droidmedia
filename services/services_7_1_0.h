@@ -17,6 +17,7 @@
  */
 
 #include <ui/Rect.h>
+#include <system/graphics.h>
 
 using namespace android;
 
@@ -107,6 +108,22 @@ public:
     status_t getAnimationFrameStats(FrameStats*) const {
         return BAD_VALUE;
     }
+
+    status_t getDisplayColorModes(const sp<IBinder>& display, Vector<android_color_mode_t>* configs) {
+        return BAD_VALUE;
+    }
+
+    android_color_mode_t getActiveColorMode(const sp<IBinder>& display) {
+        return HAL_COLOR_MODE_NATIVE;
+    }
+
+    status_t setActiveColorMode(const sp<IBinder>& display, android_color_mode_t colorMode) {
+        return BAD_VALUE;
+    }
+
+    status_t getHdrCapabilities(const sp<IBinder>& display, HdrCapabilities* outCapabilities) const {
+        return BAD_VALUE;
+    }
 };
 
 class FakePermissionController : public BinderService<FakePermissionController>,
@@ -125,6 +142,12 @@ public:
         return false;
     }
 
+    void getPackagesForUid(const uid_t uid, Vector<String16> &packages) {
+    }
+
+    bool isRuntimePermission(const String16& permission) {
+         return false;
+    }
 };
 
 #include <binder/AppOpsManager.h>
@@ -165,6 +188,108 @@ public:
   virtual sp<IBinder> getToken(const sp<IBinder>&) {
     return NULL;
   }
+  
+  virtual int32_t permissionToOpCode(const String16& permission) {
+    return 0;
+  }  
+};
+
+#include <binder/IProcessInfoService.h>
+
+class BnProcessInfoService : public BnInterface<IProcessInfoService> {
+public:
+    virtual status_t    onTransact( uint32_t code,
+                                    const Parcel& data,
+                                    Parcel* reply,
+                                    uint32_t flags = 0);
+};
+
+status_t BnProcessInfoService::onTransact( uint32_t code, const Parcel& data, Parcel* reply,
+        uint32_t flags) {
+    switch(code) {
+        case GET_PROCESS_STATES_FROM_PIDS: {
+            CHECK_INTERFACE(IProcessInfoService, data, reply);
+            int32_t arrayLen = data.readInt32();
+            if (arrayLen <= 0) {
+                reply->writeNoException();
+                reply->writeInt32(0);
+                reply->writeInt32(NOT_ENOUGH_DATA);
+                return NO_ERROR;
+            }
+
+            size_t len = static_cast<size_t>(arrayLen);
+            int32_t pids[len];
+            status_t res = data.read(pids, len * sizeof(*pids));
+
+            // Ignore output array length returned in the parcel here, as the states array must
+            // always be the same length as the input PIDs array.
+            int32_t states[len];
+            for (size_t i = 0; i < len; i++) states[i] = -1;
+            if (res == NO_ERROR) {
+                res = getProcessStatesFromPids(len, /*in*/ pids, /*out*/ states);
+            }
+            reply->writeNoException();
+            reply->writeInt32Array(len, states);
+            reply->writeInt32(res);
+            return NO_ERROR;
+        } break;
+        case GET_PROCESS_STATES_AND_OOM_SCORES_FROM_PIDS: {
+            CHECK_INTERFACE(IProcessInfoService, data, reply);
+            int32_t arrayLen = data.readInt32();
+            if (arrayLen <= 0) {
+                reply->writeNoException();
+                reply->writeInt32(0);
+                reply->writeInt32(NOT_ENOUGH_DATA);
+                return NO_ERROR;
+            }
+
+            size_t len = static_cast<size_t>(arrayLen);
+            int32_t pids[len];
+            status_t res = data.read(pids, len * sizeof(*pids));
+
+            // Ignore output array length returned in the parcel here, as the
+            // states array must always be the same length as the input PIDs array.
+            int32_t states[len];
+            int32_t scores[len];
+            for (size_t i = 0; i < len; i++) {
+                states[i] = -1;
+                scores[i] = -10000;
+            }
+            if (res == NO_ERROR) {
+                res = getProcessStatesAndOomScoresFromPids(
+                        len, /*in*/ pids, /*out*/ states, /*out*/ scores);
+            }
+            reply->writeNoException();
+            reply->writeInt32Array(len, states);
+            reply->writeInt32Array(len, scores);
+            reply->writeInt32(res);
+            return NO_ERROR;
+        } break;
+        default:
+            return BBinder::onTransact(code, data, reply, flags);
+    }
+}
+
+class FakeProcessInfoService : public BinderService<FakeProcessInfoService>,
+                        public BnProcessInfoService
+{
+public:
+    static char const *getServiceName() {
+        return "processinfo";
+    }
+
+    status_t getProcessStatesFromPids(size_t length, int32_t* pids, int32_t* states) {
+        for (int i=0; i< length; i++)
+            states[i] = 0;
+        return 0;
+    }
+    status_t getProcessStatesAndOomScoresFromPids( size_t length, int32_t* pids, int32_t* states, int32_t* scores) {
+        for (int i=0; i< length; i++) {
+            states[i] = 0;
+            scores[i] = 0;
+        }
+        return 0;
+    }
 };
 
 #include <binder/IBatteryStats.h>
@@ -184,6 +309,12 @@ public:
     void noteStopAudio(int uid) {  }
     void noteResetVideo() {  }
     void noteResetAudio() {  }
+    void noteFlashlightOn(int uid) {  }
+    void noteFlashlightOff(int uid) {  }
+    void noteStartCamera(int uid) {  }
+    void noteStopCamera(int uid) {  }
+    void noteResetCamera() {  }
+    void noteResetFlashlight() {  }
 };
 
 
@@ -222,11 +353,20 @@ public:
         return "sensorservice";
     }
 
-    Vector<Sensor> getSensorList() {
+    Vector<Sensor> getSensorList(const String16& opPackageName) {
         return Vector<Sensor>();
     }
-
-    sp<ISensorEventConnection> createSensorEventConnection() {
+    
+    Vector<Sensor> getDynamicSensorList(const String16& opPackageName) {
+        return Vector<Sensor>();
+    }
+    
+    sp<ISensorEventConnection> createSensorEventConnection(const String8& packageName,
+                        int mode, const String16& opPackageName) {
         return sp<ISensorEventConnection>(new FakeSensorEventConnection);
+    }
+
+    int32_t isDataInjectionEnabled() {
+        return 0;
     }
 };

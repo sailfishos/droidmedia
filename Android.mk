@@ -56,7 +56,13 @@ ifeq ($(strip $(BOARD_QTI_CAMERA_32BIT_ONLY)), true)
 LOCAL_MODULE_TARGET_ARCH := arm
 endif
 
+ifeq ($(strip $(ANDROID_MAJOR)),7)
+LOCAL_C_INCLUDES := frameworks/native/include/media/openmax \
+                    frameworks/native/include/media/hardware
+else
 LOCAL_C_INCLUDES := frameworks/native/include/media/openmax
+endif
+
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
