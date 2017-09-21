@@ -28,6 +28,8 @@
 #include "droidmediabuffer.h"
 #include "private.h"
 
+#define LOG_TAG "DroidMediaCamera"
+
 namespace android {
 	int32_t getColorFormat(const char* colorFormat) {
 		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV420P)) {
@@ -123,7 +125,7 @@ public:
                 }
                 break;
             default:
-                ALOGW("DroidMediaCamera: unknown notify message 0x%x", msgType);
+                ALOGW("unknown notify message 0x%x", msgType);
                 break;
         }
     }
@@ -180,7 +182,7 @@ public:
               break;
 
             default:
-                ALOGW("DroidMediaCamera: unknown postData message 0x%x", dataMsgType);
+                ALOGW("unknown postData message 0x%x", dataMsgType);
                 break;
         }
 
@@ -207,7 +209,7 @@ public:
                 break;
 
             default:
-                ALOGW("DroidMediaCamera: unknown postDataTimestamp message 0x%x", msgType);
+                ALOGW("unknown postDataTimestamp message 0x%x", msgType);
                 break;
         }
     }

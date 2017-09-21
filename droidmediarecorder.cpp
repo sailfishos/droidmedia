@@ -28,6 +28,8 @@
 #include <media/stagefright/foundation/ALooper.h>
 #endif
 
+#define LOG_TAG "DroidMediaRecorder"
+
 namespace android {
   class CameraSourceListener {
   public:
@@ -65,7 +67,7 @@ struct _DroidMediaRecorder {
         // Convert timestamp from useconds to nseconds
         data.ts *= 1000;
       } else {
-        if (!data.codec_config) ALOGE("DroidMediaRecorder: Received a buffer without a timestamp!");
+        if (!data.codec_config) ALOGE("Received a buffer without a timestamp!");
       }
 
       if (buffer->meta_data()->findInt64(android::kKeyDecodingTime, &data.decoding_ts)) {
@@ -176,7 +178,7 @@ bool droid_media_recorder_start(DroidMediaRecorder *recorder) {
   int err = recorder->m_codec->start();
 
   if (err != android::OK) {
-    ALOGE("DroidMediaRecorder: error 0x%x starting codec", -err);
+    ALOGE("error 0x%x starting codec", -err);
     return false;
   }
 
@@ -196,7 +198,7 @@ void droid_media_recorder_stop(DroidMediaRecorder *recorder) {
 
   int err = recorder->m_codec->stop();
   if (err != android::OK) {
-      ALOGE("DroidMediaRecorder: error 0x%x stopping codec", -err);
+      ALOGE("error 0x%x stopping codec", -err);
   }
 }
 

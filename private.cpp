@@ -24,6 +24,8 @@
 #include <gui/Surface.h>
 #endif
 
+#define LOG_TAG "DroidMediaBufferQueue"
+
 DroidMediaBufferQueueListener::DroidMediaBufferQueueListener() :
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
   ProxyConsumerListener(NULL),
@@ -157,7 +159,7 @@ DroidMediaBuffer *_DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCal
 #endif
 
   if (err != android::OK) {
-    ALOGE("DroidMediaBufferQueue: Failed to acquire buffer from the queue. Error 0x%x", -err);
+    ALOGE("Failed to acquire buffer from the queue. Error 0x%x", -err);
     return NULL;
   }
 
@@ -181,13 +183,13 @@ DroidMediaBuffer *_DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCal
   }
 
   if (m_slots[num].mGraphicBuffer == NULL) {
-    ALOGE("DroidMediaBufferQueue: Got a buffer without real data");
+    ALOGE("Got a buffer without real data");
 
     DroidMediaBuffer *buffer = new DroidMediaBuffer(m_slots[num], this, NULL, NULL, NULL);
     err = releaseMediaBuffer(buffer, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
 
     if (err != android::NO_ERROR) {
-      ALOGE("DroidMediaBufferQueue: error releasing buffer. Error 0x%x", -err);
+      ALOGE("error releasing buffer. Error 0x%x", -err);
     }
 
     return NULL;

@@ -19,6 +19,8 @@
 #include "droidmediabuffer.h"
 #include "private.h"
 
+#define LOG_TAG "DroidMediaBuffer"
+
 #if ANDROID_MAJOR < 5
 static const int staleBuffer = android::BufferQueue::STALE_BUFFER_SLOT;
 #else
@@ -122,7 +124,7 @@ DroidMediaBuffer *droid_media_buffer_create_from_raw_data(uint32_t w, uint32_t h
   android::status_t err = buffer->initCheck();
 
   if (err != android::NO_ERROR) {
-    ALOGE("DroidMediaBuffer: Error 0x%x allocating buffer", -err);
+    ALOGE("Error 0x%x allocating buffer", -err);
     buffer.clear();
     return NULL;
   }
@@ -130,7 +132,7 @@ DroidMediaBuffer *droid_media_buffer_create_from_raw_data(uint32_t w, uint32_t h
   err = buffer->lock(android::GraphicBuffer::USAGE_SW_READ_RARELY
 		     | android::GraphicBuffer::USAGE_SW_WRITE_RARELY, &addr);
   if (err != android::NO_ERROR) {
-    ALOGE("DroidMediaBuffer: Error 0x%x locking buffer", -err);
+    ALOGE("Error 0x%x locking buffer", -err);
     buffer.clear();
     return NULL;
   }
@@ -166,7 +168,7 @@ DroidMediaBuffer *droid_media_buffer_create_from_raw_data(uint32_t w, uint32_t h
 out:
   err = buffer->unlock();
   if (err != android::NO_ERROR) {
-    ALOGE("DroidMediaBuffer: Error 0x%x unlocking buffer", -err);
+    ALOGE("Error 0x%x unlocking buffer", -err);
     buffer.clear();
     return NULL;
   }
@@ -190,11 +192,11 @@ void droid_media_buffer_release(DroidMediaBuffer *buffer,
         break;
 
     case staleBuffer:
-        ALOGW("DroidMediaBuffer: Released stale buffer %d", buffer->m_slot);
+        ALOGW("Released stale buffer %d", buffer->m_slot);
         break;
 
     default:
-        ALOGE("DroidMediaBuffer: Error 0x%x releasing buffer %d", -err, buffer->m_slot);
+        ALOGE("Error 0x%x releasing buffer %d", -err, buffer->m_slot);
         break;
     }
 
