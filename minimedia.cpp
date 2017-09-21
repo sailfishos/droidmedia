@@ -74,7 +74,7 @@ main(int, char**)
     // Camera service needs to be told which users may use the camera
     sp<IBinder> binder;
     do {
-    	binder = sm->getService(String16("media.camera"));
+        binder = sm->getService(String16("media.camera"));
         if (binder != NULL) {
             break;
         }

@@ -71,7 +71,9 @@ main(int, char**)
 #endif
 
 #if ANDROID_MAJOR >= 6
+    FakeResourceManagerService::instantiate();
     FakeProcessInfoService::instantiate();
+
 #endif
 
     ProcessState::self()->startThreadPool();
