@@ -405,15 +405,17 @@ public:
         format->setString("mime", mime);
         ALOGW("Creating audio encoder for %s", mime);
         format->setInt32("aac-profile", OMX_AUDIO_AACObjectLC);
-        int32_t maxinput, bitrate;
+
+        int32_t maxinput, channels, samplerate, bitrate;
         if (md->findInt32(android::kKeyMaxInputSize, &maxinput)) {
             format->setInt32("max-input-size", maxinput);
         }
-
-        //TODO: make these configurable
-        format->setInt32("channel-count", 2);
-        format->setInt32("sample-rate", 44100);
-
+        if (md->findInt32(android::kKeyChannelCount, &channels)) {
+            format->setInt32("channel-count", channels);
+        }
+        if (md->findInt32(android::kKeySampleRate, &samplerate)) {
+            format->setInt32("sample-rate", samplerate);
+        }
         if (md->findInt32(android::kKeyBitRate, &bitrate)) {
           format->setInt32("bitrate", bitrate);
         }
