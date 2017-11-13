@@ -244,6 +244,11 @@ uint32_t droid_media_buffer_get_height(DroidMediaBuffer * buffer)
     return buffer->height;
 }
 
+const void *droid_media_buffer_get_handle(DroidMediaBuffer *buffer)
+{
+    return buffer->handle;
+}
+
 void droid_media_buffer_get_info(DroidMediaBuffer *buffer, DroidMediaBufferInfo *info)
 {
     info->width = buffer->width;
