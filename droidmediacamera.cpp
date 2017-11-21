@@ -216,7 +216,7 @@ public:
 #if ANDROID_MAJOR >= 7
     void postRecordingFrameHandleTimestamp(nsecs_t timestamp, native_handle_t* handle) 
     {
-        // Ignore for now
+    	ALOGW("postRecordingFrameHandleTimestamp - not sure what to do");
     }
 #endif
 
@@ -279,14 +279,14 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 
 DroidMediaCamera *droid_media_camera_connect(int camera_number)
 {
-  android::sp<DroidMediaBufferQueueListener> listener(new DroidMediaBufferQueueListener);
+    android::sp<DroidMediaBufferQueueListener> listener(new DroidMediaBufferQueueListener);
 
     android::sp<DroidMediaBufferQueue>
       queue(new DroidMediaBufferQueue("DroidMediaCameraBufferQueue"));
     if (!queue->connectListener()) {
         ALOGE("Failed to connect buffer queue listener");
-	queue.clear();
-	listener.clear();
+        queue.clear();
+        listener.clear();
         return NULL;
     }
 
@@ -400,8 +400,13 @@ bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, boo
 #if ANDROID_MAJOR < 7
     return camera->m_camera->storeMetaDataInBuffers(enabled) == android::NO_ERROR;
 #else
-    // TODO: assess whether we should still support this in Android 7. Lots of cameras seem to not support it
-    return false;
+    if (android::OK == camera->m_camera->setVideoBufferMode(
+            android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE)) {
+        ALOGI("Recording in buffer queue mode");
+        return true;
+    } else {
+        return false;
+    }
 #endif
 }
 

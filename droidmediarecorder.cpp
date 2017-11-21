@@ -50,7 +50,7 @@ struct _DroidMediaRecorder {
     android::MediaBuffer *buffer;
     android::status_t err = m_codec->read(&buffer);
 
-    if (buffer) {
+    if (err == android::OK) {
       DroidMediaCodecData data;
       data.data.data = (uint8_t *)buffer->data() + buffer->range_offset();
       data.data.size = buffer->range_length();
@@ -67,7 +67,7 @@ struct _DroidMediaRecorder {
         // Convert timestamp from useconds to nseconds
         data.ts *= 1000;
       } else {
-        if (!data.codec_config) ALOGE("Received a buffer without a timestamp!");
+        if (!data.codec_config) ALOGE("Recorder received a buffer without a timestamp!");
       }
 
       if (buffer->meta_data()->findInt64(android::kKeyDecodingTime, &data.decoding_ts)) {
@@ -151,7 +151,7 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 #endif
   // fetch the colour format
   recorder->m_src->getFormat()->findInt32(android::kKeyColorFormat, &meta->color_format);
-  
+
   // Now the encoder:
 #if ANDROID_MAJOR >= 5
   recorder->m_codec = droid_media_codec_create_encoder_raw(meta, recorder->m_looper, recorder->m_src);

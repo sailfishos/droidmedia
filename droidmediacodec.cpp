@@ -33,6 +33,8 @@
 
 #if ANDROID_MAJOR < 7
 #include <media/stagefright/OMXCodec.h>
+#else
+#include <media/hardware/MetadataBufferType.h>
 #endif
 
 #include <media/stagefright/MediaSource.h>
@@ -388,6 +390,14 @@ public:
           format->setInt32("i-frame-interval", iframes);
       }
 
+#if ANDROID_MAJOR >= 7
+      if (m_enc->meta_data) {
+          format->setInt32("android._input-metadata-buffer-type", android::kMetadataBufferTypeANWBuffer);
+          format->setInt32("android._store-metadata-in-buffers-output", false);
+      }
+      format->setInt32("android._using-recorder", 1);
+#endif
+
       if (!strcmp (mime, android::MEDIA_MIMETYPE_VIDEO_AVC)) {
         format->setInt32("profile", OMX_VIDEO_AVCProfileBaseline);
         int32_t level = android::ACodec::getAVCLevelFor(width, height, frames, bitrate);
@@ -511,6 +521,9 @@ private:
   }
 
   uint32_t flags(DroidMediaCodecEncoderMetaData *meta) {
+#if ANDROID_MAJOR >= 7
+    return flags((DroidMediaCodecMetaData *)meta, 0);
+#else
     return flags((DroidMediaCodecMetaData *)meta, meta->meta_data ?
 #if ANDROID_MAJOR >= 5
     	  android::MediaCodecSource::FLAG_USE_METADATA_INPUT
@@ -518,6 +531,7 @@ private:
 		  android::OMXCodec::kStoreMetaDataInVideoBuffers
 #endif
 : 0);
+#endif
   }
 
   uint32_t flags(DroidMediaCodecDecoderMetaData *meta) {
