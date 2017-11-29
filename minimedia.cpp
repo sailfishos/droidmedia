@@ -33,6 +33,8 @@
 #include <cutils/multiuser.h>
 #endif
 
+#define LOG_TAG "MinimediaService"
+
 // echo "persist.camera.shutter.disable=1" >> /system/build.prop
 
 using namespace android;
@@ -78,10 +80,10 @@ main(int, char**)
         if (binder != NULL) {
             break;
         }
-        ALOGW("DroidMedia: Camera service is not yet available, waiting...");
+        ALOGW("Camera service is not yet available, waiting...");
         usleep(BINDER_SERVICE_CHECK_INTERVAL);
     } while (true);
-    ALOGD("DroidMedia: Allowing use of the camera for users root and bin");
+    ALOGD("Allowing use of the camera for users root and bin");
 #if ANDROID_MAJOR >= 7
     sp<hardware::ICameraService> gCameraService = interface_cast<hardware::ICameraService>(binder);
     std::vector<int32_t> users = {0, 1};

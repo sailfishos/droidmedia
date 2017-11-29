@@ -19,6 +19,8 @@
 #include "allocator.h"
 #include <ui/GraphicBuffer.h>
 
+#define LOG_TAG "DroidMediaAllocator"
+
 DroidMediaAllocator::DroidMediaAllocator() :
     m_size(0)
 {
@@ -52,7 +54,7 @@ DroidMediaAllocator::createGraphicBuffer(uint32_t w, uint32_t h,
     *error = err;
 
     if (err != android::NO_ERROR || graphicBuffer->handle == 0) {
-        ALOGE("DroidMediaAllocator::createGraphicBuffer(w=%d, h=%d) "
+        ALOGE("createGraphicBuffer(w=%d, h=%d) "
               "failed (%s), handle=%p, format=0x%x, usage=0x%x, size=%d",
               w, h, strerror(-err), graphicBuffer->handle, format, usage, m_size);
         return 0;
