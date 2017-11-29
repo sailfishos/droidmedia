@@ -47,9 +47,9 @@ popd
 
 %build
 if (grep -qi '^BOARD_QTI_CAMERA_32BIT_ONLY := true' device/*/*/*.mk); then
-droid-make -j4 libdroidmedia_32 minimediaservice minisfservice
+droid-make %{?_smp_mflags} libdroidmedia_32 minimediaservice minisfservice
 else
-droid-make -j4 libdroidmedia minimediaservice minisfservice
+droid-make %{?_smp_mflags} libdroidmedia minimediaservice minisfservice
 fi
 
 %install
