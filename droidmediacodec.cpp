@@ -621,8 +621,8 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecBuilder& builder)
     if (!queue->connectListener()) {
       ALOGE("Failed to connect buffer queue listener");
     return NULL;
-#endif
     }
+#endif
   }
 
 #if ANDROID_MAJOR >= 5
