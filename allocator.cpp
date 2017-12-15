@@ -19,6 +19,8 @@
 #include "allocator.h"
 #include <ui/GraphicBuffer.h>
 
+#define LOG_TAG "DroidMediaAllocator"
+
 DroidMediaAllocator::DroidMediaAllocator() :
     m_size(0)
 {
@@ -33,23 +35,26 @@ DroidMediaAllocator::~DroidMediaAllocator()
 android::sp<android::GraphicBuffer>
 DroidMediaAllocator::createGraphicBuffer(uint32_t w, uint32_t h,
                                          android::PixelFormat format, uint32_t usage,
+#if ANDROID_MAJOR >= 7
+                                                          std::string requestorName,
+#endif
                                          android::status_t* error)
 {
     // Copied from SurfaceFlinger.cpp
     android::sp<android::GraphicBuffer>
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR == 5
-        graphicBuffer(new android::GraphicBuffer(w, h, format,
-                                                 usage));
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 2)
+    graphicBuffer(new android::GraphicBuffer(w, h, format,
+                                             usage, m_size));
 #else
-        graphicBuffer(new android::GraphicBuffer(w, h, format,
-                                                 usage, m_size));
+    graphicBuffer(new android::GraphicBuffer(w, h, format,
+                                             usage));
 #endif
     android::status_t err = graphicBuffer->initCheck();
 
     *error = err;
 
     if (err != android::NO_ERROR || graphicBuffer->handle == 0) {
-        ALOGE("DroidMediaAllocator::createGraphicBuffer(w=%d, h=%d) "
+        ALOGE("createGraphicBuffer(w=%d, h=%d) "
               "failed (%s), handle=%p, format=0x%x, usage=0x%x, size=%d",
               w, h, strerror(-err), graphicBuffer->handle, format, usage, m_size);
         return 0;

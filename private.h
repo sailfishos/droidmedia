@@ -22,12 +22,18 @@
 #include "droidmedia.h"
 #include <gui/BufferQueue.h>
 #include <camera/Camera.h>
+#include <media/stagefright/MediaSource.h>
+#include "droidmediacamera.h"
+#include "droidmediacodec.h"
+#if ANDROID_MAJOR >=5
+#include <media/stagefright/foundation/ALooper.h>
+#endif
 
 class DroidMediaBufferQueueListener :
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
-public android::BufferQueue::ProxyConsumerListener {
-#else
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
 public android::BufferQueue::ConsumerListener {
+#else
+	public android::BufferQueue::ProxyConsumerListener {
 #endif
 public:
   DroidMediaBufferQueueListener();
@@ -35,7 +41,7 @@ public:
   void onBuffersReleased();
   void setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data);
 
-#if ANDROID_MAJOR == 5
+#if ANDROID_MAJOR >= 5
   void onFrameAvailable(const android::BufferItem&) { onFrameAvailable(); }
   void onSidebandStreamChanged() {}
 #endif
@@ -67,15 +73,27 @@ public:
   bool acquireAndRelease(DroidMediaBufferInfo *info);
 
 private:
-#if ANDROID_MAJOR == 5
+#if ANDROID_MAJOR >= 5
   android::sp<android::IGraphicBufferProducer> m_producer;
   android::sp<android::IGraphicBufferConsumer> m_queue;
 #else
   android::sp<android::BufferQueue> m_queue;
 #endif
+
+#if ANDROID_MAJOR >= 6
+  android::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
+#else
   android::BufferQueue::BufferItem m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
+#endif
 
   android::sp<DroidMediaBufferQueueListener> m_listener;
 };
 
+android::sp<android::Camera> droid_media_camera_get_camera(DroidMediaCamera *camera);
+android::sp<android::MediaSource> droid_media_codec_create_encoder_raw(DroidMediaCodecEncoderMetaData *meta,
+#if ANDROID_MAJOR >=5
+							      android::sp<android::ALooper> looper,
+#endif
+							      android::sp<android::MediaSource> src);
+ 
 #endif /* DROID_MEDIA_PRIVATE_H */

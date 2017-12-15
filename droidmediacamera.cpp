@@ -24,18 +24,45 @@
 #include <utils/String8.h>
 #include <utils/Condition.h>
 #include <media/stagefright/CameraSource.h>
+#include <media/openmax/OMX_IVCommon.h>
 #include "droidmediabuffer.h"
 #include "private.h"
 
-// This is really a hack
+#define LOG_TAG "DroidMediaCamera"
+
 namespace android {
-  class CameraSourceListener {
-  public:
-    static int32_t getColorFormat(android::CameraSource *src, android::CameraParameters p) {
-      return src->isCameraColorFormatSupported (p) == android::NO_ERROR ? src->mColorFormat : -1;
-    }
-  };
-};
+	int32_t getColorFormat(const char* colorFormat) {
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV420P)) {
+		   return OMX_COLOR_FormatYUV420Planar;
+		}
+
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV422SP)) {
+		   return OMX_COLOR_FormatYUV422SemiPlanar;
+		}
+
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV420SP)) {
+			return OMX_COLOR_FormatYUV420SemiPlanar;
+		}
+
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV422I)) {
+			return OMX_COLOR_FormatYCbYCr;
+		}
+
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_RGB565)) {
+		   return OMX_COLOR_Format16bitRGB565;
+		}
+
+		if (!strcmp(colorFormat, "OMX_TI_COLOR_FormatYUV420PackedSemiPlanar")) {
+		   return OMX_TI_COLOR_FormatYUV420PackedSemiPlanar;
+		}
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR >= 5
+		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_ANDROID_OPAQUE)) {
+			return OMX_COLOR_FormatAndroidOpaque;
+		}
+#endif
+		return -1;
+	}
+}
 
 extern "C" {
 
@@ -98,7 +125,7 @@ public:
                 }
                 break;
             default:
-                ALOGW("DroidMediaCamera: unknown notify message 0x%x", msgType);
+                ALOGW("unknown notify message 0x%x", msgType);
                 break;
         }
     }
@@ -155,7 +182,7 @@ public:
               break;
 
             default:
-                ALOGW("DroidMediaCamera: unknown postData message 0x%x", dataMsgType);
+                ALOGW("unknown postData message 0x%x", dataMsgType);
                 break;
         }
 
@@ -182,10 +209,16 @@ public:
                 break;
 
             default:
-                ALOGW("DroidMediaCamera: unknown postDataTimestamp message 0x%x", msgType);
+                ALOGW("unknown postDataTimestamp message 0x%x", msgType);
                 break;
         }
     }
+#if ANDROID_MAJOR >= 7
+    void postRecordingFrameHandleTimestamp(nsecs_t timestamp, native_handle_t* handle) 
+    {
+    	ALOGW("postRecordingFrameHandleTimestamp - not sure what to do");
+    }
+#endif
 
     void sendPreviewMetadata(camera_frame_metadata_t *metadata)
     {
@@ -246,14 +279,14 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 
 DroidMediaCamera *droid_media_camera_connect(int camera_number)
 {
-  android::sp<DroidMediaBufferQueueListener> listener(new DroidMediaBufferQueueListener);
+    android::sp<DroidMediaBufferQueueListener> listener(new DroidMediaBufferQueueListener);
 
     android::sp<DroidMediaBufferQueue>
       queue(new DroidMediaBufferQueue("DroidMediaCameraBufferQueue"));
     if (!queue->connectListener()) {
         ALOGE("Failed to connect buffer queue listener");
-	queue.clear();
-	listener.clear();
+        queue.clear();
+        listener.clear();
         return NULL;
     }
 
@@ -263,11 +296,17 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
         return NULL;
     }
 
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
+    cam->m_camera = android::Camera::connect(camera_number);
+#elif ANDROID_MAJOR <= 6
     cam->m_camera = android::Camera::connect(camera_number, android::String16("droidmedia"),
 					     android::Camera::USE_CALLING_UID);
 #else
-    cam->m_camera = android::Camera::connect(camera_number);
+    cam->m_camera = android::Camera::connect(camera_number, android::String16("droidmedia"),
+					     android::Camera::USE_CALLING_UID, android::Camera::USE_CALLING_PID);
+// This would open a HAL1 camera, but everything seems to work with default HAL3 
+//    android::Camera::connectLegacy(camera_number, 1 << 8, android::String16("droidmedia"),
+//					     android::Camera::USE_CALLING_UID, cam->m_camera);
 #endif
     if (cam->m_camera.get() == NULL) {
         delete cam;
@@ -358,7 +397,17 @@ bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int3
 
 bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, bool enabled)
 {
+#if ANDROID_MAJOR < 7
     return camera->m_camera->storeMetaDataInBuffers(enabled) == android::NO_ERROR;
+#else
+    if (android::OK == camera->m_camera->setVideoBufferMode(
+            android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE)) {
+        ALOGI("Recording in buffer queue mode");
+        return true;
+    } else {
+        return false;
+    }
+#endif
 }
 
 void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera, int preview_callback_flag)
@@ -432,19 +481,14 @@ bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
 
 int32_t droid_media_camera_get_video_color_format (DroidMediaCamera *camera)
 {
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR <= 2
-  android::CameraSource *s = android::CameraSource::Create();
-#else
-  android::CameraSource *s = android::CameraSource::Create(android::String16(""));
-#endif
 
   android::CameraParameters p(camera->m_camera->getParameters());
 
-  int32_t fmt = android::CameraSourceListener::getColorFormat(s, p);
-
-  delete s;
-
-  return fmt;
+  return android::getColorFormat(p.get(android::CameraParameters::KEY_VIDEO_FRAME_FORMAT));
 }
 
 };
+
+android::sp<android::Camera> droid_media_camera_get_camera (DroidMediaCamera *camera) {
+  return camera->m_camera;
+}

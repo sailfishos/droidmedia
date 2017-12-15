@@ -33,6 +33,7 @@ LOCAL_SRC_FILES := droidmedia.cpp \
                    droidmediaconstants.cpp \
                    droidmediacodec.cpp \
                    droidmediaconvert.cpp \
+                   droidmediarecorder.cpp \
                    allocator.cpp \
                    droidmediabuffer.cpp \
                    private.cpp
@@ -51,7 +52,17 @@ LOCAL_SHARED_LIBRARIES := libc \
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO)
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
+ifeq ($(strip $(BOARD_QTI_CAMERA_32BIT_ONLY)), true)
+LOCAL_MODULE_TARGET_ARCH := arm
+endif
+
+ifeq ($(strip $(ANDROID_MAJOR)),7)
+LOCAL_C_INCLUDES := frameworks/native/include/media/openmax \
+                    frameworks/native/include/media/hardware
+else
 LOCAL_C_INCLUDES := frameworks/native/include/media/openmax
+endif
+
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -63,6 +74,7 @@ LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice \
 LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libmediaplayerservice \
                           libaudiopolicyservice \
+                          libcamera_client \
                           libutils \
                           libbinder \
                           libgui \
@@ -71,12 +83,16 @@ LOCAL_SHARED_LIBRARIES := libcameraservice \
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO)
 LOCAL_MODULE := minimediaservice
+ifeq ($(strip $(BOARD_QTI_CAMERA_32BIT_ONLY)), true)
+LOCAL_MODULE_TARGET_ARCH := arm
+endif
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minisf.cpp allocator.cpp
 LOCAL_SHARED_LIBRARIES := libutils \
                           libbinder \
+                          libmedia \
                           libgui \
                           libcutils \
                           libui
@@ -86,4 +102,7 @@ ifneq ($(CM_BUILD),)
 LOCAL_CPPFLAGS += -DCM_BUILD
 endif
 LOCAL_MODULE := minisfservice
+ifeq ($(strip $(BOARD_QTI_CAMERA_32BIT_ONLY)), true)
+LOCAL_MODULE_TARGET_ARCH := arm
+endif
 include $(BUILD_EXECUTABLE)

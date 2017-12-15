@@ -20,10 +20,14 @@
 #include <binder/ProcessState.h>
 #include <binder/IPCThreadState.h>
 
+
 extern "C" {
 
 void droid_media_init()
 {
+
+
+
     android::ProcessState::self()->startThreadPool();
 }
 

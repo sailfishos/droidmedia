@@ -25,6 +25,8 @@
 
 typedef void (*_getI420ColorConverter)(II420ColorConverter *converter);
 
+#define LOG_TAG "DroidMediaConvert"
+
 extern "C" {
 
 struct _DroidMediaConvert : public II420ColorConverter
@@ -45,19 +47,19 @@ public:
 
     bool init() {
         if (m_handle) {
-            ALOGW("DroidMediaConvert: already loaded");
+            ALOGW("already loaded");
             return true;
         }
 
         m_handle = dlopen("libI420colorconvert.so", RTLD_NOW);
         if (!m_handle) {
-            ALOGE("DroidMediaConvert: failed to load libI420colorconvert.so. %s", dlerror());
+            ALOGE("failed to load libI420colorconvert.so. %s", dlerror());
             return false;
         }
 
         _getI420ColorConverter func = (_getI420ColorConverter)dlsym(m_handle, "getI420ColorConverter");
         if (!func) {
-            ALOGE("DroidMediaConvert: failed to find symbol getI420ColorConverter");
+            ALOGE("failed to find symbol getI420ColorConverter");
             dlclose(m_handle);
             m_handle = NULL;
             return false;
@@ -97,7 +99,7 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in,
 	convert->m_crop.right == -1 ||
 	convert->m_crop.bottom == -1) {
 
-      ALOGE("DroidMediaConvert: crop rectangle not set");
+      ALOGE("crop rectangle not set");
 
       return false;
     }
@@ -108,7 +110,7 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in,
                                               out);
 
     if (err != android::NO_ERROR) {
-        ALOGE("DroidMediaConvert: error 0x%x converting buffer", -err);
+        ALOGE("error 0x%x converting buffer", -err);
         return false;
     }
 

@@ -42,67 +42,15 @@
 #include "services/services_5_1_0.h"
 #endif
 
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
-#include <binder/AppOpsManager.h>
-#include <binder/IAppOpsService.h>
-class FakeAppOps : public BinderService<FakeAppOps>,
-		   public BnAppOpsService
-{
-public:
-  static char const *getServiceName() {
-    return "appops";
-  }
+#if ANDROID_MAJOR == 6 && ANDROID_MINOR == 0
+#include "services/services_6_0_0.h"
+#endif
 
-  virtual int32_t checkOperation(int32_t, int32_t, const String16&) {
-    return android::AppOpsManager::MODE_ALLOWED;
-  }
-
-  virtual int32_t noteOperation(int32_t, int32_t, const String16&) {
-    return android::AppOpsManager::MODE_ALLOWED;
-  }
-
-  virtual int32_t startOperation(const sp<IBinder>&, int32_t, int32_t,
-				 const String16&) {
-    return android::AppOpsManager::MODE_ALLOWED;
-  }
-
-  virtual void finishOperation(const sp<IBinder>&, int32_t, int32_t, const String16&) {
-    // Nothing
-  }
-
-  virtual void startWatchingMode(int32_t, const String16&, const sp<IAppOpsCallback>&) {
-    // Nothing
-  }
-
-  void stopWatchingMode(const sp<IAppOpsCallback>&) {
-    // Nothing
-  }
-
-  virtual sp<IBinder> getToken(const sp<IBinder>&) {
-    return NULL;
-  }
-};
-
+#if ANDROID_MAJOR == 7 && ANDROID_MINOR == 1
+#include "services/services_7_1_0.h"
 #endif
 
 using namespace android;
-
-class FakePermissionController : public BinderService<FakePermissionController>,
-                                 public BnPermissionController
-{
-public:
-    static char const *getServiceName() {
-        return "permission";
-    }
-
-    bool checkPermission(const String16& permission, int32_t, int32_t) {
-      if (permission == String16("android.permission.CAMERA")) {
-	return true;
-      }
-
-      return false;
-    }
-};
 
 int
 main(int, char**)
@@ -113,8 +61,19 @@ main(int, char**)
     FakePermissionController::instantiate();
     MiniSurfaceFlinger::instantiate();
 
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR == 5
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
     FakeAppOps::instantiate();
+#endif
+   
+#if ANDROID_MAJOR >= 5
+    FakeBatteryStats::instantiate();
+    FakeSensorServer::instantiate();
+#endif
+
+#if ANDROID_MAJOR >= 6
+    FakeResourceManagerService::instantiate();
+    FakeProcessInfoService::instantiate();
+
 #endif
 
     ProcessState::self()->startThreadPool();

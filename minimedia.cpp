@@ -23,10 +23,45 @@
 #include <AudioPolicyService.h>
 #include <binder/MemoryHeapBase.h>
 #include <MediaPlayerService.h>
+#if ANDROID_MAJOR >= 6
+#include <binder/BinderService.h>
+#if ANDROID_MAJOR < 7
+#include <camera/ICameraService.h>
+#else
+#include <android/hardware/ICameraService.h>
+#endif
+#include <binder/IInterface.h>
+#include <cutils/multiuser.h>
+#endif
+
+#define LOG_TAG "MinimediaService"
 
 // echo "persist.camera.shutter.disable=1" >> /system/build.prop
 
 using namespace android;
+
+#define BINDER_SERVICE_CHECK_INTERVAL 500000
+
+
+#if ANDROID_MAJOR >= 6
+
+#include <camera/ICameraServiceProxy.h>
+
+class FakeCameraServiceProxy : public BinderService<FakeCameraServiceProxy>,
+                        public BnCameraServiceProxy
+{
+public:
+    static char const *getServiceName() {
+        return "media.camera.proxy";
+    }
+
+    void pingForUserUpdate() {
+    }
+
+    void notifyCameraState(String16 cameraId, CameraState newCameraState) {
+    }
+};
+#endif
 
 int
 main(int, char**)
@@ -37,6 +72,31 @@ main(int, char**)
     MediaPlayerService::instantiate();
     CameraService::instantiate();
     AudioPolicyService::instantiate();
+
+#if ANDROID_MAJOR >= 6
+    FakeCameraServiceProxy::instantiate();
+    // Camera service needs to be told which users may use the camera
+    sp<IBinder> binder;
+    do {
+        binder = sm->getService(String16("media.camera"));
+        if (binder != NULL) {
+            break;
+        }
+        ALOGW("Camera service is not yet available, waiting...");
+        usleep(BINDER_SERVICE_CHECK_INTERVAL);
+    } while (true);
+    ALOGD("Allowing use of the camera for users root and bin");
+#if ANDROID_MAJOR >= 7
+    sp<hardware::ICameraService> gCameraService = interface_cast<hardware::ICameraService>(binder);
+    std::vector<int32_t> users = {0, 1};
+    gCameraService->notifySystemEvent(1, users);
+#else
+    sp<ICameraService> gCameraService = interface_cast<ICameraService>(binder);
+    int32_t users[2];
+    users[0] = 0; users[1] = 1;
+    gCameraService->notifySystemEvent(1, users, 2);
+#endif
+#endif
 
     ProcessState::self()->startThreadPool();
     IPCThreadState::self()->joinThreadPool();

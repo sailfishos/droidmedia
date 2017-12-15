@@ -125,6 +125,12 @@ public:
         return false;
     }
 
+    void getPackagesForUid(const uid_t uid, Vector<String16> &packages) {
+    }
+
+    bool isRuntimePermission(const String16& permission) {
+         return false;
+    }
 };
 
 #include <binder/AppOpsManager.h>
@@ -165,6 +171,27 @@ public:
   virtual sp<IBinder> getToken(const sp<IBinder>&) {
     return NULL;
   }
+  
+  virtual int32_t permissionToOpCode(const String16& permission) {
+    return 0;
+  }  
+};
+
+#include <binder/IProcessInfoService.h>
+
+class FakeProcessInfoService : public BinderService<FakeProcessInfoService>,
+                        public BnProcessInfoService
+{
+public:
+    static char const *getServiceName() {
+        return "processinfo";
+    }
+
+    status_t getProcessStatesFromPids(size_t length, int32_t* pids, int32_t* states) {
+        for (int i=0; i< length; i++)
+            states[i] = 0;
+        return 0;
+    }
 };
 
 #include <binder/IBatteryStats.h>
@@ -184,6 +211,12 @@ public:
     void noteStopAudio(int uid) {  }
     void noteResetVideo() {  }
     void noteResetAudio() {  }
+    void noteFlashlightOn(int uid) {  }
+    void noteFlashlightOff(int uid) {  }
+    void noteStartCamera(int uid) {  }
+    void noteStopCamera(int uid) {  }
+    void noteResetCamera() {  }
+    void noteResetFlashlight() {  }
 };
 
 
@@ -222,11 +255,43 @@ public:
         return "sensorservice";
     }
 
-    Vector<Sensor> getSensorList() {
+    Vector<Sensor> getSensorList(const String16& opPackageName) {
         return Vector<Sensor>();
     }
 
-    sp<ISensorEventConnection> createSensorEventConnection() {
+    sp<ISensorEventConnection> createSensorEventConnection(const String8& packageName,
+                        int mode, const String16& opPackageName) {
         return sp<ISensorEventConnection>(new FakeSensorEventConnection);
+    }
+
+    int32_t isDataInjectionEnabled() {
+        return 0;
+    }
+};
+
+#include <media/IResourceManagerService.h>
+#include <media/IResourceManagerClient.h>
+#include <media/MediaResource.h>
+#include <media/MediaResourcePolicy.h>
+
+class FakeResourceManagerService : public BinderService<FakeResourceManagerService>,
+                         public BnResourceManagerService
+{
+public:
+    static char const *getServiceName() {
+        return "media.resource_manager";
+    }
+    void config(const Vector<MediaResourcePolicy> &policies) {
+    }
+
+    void addResource(int pid, int64_t clientId, const sp<IResourceManagerClient> client,
+        const Vector<MediaResource> &resources) {
+    }
+
+    void removeResource(int pid, int64_t clientId) {
+    }
+
+    bool reclaimResource(int callingPid, const Vector<MediaResource> &resources) {
+    	return true;
     }
 };
