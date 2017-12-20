@@ -1,0 +1,1 @@
+/* Empty header for building outside OBS */

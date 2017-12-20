@@ -25,6 +25,7 @@
 #include <binder/IPermissionController.h>
 #include <binder/MemoryHeapBase.h>
 #include "allocator.h"
+#include "android-config.h"
 
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 1 && ANDROID_MICRO == 2
 #include "services/services_4_1_2.h"
