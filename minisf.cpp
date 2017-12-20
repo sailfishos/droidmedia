@@ -27,6 +27,16 @@
 #include "allocator.h"
 #include "android-config.h"
 
+#ifdef USE_SERVICES_VENDOR_EXTENSION
+
+#if ANDROID_MAJOR == 5 && ANDROID_MINOR == 1
+#include "services/services_5_1_0_custom.h"
+#else
+#error "No droidmedia vendor extension defined for this Android version."
+#endif
+
+#else
+
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR == 1 && ANDROID_MICRO == 2
 #include "services/services_4_1_2.h"
 #endif
@@ -49,6 +59,8 @@
 
 #if ANDROID_MAJOR == 7 && ANDROID_MINOR == 1
 #include "services/services_7_1_0.h"
+#endif
+
 #endif
 
 using namespace android;
