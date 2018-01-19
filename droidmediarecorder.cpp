@@ -149,8 +149,11 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 #else
   meta->meta_data = recorder->m_src->isMetaDataStoredInVideoBuffers();
 #endif
-  // fetch the colour format
-  recorder->m_src->getFormat()->findInt32(android::kKeyColorFormat, &meta->color_format);
+  // pass important metadata to the recorder
+  android::sp<android::MetaData> md = recorder->m_src->getFormat();
+  md->findInt32(android::kKeyStride, &meta->stride);
+  md->findInt32(android::kKeySliceHeight, &meta->slice_height);
+  md->findInt32(android::kKeyColorFormat, &meta->color_format);
 
   // Now the encoder:
 #if ANDROID_MAJOR >= 5
