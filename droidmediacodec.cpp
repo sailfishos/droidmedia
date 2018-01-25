@@ -416,7 +416,9 @@ public:
         android::sp<android::AMessage> format = new android::AMessage();
         format->setString("mime", mime);
         ALOGW("Creating audio encoder for %s", mime);
-        format->setInt32("aac-profile", OMX_AUDIO_AACObjectLC);
+        if (!strcmp (mime, android::MEDIA_MIMETYPE_AUDIO_AAC)) {
+            format->setInt32("aac-profile", OMX_AUDIO_AACObjectLC);
+        }
 
         int32_t maxinput, channels, samplerate, bitrate;
         if (md->findInt32(android::kKeyMaxInputSize, &maxinput)) {
