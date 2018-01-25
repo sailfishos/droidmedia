@@ -48,7 +48,17 @@ LOCAL_SHARED_LIBRARIES := libc \
                           libbinder \
                           libstagefright \
                           libstagefright_foundation \
-                          libmedia
+                          libstagefright_httplive \
+                          libmedia \
+                          libmediaplayerservice \
+                          libdrmframework \
+                          libcrypto
+
+LOCAL_STATIC_LIBRARIES := libstagefright_nuplayer \
+                          libstagefright_rtsp 
+
+LOCAL_WHOLE_STATIC_LIBRARIES := libavmediaserviceextensions
+
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO)
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
@@ -60,7 +70,9 @@ ifeq ($(strip $(ANDROID_MAJOR)),7)
 LOCAL_C_INCLUDES := frameworks/native/include/media/openmax \
                     frameworks/native/include/media/hardware
 else
-LOCAL_C_INCLUDES := frameworks/native/include/media/openmax
+LOCAL_C_INCLUDES := frameworks/native/include/media/openmax \
+                    frameworks/av/media/libavextensions \
+                    frameworks/av/media/libstagefright/mpeg2ts
 endif
 
 include $(BUILD_SHARED_LIBRARY)

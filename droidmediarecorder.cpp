@@ -27,6 +27,7 @@
 #if ANDROID_MAJOR >=5
 #include <media/stagefright/foundation/ALooper.h>
 #endif
+#include <stagefright/AVExtensions.h>
 
 #define LOG_TAG "DroidMediaRecorder"
 
@@ -127,7 +128,7 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
   recorder->m_looper->start();
 #endif
 
-  recorder->m_src = android::CameraSource::CreateFromCamera(cam->remote(),
+  recorder->m_src = android::AVFactory::get()->CreateCameraSourceFromCamera(cam->remote(),
 							    cam->getRecordingProxy(), // proxy
 							    -1, // cameraId
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
@@ -142,15 +143,18 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 							    NULL, // surface
 								meta->meta_data // storeMetaDataInVideoBuffers
 							    );
-
+  android::AVUtils::get()->cacheCaptureBuffers(cam->remote(), (android::video_encoder)3); //AVC
   // set metadata storage in codec according to whether the camera request was successful
 #if ANDROID_MAJOR >= 7
   meta->meta_data = recorder->m_src->metaDataStoredInVideoBuffers();
 #else
   meta->meta_data = recorder->m_src->isMetaDataStoredInVideoBuffers();
 #endif
-  // fetch the colour format
-  recorder->m_src->getFormat()->findInt32(android::kKeyColorFormat, &meta->color_format);
+  // pass important metadata to the recorder
+  android::sp<android::MetaData> md = recorder->m_src->getFormat();
+  md->findInt32(android::kKeyStride, &meta->stride);
+  md->findInt32(android::kKeySliceHeight, &meta->slice_height);
+  md->findInt32(android::kKeyColorFormat, &meta->color_format);
 
   // Now the encoder:
 #if ANDROID_MAJOR >= 5
@@ -158,7 +162,6 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 #else
   recorder->m_codec = droid_media_codec_create_encoder_raw(meta, recorder->m_src);
 #endif
-
   return recorder;
 
 }
