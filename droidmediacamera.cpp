@@ -400,13 +400,21 @@ bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, boo
 #if ANDROID_MAJOR < 7
     return camera->m_camera->storeMetaDataInBuffers(enabled) == android::NO_ERROR;
 #else
-    if (android::OK == camera->m_camera->setVideoBufferMode(
-            android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE)) {
-        ALOGI("Recording in buffer queue mode");
-        return true;
-    } else {
-        return false;
+    if (enabled) {
+        if (android::OK == camera->m_camera->setVideoBufferMode(
+                android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE)) {
+            ALOGI("Recording in buffer queue mode");
+            return true;
+        } else if (android::OK == camera->m_camera->setVideoBufferMode(
+                android::hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_METADATA)) {
+            ALOGI("Recording in callback metadata mode");
+            return true;
+        }
     }
+    camera->m_camera->setVideoBufferMode(
+                android::hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_YUV);
+    ALOGI("Recording in callback yuv mode");
+    return !enabled; // false if metadata mode was requested.
 #endif
 }
 

@@ -393,7 +393,7 @@ public:
 
 #if ANDROID_MAJOR >= 7
       if (m_enc->meta_data) {
-          format->setInt32("android._input-metadata-buffer-type", android::kMetadataBufferTypeANWBuffer);
+          format->setInt32("android._input-metadata-buffer-type", m_enc->meta_data);
           format->setInt32("android._store-metadata-in-buffers-output", false);
       }
       format->setInt32("android._using-recorder", 1);
@@ -416,7 +416,9 @@ public:
         android::sp<android::AMessage> format = new android::AMessage();
         format->setString("mime", mime);
         ALOGW("Creating audio encoder for %s", mime);
-        format->setInt32("aac-profile", OMX_AUDIO_AACObjectLC);
+        if (!strcmp (mime, android::MEDIA_MIMETYPE_AUDIO_AAC)) {
+            format->setInt32("aac-profile", OMX_AUDIO_AACObjectLC);
+        }
 
         int32_t maxinput, channels, samplerate, bitrate;
         if (md->findInt32(android::kKeyMaxInputSize, &maxinput)) {
