@@ -3,6 +3,11 @@ LOCAL_PATH:= $(call my-dir)
 ANDROID_MAJOR :=
 ANDROID_MINOR :=
 ANDROID_MICRO :=
+FORCE_HAL_PARAM :=
+
+ifdef FORCE_HAL
+FORCE_HAL_PARAM := -DFORCE_HAL=$(FORCE_HAL)
+endif
 
 ifndef ANDROID_MAJOR
 include build/core/version_defaults.mk
@@ -49,7 +54,7 @@ LOCAL_SHARED_LIBRARIES := libc \
                           libstagefright \
                           libstagefright_foundation \
                           libmedia
-LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO)
+LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM)
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
 ifeq ($(strip $(BOARD_QTI_CAMERA_32BIT_ONLY)), true)
