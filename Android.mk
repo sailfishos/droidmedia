@@ -5,6 +5,7 @@ ANDROID_MINOR :=
 ANDROID_MICRO :=
 FORCE_HAL_PARAM :=
 
+include external/droidmedia/env.sh
 ifdef FORCE_HAL
 FORCE_HAL_PARAM := -DFORCE_HAL=$(FORCE_HAL)
 endif
