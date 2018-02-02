@@ -45,12 +45,14 @@ tar -zxf %SOURCE0
 mv droidmedia* droidmedia
 popd
 
-%build
-
 %if %{?force_hal:1}%{!?force_hal:0}
 echo Forcing Camera HAL connect version %{force_hal}
-export FORCE_HAL=%{force_hal}
+echo FORCE_HAL := %{force_hal} > external/droidmedia/env.sh
+%else 
+rm -f env.sh
 %endif
+
+%build
 
 if (grep -qi '^BOARD_QTI_CAMERA_32BIT_ONLY := true' device/*/*/*.mk); then
 droid-make %{?_smp_mflags} libdroidmedia_32 minimediaservice minisfservice
