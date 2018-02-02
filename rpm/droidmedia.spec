@@ -47,9 +47,9 @@ popd
 
 %if %{?force_hal:1}%{!?force_hal:0}
 echo Forcing Camera HAL connect version %{force_hal}
-echo FORCE_HAL := %{force_hal} > external/droidmedia/env.sh
+echo FORCE_HAL := %{force_hal} > external/droidmedia/env.mk
 %else 
-rm -f env.sh
+cat /dev/null > external/droidmedia/env.mk
 %endif
 
 %build
