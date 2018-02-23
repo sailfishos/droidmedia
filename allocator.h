@@ -29,7 +29,7 @@ public:
 
   android::sp<android::GraphicBuffer> createGraphicBuffer(uint32_t w, uint32_t h,
 							  android::PixelFormat format, uint32_t usage,
-#if ANDROID_MAJOR >= 7
+#if ANDROID_MAJOR >= 7 && ANDROID_MINOR >= 1
                                                           std::string requestorName,
 #endif
 							  android::status_t* error);
