@@ -56,6 +56,10 @@
 #include "services/services_6_0_0.h"
 #endif
 
+#if ANDROID_MAJOR == 7 && ANDROID_MINOR == 0
+#include "services/services_7_0_0.h"
+#endif
+
 #if ANDROID_MAJOR == 7 && ANDROID_MINOR == 1
 #include "services/services_7_1_0.h"
 #endif

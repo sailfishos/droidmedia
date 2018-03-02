@@ -58,7 +58,7 @@ LOCAL_SHARED_LIBRARIES := libc \
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM)
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
-ifeq ($(strip $(BOARD_QTI_CAMERA_32BIT_ONLY)), true)
+ifeq ($(strip $(DROIDMEDIA_32)), true)
 LOCAL_MODULE_TARGET_ARCH := arm
 endif
 
@@ -87,7 +87,7 @@ LOCAL_SHARED_LIBRARIES := libcameraservice \
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO)
 LOCAL_MODULE := minimediaservice
-ifeq ($(strip $(BOARD_QTI_CAMERA_32BIT_ONLY)), true)
+ifeq ($(strip $(DROIDMEDIA_32)), true)
 LOCAL_MODULE_TARGET_ARCH := arm
 endif
 include $(BUILD_EXECUTABLE)
@@ -109,7 +109,7 @@ ifneq ($(shell cat frameworks/native/services/surfaceflinger/SurfaceFlinger.h |g
 LOCAL_CPPFLAGS += -DUSE_SERVICES_VENDOR_EXTENSION
 endif
 LOCAL_MODULE := minisfservice
-ifeq ($(strip $(BOARD_QTI_CAMERA_32BIT_ONLY)), true)
+ifeq ($(strip $(DROIDMEDIA_32)), true)
 LOCAL_MODULE_TARGET_ARCH := arm
 endif
 include $(BUILD_EXECUTABLE)
