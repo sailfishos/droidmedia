@@ -105,6 +105,9 @@ LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MIN
 ifneq ($(CM_BUILD),)
 LOCAL_CPPFLAGS += -DCM_BUILD
 endif
+ifneq ($(shell cat frameworks/native/services/surfaceflinger/SurfaceFlinger.h |grep getDisplayInfoEx),)
+LOCAL_CPPFLAGS += -DUSE_SERVICES_VENDOR_EXTENSION
+endif
 LOCAL_MODULE := minisfservice
 ifeq ($(strip $(BOARD_QTI_CAMERA_32BIT_ONLY)), true)
 LOCAL_MODULE_TARGET_ARCH := arm
