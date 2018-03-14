@@ -16,9 +16,11 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
-#include <ui/Rect.h>
-
 using namespace android;
+
+#include <gui/ISurfaceComposer.h>
+#include <gui/IDisplayEventConnection.h>
+#include <ui/Rect.h>
 
 class MiniSurfaceFlinger : public BinderService<MiniSurfaceFlinger>,
                            public BnSurfaceComposer,
@@ -112,6 +114,8 @@ public:
         return BAD_VALUE;
     }
 };
+
+#include <binder/IPermissionController.h>
 
 class FakePermissionController : public BinderService<FakePermissionController>,
                                  public BnPermissionController
