@@ -16,9 +16,11 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
-#include <ui/Rect.h>
-
 using namespace android;
+
+#include <gui/ISurfaceComposer.h>
+#include <gui/IDisplayEventConnection.h>
+#include <ui/Rect.h>
 
 class MiniSurfaceFlinger : public BinderService<MiniSurfaceFlinger>,
                            public BnSurfaceComposer,
@@ -109,6 +111,8 @@ public:
     }
 };
 
+#include <binder/IPermissionController.h>
+
 class FakePermissionController : public BinderService<FakePermissionController>,
                                  public BnPermissionController
 {
@@ -191,6 +195,23 @@ public:
         for (int i=0; i< length; i++)
             states[i] = 0;
         return 0;
+    }
+};
+
+#include <camera/ICameraServiceProxy.h>
+
+class FakeCameraServiceProxy : public BinderService<FakeCameraServiceProxy>,
+                        public BnCameraServiceProxy
+{
+public:
+    static char const *getServiceName() {
+        return "media.camera.proxy";
+    }
+
+    void pingForUserUpdate() {
+    }
+
+    void notifyCameraState(String16 cameraId, CameraState newCameraState) {
     }
 };
 

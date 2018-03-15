@@ -80,6 +80,7 @@ LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libmediaplayerservice \
                           libcamera_client \
                           libutils \
+                          libmedia \
                           libbinder \
                           libgui \
                           libcutils \
@@ -113,3 +114,25 @@ ifeq ($(strip $(DROIDMEDIA_32)), true)
 LOCAL_MODULE_TARGET_ARCH := arm
 endif
 include $(BUILD_EXECUTABLE)
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := libminisf.cpp allocator.cpp
+LOCAL_SHARED_LIBRARIES := libutils \
+                          libbinder \
+                          libmedia \
+                          libgui \
+                          libcutils \
+                          libui
+LOCAL_MODULE_TAGS := optional
+LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO)
+ifneq ($(CM_BUILD),)
+LOCAL_CPPFLAGS += -DCM_BUILD
+endif
+ifneq ($(shell cat frameworks/native/services/surfaceflinger/SurfaceFlinger.h |grep getDisplayInfoEx),)
+LOCAL_CPPFLAGS += -DUSE_SERVICES_VENDOR_EXTENSION
+endif
+LOCAL_MODULE := libminisf
+ifeq ($(strip $(DROIDMEDIA_32)), true)
+LOCAL_MODULE_TARGET_ARCH := arm
+endif
+include $(BUILD_SHARED_LIBRARY)

@@ -18,6 +18,9 @@
 
 using namespace android;
 
+#include <gui/ISurfaceComposer.h>
+#include <gui/IDisplayEventConnection.h>
+
 class MiniSurfaceFlinger : public BinderService<MiniSurfaceFlinger>,
                            public BnSurfaceComposer,
                            public IBinder::DeathRecipient
@@ -101,6 +104,8 @@ public:
   }
 #endif
 };
+
+#include <binder/IPermissionController.h>
 
 class FakePermissionController : public BinderService<FakePermissionController>,
                                  public BnPermissionController
