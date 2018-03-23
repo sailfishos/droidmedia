@@ -49,13 +49,13 @@ cat /dev/null > external/droidmedia/env.mk
 
 %if %{?force_hal:1}%{!?force_hal:0}
 echo Forcing Camera HAL connect version %{force_hal}
-echo FORCE_HAL := %{force_hal} > external/droidmedia/env.mk
+echo FORCE_HAL := %{force_hal} >> external/droidmedia/env.mk
 %endif
 
 %build
 
 if (grep -qi '^BOARD_QTI_CAMERA_32BIT_ONLY := true' device/*/*/*.mk) || %{?droidmedia_32bit:1}%{!?droidmedia_32bit:0}; then
-echo DROIDMEDIA_32 := true > external/droidmedia/env.mk
+echo DROIDMEDIA_32 := true >> external/droidmedia/env.mk
 droid-make %{?_smp_mflags} libdroidmedia_32 minimediaservice minisfservice libminisf_32
 else
 droid-make %{?_smp_mflags} libdroidmedia minimediaservice minisfservice libminisf
