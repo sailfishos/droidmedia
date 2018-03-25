@@ -33,6 +33,8 @@
 #include <binder/IInterface.h>
 #include <cutils/multiuser.h>
 #endif
+#include "allocator.h"
+#include "services/services.h"
 
 #define LOG_TAG "MinimediaService"
 
@@ -41,27 +43,6 @@
 using namespace android;
 
 #define BINDER_SERVICE_CHECK_INTERVAL 500000
-
-
-#if ANDROID_MAJOR >= 6
-
-#include <camera/ICameraServiceProxy.h>
-
-class FakeCameraServiceProxy : public BinderService<FakeCameraServiceProxy>,
-                        public BnCameraServiceProxy
-{
-public:
-    static char const *getServiceName() {
-        return "media.camera.proxy";
-    }
-
-    void pingForUserUpdate() {
-    }
-
-    void notifyCameraState(String16 cameraId, CameraState newCameraState) {
-    }
-};
-#endif
 
 int
 main(int, char**)
@@ -72,8 +53,20 @@ main(int, char**)
     MediaPlayerService::instantiate();
     CameraService::instantiate();
     AudioPolicyService::instantiate();
+    FakePermissionController::instantiate();
+
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
+    FakeAppOps::instantiate();
+#endif
+
+#if ANDROID_MAJOR >= 5
+    FakeBatteryStats::instantiate();
+    FakeSensorServer::instantiate();
+#endif
 
 #if ANDROID_MAJOR >= 6
+    FakeResourceManagerService::instantiate();
+    FakeProcessInfoService::instantiate();
     FakeCameraServiceProxy::instantiate();
     // Camera service needs to be told which users may use the camera
     sp<IBinder> binder;

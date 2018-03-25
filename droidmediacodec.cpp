@@ -393,7 +393,7 @@ public:
 
 #if ANDROID_MAJOR >= 7
       if (m_enc->meta_data) {
-          format->setInt32("android._input-metadata-buffer-type", android::kMetadataBufferTypeANWBuffer);
+          format->setInt32("android._input-metadata-buffer-type", m_enc->meta_data);
           format->setInt32("android._store-metadata-in-buffers-output", false);
       }
       format->setInt32("android._using-recorder", 1);
@@ -416,7 +416,9 @@ public:
         android::sp<android::AMessage> format = new android::AMessage();
         format->setString("mime", mime);
         ALOGW("Creating audio encoder for %s", mime);
-        format->setInt32("aac-profile", OMX_AUDIO_AACObjectLC);
+        if (!strcmp (mime, android::MEDIA_MIMETYPE_AUDIO_AAC)) {
+            format->setInt32("aac-profile", OMX_AUDIO_AACObjectLC);
+        }
 
         int32_t maxinput, channels, samplerate, bitrate;
         if (md->findInt32(android::kKeyMaxInputSize, &maxinput)) {
@@ -669,14 +671,12 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
 
 bool droid_media_codec_start(DroidMediaCodec *codec)
 {
-    if (codec->m_queue.get() != NULL) {
 #if ANDROID_MAJOR < 7
+    if (codec->m_queue.get() != NULL) {
         if (!codec->m_queue->connectListener()) {
 	    ALOGE("Failed to connect buffer queue listener");
 	    return false;
 	}
-#endif
-
 	android::status_t err = native_window_api_connect(codec->m_window.get(),
 							  NATIVE_WINDOW_API_MEDIA);
 	if (err != android::NO_ERROR) {
@@ -684,6 +684,7 @@ bool droid_media_codec_start(DroidMediaCodec *codec)
 	    return false;
 	}
     }
+#endif
 
     int err = codec->m_codec->start();
     if (err != android::OK) {
@@ -771,21 +772,21 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 	  return DROID_MEDIA_CODEC_LOOP_ERROR;
 	}
     }
-
-    if (err == -EWOULDBLOCK) {
-      ALOGI("retry reading again. error: 0x%x", -err);
-      return DROID_MEDIA_CODEC_LOOP_OK;
-    }
-
-#if 0
-    if (err == -EWOULDBLOCK || err == -ETIMEDOUT) {
-      ALOGI("retry reading again. error: 0x%x", -err);
-      return DROID_MEDIA_CODEC_LOOP_OK;
-    }
+    if (err == -EWOULDBLOCK
+#if ANDROID_MAJOR >= 7
+	|| err == -ENODATA
 #endif
+	) {
+      ALOGI("retry reading again. error: 0x%x", -err);
+      return DROID_MEDIA_CODEC_LOOP_OK;
+    }
 
     if (err != android::OK) {
-        if (err == android::ERROR_END_OF_STREAM || err == -ENODATA) {
+        if (err == android::ERROR_END_OF_STREAM
+#if ANDROID_MAJOR < 7
+            || err == -ENODATA
+#endif
+            ) {
             ALOGE("Got EOS");
 
             if (codec->m_cb.signal_eos) {

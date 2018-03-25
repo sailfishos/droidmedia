@@ -26,16 +26,21 @@
 
 using namespace android;
 
-int
-main(int, char**)
+extern "C"
+void startMiniSurfaceFlinger()
 {
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();
 
-    MiniSurfaceFlinger::instantiate();
+    if (sm->checkService(String16("SurfaceFlinger")) == NULL)
+    {
+        MiniSurfaceFlinger::instantiate();
+    }
+    else
+    {
+        ALOGW("SurfaceFlinger service already running, so we won't start it here. If you have trouble with media, try disabling the minisf service.");
+    }
 
     ProcessState::self()->startThreadPool();
-    IPCThreadState::self()->joinThreadPool();
 
-    return 0;
 }

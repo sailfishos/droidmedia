@@ -298,15 +298,22 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
     cam->m_camera = android::Camera::connect(camera_number);
-#elif ANDROID_MAJOR <= 6
+#elif (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4)
     cam->m_camera = android::Camera::connect(camera_number, android::String16("droidmedia"),
 					     android::Camera::USE_CALLING_UID);
-#else
+#else // Force HAL version if defined
+#ifdef FORCE_HAL
+    ALOGI("Connecting HAL version %d", FORCE_HAL);
+    android::OK != android::Camera::connectLegacy(camera_number, FORCE_HAL << 8, android::String16("droidmedia"),
+					     android::Camera::USE_CALLING_UID, cam->m_camera);
+#else // Default connect
     cam->m_camera = android::Camera::connect(camera_number, android::String16("droidmedia"),
-					     android::Camera::USE_CALLING_UID, android::Camera::USE_CALLING_PID);
-// This would open a HAL1 camera, but everything seems to work with default HAL3 
-//    android::Camera::connectLegacy(camera_number, 1 << 8, android::String16("droidmedia"),
-//					     android::Camera::USE_CALLING_UID, cam->m_camera);
+					     android::Camera::USE_CALLING_UID
+#if (ANDROID_MAJOR >= 7)
+					     , android::Camera::USE_CALLING_PID
+#endif
+					      );
+#endif
 #endif
     if (cam->m_camera.get() == NULL) {
         delete cam;
@@ -400,13 +407,21 @@ bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, boo
 #if ANDROID_MAJOR < 7
     return camera->m_camera->storeMetaDataInBuffers(enabled) == android::NO_ERROR;
 #else
-    if (android::OK == camera->m_camera->setVideoBufferMode(
-            android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE)) {
-        ALOGI("Recording in buffer queue mode");
-        return true;
-    } else {
-        return false;
+    if (enabled) {
+        if (android::OK == camera->m_camera->setVideoBufferMode(
+                android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE)) {
+            ALOGI("Recording in buffer queue mode");
+            return true;
+        } else if (android::OK == camera->m_camera->setVideoBufferMode(
+                android::hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_METADATA)) {
+            ALOGI("Recording in callback metadata mode");
+            return true;
+        }
     }
+    camera->m_camera->setVideoBufferMode(
+                android::hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_YUV);
+    ALOGI("Recording in callback yuv mode");
+    return !enabled; // false if metadata mode was requested.
 #endif
 }
 

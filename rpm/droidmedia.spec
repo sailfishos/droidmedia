@@ -45,11 +45,20 @@ tar -zxf %SOURCE0
 mv droidmedia* droidmedia
 popd
 
+cat /dev/null > external/droidmedia/env.mk
+
+%if %{?force_hal:1}%{!?force_hal:0}
+echo Forcing Camera HAL connect version %{force_hal}
+echo FORCE_HAL := %{force_hal} >> external/droidmedia/env.mk
+%endif
+
 %build
-if (grep -qi '^BOARD_QTI_CAMERA_32BIT_ONLY := true' device/*/*/*.mk); then
-droid-make %{?_smp_mflags} libdroidmedia_32 minimediaservice minisfservice
+
+if (grep -qi '^BOARD_QTI_CAMERA_32BIT_ONLY := true' device/*/*/*.mk) || %{?droidmedia_32bit:1}%{!?droidmedia_32bit:0}; then
+echo DROIDMEDIA_32 := true >> external/droidmedia/env.mk
+droid-make %{?_smp_mflags} libdroidmedia_32 minimediaservice minisfservice libminisf_32
 else
-droid-make %{?_smp_mflags} libdroidmedia minimediaservice minisfservice
+droid-make %{?_smp_mflags} libdroidmedia minimediaservice minisfservice libminisf
 fi
 
 %install
@@ -60,6 +69,9 @@ mkdir -p $RPM_BUILD_ROOT/%{_includedir}/droidmedia/
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/droidmedia/
 
 cp out/target/product/*/system/lib/libdroidmedia.so \
+    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/lib/
+
+cp out/target/product/*/system/lib/libminisf.so \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/lib/
 
 cp out/target/product/*/system/bin/minimediaservice \
@@ -74,6 +86,7 @@ cp external/droidmedia/hybris.c $RPM_BUILD_ROOT/%{_datadir}/droidmedia/
 %files
 %defattr(-,root,root,-)
 %{_libexecdir}/droid-hybris/system/lib/libdroidmedia.so
+%{_libexecdir}/droid-hybris/system/lib/libminisf.so
 %{_libexecdir}/droid-hybris/system/bin/minimediaservice
 %{_libexecdir}/droid-hybris/system/bin/minisfservice
 
