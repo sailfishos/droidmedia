@@ -27,7 +27,7 @@ extern "C" {
 
 typedef struct _DroidMediaConvert DroidMediaConvert;
 
-DroidMediaConvert *droid_media_convert_create();
+DroidMediaConvert *droid_media_convert_create(int32_t from, int32_t to);
 void droid_media_convert_destroy(DroidMediaConvert *convert);
 
 bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in, void *out);

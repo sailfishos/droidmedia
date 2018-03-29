@@ -55,6 +55,13 @@ LOCAL_SHARED_LIBRARIES := libc \
                           libstagefright \
                           libstagefright_foundation \
                           libmedia
+# TODO: find a proper test for this:
+ifeq ($(strip $(BOARD_HAS_MTK_HARDWARE)),true)
+LOCAL_SHARED_LIBRARIES += libdpframework
+endif
+
+LOCAL_STATIC_LIBRARIES := libstagefright_color_conversion
+
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM)
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia

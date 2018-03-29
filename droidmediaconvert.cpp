@@ -19,6 +19,7 @@
 #include "droidmediaconvert.h"
 #include "droidmediabuffer.h"
 #include <media/editor/II420ColorConverter.h>
+#include <media/stagefright/ColorConverter.h>
 #include <media/openmax/OMX_IVCommon.h>
 #include <cutils/log.h>
 #include <dlfcn.h>
@@ -32,57 +33,76 @@ extern "C" {
 struct _DroidMediaConvert : public II420ColorConverter
 {
 public:
-    _DroidMediaConvert() :
-        m_handle(NULL) {
+    _DroidMediaConvert():
+      m_i420_handle(NULL), m_droid_convert(NULL),
+      m_src_colour(OMX_COLOR_Format16bitRGB565), m_dst_colour(OMX_COLOR_Format16bitRGB565)
+    {
       m_crop.top = m_crop.left = m_crop.bottom = m_crop.right = -1;
       m_width = m_height = 0;
     }
 
     ~_DroidMediaConvert() {
-        if (m_handle) {
-            dlclose(m_handle);
-            m_handle = NULL;
+        if (m_i420_handle) {
+            dlclose(m_i420_handle);
+            m_i420_handle = NULL;
+        }
+        if (m_droid_convert) {
+            delete m_droid_convert;
+            m_droid_convert = NULL;
         }
     }
-
-    bool init() {
-        if (m_handle) {
+    bool init(int32_t src_colour, int32_t dst_colour) {
+        if (m_i420_handle) {
             ALOGW("already loaded");
             return true;
         }
+        m_src_colour = static_cast<OMX_COLOR_FORMATTYPE>(src_colour);
+        m_dst_colour = static_cast<OMX_COLOR_FORMATTYPE>(dst_colour);
 
-        m_handle = dlopen("libI420colorconvert.so", RTLD_NOW);
-        if (!m_handle) {
-            ALOGE("failed to load libI420colorconvert.so. %s", dlerror());
-            return false;
-        }
+        m_droid_convert = new android::ColorConverter(m_src_colour, m_dst_colour);
 
-        _getI420ColorConverter func = (_getI420ColorConverter)dlsym(m_handle, "getI420ColorConverter");
-        if (!func) {
-            ALOGE("failed to find symbol getI420ColorConverter");
-            dlclose(m_handle);
-            m_handle = NULL;
-            return false;
-        }
-
-        func(this);
-
-        return true;
+        m_i420_handle = dlopen("libI420colorconvert.so", RTLD_NOW);
+        if (m_i420_handle)
+        {
+	  _getI420ColorConverter func = (_getI420ColorConverter)dlsym(m_i420_handle, "getI420ColorConverter");
+	  if (!func)
+	  {
+	      func(this);
+	      return true;
+	  }
+	  else
+	  {
+	      ALOGE("failed to find symbol getI420ColorConverter");
+	      dlclose(m_i420_handle);
+	      m_i420_handle = NULL;
+	  }
+      }
+      else
+      {
+          ALOGE("Failed to load libI420colorconvert.so. Using fallback. %s", dlerror());
+      }
+      return m_droid_convert->isValid();
     }
 
-    void *m_handle;
+    void *m_i420_handle;
     ARect m_crop;
     int32_t m_width;
     int32_t m_height;
+    OMX_COLOR_FORMATTYPE m_src_colour;
+    OMX_COLOR_FORMATTYPE m_dst_colour;
+    android::ColorConverter *m_droid_convert;
 };
 
-DroidMediaConvert *droid_media_convert_create()
+
+
+DroidMediaConvert *droid_media_convert_create(int32_t from, int32_t to)
 {
     DroidMediaConvert *conv = new DroidMediaConvert;
-    if (conv->init()) {
+    if (conv->init(from, to)) {
         return conv;
     }
 
+    ALOGE("No valid colour conversion found.");
     delete conv;
     return NULL;
 }
@@ -92,7 +112,7 @@ void droid_media_convert_destroy(DroidMediaConvert *convert)
     delete convert;
 }
 
-bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in, void *out)
+bool droid_media_convert_handle_buffer(DroidMediaConvert *convert, DroidMediaData *in, void *out)
 {
     if (convert->m_crop.left == -1 ||
 	convert->m_crop.top == -1 ||
@@ -104,17 +124,27 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in,
       return false;
     }
 
-    android::status_t err = convert->convertDecoderOutputToI420(in->data, convert->m_width,
-                                              convert->m_height,
-					      convert->m_crop,
-                                              out);
+    android::status_t err = android::NO_INIT;
 
-    if (err != android::NO_ERROR) {
-        ALOGE("error 0x%x converting buffer", -err);
-        return false;
+    if (to == OMX_COLOR_FormatYUV420Planar && convert->m_i420_handle) {
+      err = convert->convertDecoderOutputToI420(in->data, convert->m_width,
+						convert->m_height,
+						convert->m_crop,
+						out);
+    } else if (convert->m_droid_convert.isValid()) {
+      err = convert->m_droid_convert->convert(in->data, convert->m_width, convert->m_height,
+						convert->m_crop.left, convert->m_crop.top,
+						convert->m_crop.right, convert->m_crop.bottom,
+						out, convert->m_width, convert->m_height,
+						convert->m_crop.left, convert->m_crop.top,
+						convert->m_crop.right, convert->m_crop.bottom);
     }
 
-    return true;
+    if (err != android::NO_ERROR) {
+	ALOGE("error 0x%x converting buffer", -err);
+	return false;
+    }
+      return true;
 }
 
 void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRect rect,
@@ -129,6 +159,11 @@ void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRec
 }
 
 bool droid_media_convert_is_i420(DroidMediaConvert *convert) {
+  if (convert->m_i420_handle) {
     return convert->getDecoderOutputFormat() == OMX_COLOR_FormatYUV420Planar;
+  }
+  else {
+    return convert->m_src_colour == OMX_COLOR_FormatYUV420Planar;
+  }
 }
 };
