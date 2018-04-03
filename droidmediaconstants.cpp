@@ -19,6 +19,7 @@
 #include "droidmediaconstants.h"
 #include <system/camera.h>
 #include <system/graphics.h>
+#include <OMX_IVCommon.h>
 
 extern "C" {
 
@@ -69,6 +70,16 @@ void droid_media_pixel_format_constants_init(DroidMediaPixelFormatConstants *c)
   c->HAL_PIXEL_FORMAT_RAW_SENSOR = HAL_PIXEL_FORMAT_RAW16;
 #endif
   c->HAL_PIXEL_FORMAT_YCrCb_420_SP = HAL_PIXEL_FORMAT_YCrCb_420_SP;
+}
+
+void droid_media_colour_format_constants_init(DroidMediaColourFormatConstants *c)
+{
+#ifdef OMX_QCOM_COLOR_FormatYUV420PackedSemiPlanar32m
+  c->QOMX_COLOR_FormatYUV420PackedSemiPlanar32m = OMX_QCOM_COLOR_FormatYUV420PackedSemiPlanar32m;
+#else
+  c->QOMX_COLOR_FormatYUV420PackedSemiPlanar32m = -1;
+#endif
+  c->OMX_COLOR_FormatYUV420Planar = OMX_COLOR_FormatYUV420Planar;
 }
 
 };

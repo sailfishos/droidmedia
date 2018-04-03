@@ -919,6 +919,7 @@ void droid_media_codec_get_output_info(DroidMediaCodec *codec,
   md->findInt32(android::kKeyHeight, &info->height);
   md->findInt32(android::kKeyChannelCount, &info->channels);
   md->findInt32(android::kKeySampleRate, &info->sample_rate);
+  md->findInt32(android::kKeyColorFormat, &info->hal_format);
 
   if (!md->findRect(android::kKeyCropRect, &crop->left, &crop->top, &crop->right, &crop->bottom)) {
     crop->left = crop->top = 0;
