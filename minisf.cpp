@@ -34,6 +34,16 @@ main(int, char**)
 
     MiniSurfaceFlinger::instantiate();
 
+// Android 4 will not allow system services to be run from minimediaservice. So keep them here instead.
+
+#if (ANDROID_MAJOR == 4)
+    FakePermissionController::instantiate();
+#if (ANDROID_MINOR == 4)
+    FakeAppOps::instantiate();
+#endif
+#endif
+
+
     ProcessState::self()->startThreadPool();
     IPCThreadState::self()->joinThreadPool();
 
