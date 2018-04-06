@@ -74,11 +74,7 @@ void droid_media_pixel_format_constants_init(DroidMediaPixelFormatConstants *c)
 
 void droid_media_colour_format_constants_init(DroidMediaColourFormatConstants *c)
 {
-#ifdef OMX_QCOM_COLOR_FormatYUV420PackedSemiPlanar32m
-  c->QOMX_COLOR_FormatYUV420PackedSemiPlanar32m = OMX_QCOM_COLOR_FormatYUV420PackedSemiPlanar32m;
-#else
-  c->QOMX_COLOR_FormatYUV420PackedSemiPlanar32m = -1;
-#endif
+  c->QOMX_COLOR_FormatYUV420PackedSemiPlanar32m = 0x7FA30C04;
   c->OMX_COLOR_FormatYUV420Planar = OMX_COLOR_FormatYUV420Planar;
 }
 
