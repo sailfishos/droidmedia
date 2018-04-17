@@ -54,8 +54,11 @@ echo FORCE_HAL := %{force_hal} >> external/droidmedia/env.mk
 
 %build
 
-if (grep -qi '^BOARD_QTI_CAMERA_32BIT_ONLY := true' device/*/*/*.mk) || %{?droidmedia_32bit:1}%{!?droidmedia_32bit:0}; then
+%if %{?droidmedia_32bit:1}%{!?droidmedia_32bit:0}
 echo DROIDMEDIA_32 := true >> external/droidmedia/env.mk
+%endif
+
+if (grep -qi '^BOARD_QTI_CAMERA_32BIT_ONLY := true' device/*/*/*.mk) || (grep -q 'DROIDMEDIA_32 := true' external/droidmedia/env.mk); then
 droid-make %{?_smp_mflags} libdroidmedia_32 minimediaservice minisfservice libminisf_32
 else
 droid-make %{?_smp_mflags} libdroidmedia minimediaservice minisfservice libminisf
