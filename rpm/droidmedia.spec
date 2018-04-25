@@ -53,26 +53,28 @@ echo FORCE_HAL := %{force_hal} >> external/droidmedia/env.mk
 %endif
 
 %build
+echo "building for %{device_rpm_architecture_string}"
 
-if (grep -qi '^BOARD_QTI_CAMERA_32BIT_ONLY := true' device/*/*/*.mk) || %{?droidmedia_32bit:1}%{!?droidmedia_32bit:0}; then
-echo DROIDMEDIA_32 := true >> external/droidmedia/env.mk
-droid-make %{?_smp_mflags} libdroidmedia_32 minimediaservice minisfservice libminisf_32
-else
-droid-make %{?_smp_mflags} libdroidmedia minimediaservice minisfservice libminisf
-fi
+droid-make %{?_smp_mflags} $(external/droidmedia/detect_build_targets.sh %{device_rpm_architecture_string})
 
 %install
 
-mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/lib/
+if [ -f out/target/product/*/system/lib64/libdroidmedia.so ]; then
+DROIDLIB=lib64
+else
+DROIDLIB=lib
+fi
+
+mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 mkdir -p $RPM_BUILD_ROOT/%{_includedir}/droidmedia/
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/droidmedia/
 
-cp out/target/product/*/system/lib/libdroidmedia.so \
-    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/lib/
+cp out/target/product/*/system/$DROIDLIB/libdroidmedia.so \
+    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 
-cp out/target/product/*/system/lib/libminisf.so \
-    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/lib/
+cp out/target/product/*/system/$DROIDLIB/libminisf.so \
+    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 
 cp out/target/product/*/system/bin/minimediaservice \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
@@ -83,10 +85,12 @@ cp out/target/product/*/system/bin/minisfservice \
 cp external/droidmedia/*.h $RPM_BUILD_ROOT/%{_includedir}/droidmedia/
 cp external/droidmedia/hybris.c $RPM_BUILD_ROOT/%{_datadir}/droidmedia/
 
-%files
+LIBDMSOLOC=$RPM_BUILD_ROOT/file.list
+echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libdroidmedia.so >> %{LIBDMSOLOC}
+echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libminisf.so >> %{LIBDMSOLOC}
+
+%files -f %{LIBDMSOLOC}
 %defattr(-,root,root,-)
-%{_libexecdir}/droid-hybris/system/lib/libdroidmedia.so
-%{_libexecdir}/droid-hybris/system/lib/libminisf.so
 %{_libexecdir}/droid-hybris/system/bin/minimediaservice
 %{_libexecdir}/droid-hybris/system/bin/minisfservice
 
