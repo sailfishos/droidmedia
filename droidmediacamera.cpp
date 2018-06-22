@@ -17,12 +17,17 @@
  */
 
 #include "droidmediacamera.h"
+#if ANDROID_MAJOR < 8
 #include "allocator.h"
+#endif
 #include <camera/Camera.h>
 #include <camera/CameraParameters.h>
 #include <android/log.h>
 #include <utils/String8.h>
 #include <utils/Condition.h>
+#if ANDROID_MAJOR >= 8
+#include <media/hardware/MetadataBufferType.h>
+#endif
 #include <media/stagefright/CameraSource.h>
 #include <media/openmax/OMX_IVCommon.h>
 #include "droidmediabuffer.h"
@@ -217,6 +222,14 @@ public:
     void postRecordingFrameHandleTimestamp(nsecs_t timestamp, native_handle_t* handle) 
     {
     	ALOGW("postRecordingFrameHandleTimestamp - not sure what to do");
+    }
+#endif
+
+#if ANDROID_MAJOR >= 8
+    void postRecordingFrameHandleTimestampBatch(const std::vector<nsecs_t>& timestamps,
+                                                const std::vector<native_handle_t*>& handles)
+    {
+        ALOGW("postRecordingFrameHandleTimestampBatch - not sure what to do");
     }
 #endif
 

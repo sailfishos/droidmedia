@@ -16,7 +16,11 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
+#if ANDROID_MAJOR >= 8
+#include <media/stagefright/omx/OMX.h>
+#else
 #include <media/stagefright/OMXClient.h>
+#endif
 
 // MediaCodecSource should be used instead of OMXCodec from Android 5
 #if ANDROID_MAJOR >= 5
@@ -43,7 +47,9 @@
 #include <media/stagefright/MediaDefs.h>
 #include <gui/BufferQueue.h>
 #include "droidmediacodec.h"
+#if ANDROID_MAJOR < 8
 #include "allocator.h"
+#endif
 #include "private.h"
 #include "droidmediabuffer.h"
 
