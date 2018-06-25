@@ -1,5 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 
+DROIDMEDIA_32 := $(shell cat frameworks/av/media/mediaserver/Android.mk |grep "LOCAL_32_BIT_ONLY[[:space:]]*:=[[:space:]]*" |grep -o "true\|1\|false\|0")
+
 ANDROID_MAJOR :=
 ANDROID_MINOR :=
 ANDROID_MICRO :=
@@ -58,9 +60,6 @@ LOCAL_SHARED_LIBRARIES := libc \
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM)
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
-ifeq ($(strip $(DROIDMEDIA_32)), true)
-LOCAL_MODULE_TARGET_ARCH := arm
-endif
 
 ifeq ($(strip $(ANDROID_MAJOR)),7)
 LOCAL_C_INCLUDES := frameworks/native/include/media/openmax \
@@ -89,7 +88,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO)
 LOCAL_MODULE := minimediaservice
 ifeq ($(strip $(DROIDMEDIA_32)), true)
-LOCAL_MODULE_TARGET_ARCH := arm
+LOCAL_32_BIT_ONLY := true
 endif
 include $(BUILD_EXECUTABLE)
 
@@ -111,7 +110,7 @@ LOCAL_CPPFLAGS += -DUSE_SERVICES_VENDOR_EXTENSION
 endif
 LOCAL_MODULE := minisfservice
 ifeq ($(strip $(DROIDMEDIA_32)), true)
-LOCAL_MODULE_TARGET_ARCH := arm
+LOCAL_32_BIT_ONLY := true
 endif
 include $(BUILD_EXECUTABLE)
 
@@ -132,7 +131,4 @@ ifneq ($(shell cat frameworks/native/services/surfaceflinger/SurfaceFlinger.h |g
 LOCAL_CPPFLAGS += -DUSE_SERVICES_VENDOR_EXTENSION
 endif
 LOCAL_MODULE := libminisf
-ifeq ($(strip $(DROIDMEDIA_32)), true)
-LOCAL_MODULE_TARGET_ARCH := arm
-endif
 include $(BUILD_SHARED_LIBRARY)
