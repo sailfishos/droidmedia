@@ -32,7 +32,9 @@
 #include <binder/IInterface.h>
 #include <cutils/multiuser.h>
 #endif
+#if ANDROID_MAJOR < 8
 #include "allocator.h"
+#endif
 #include "services/services.h"
 
 #include <cutils/properties.h>
@@ -67,7 +69,9 @@ main(int, char**)
 #if ANDROID_MAJOR >= 6
     FakeResourceManagerService::instantiate();
     FakeProcessInfoService::instantiate();
+#if ANDROID_MAJOR < 8
     FakeCameraServiceProxy::instantiate();
+#endif
     // Camera service needs to be told which users may use the camera
     sp<IBinder> binder;
     do {

@@ -16,6 +16,7 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
+#if ANDROID_MAJOR < 8
 #include "allocator.h"
 #include <ui/GraphicBuffer.h>
 
@@ -67,3 +68,4 @@ void DroidMediaAllocator::setGraphicBufferSize(int size)
 {
     m_size = size;
 }
+#endif
