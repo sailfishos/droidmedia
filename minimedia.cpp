@@ -35,10 +35,9 @@
 #include "allocator.h"
 #include "services/services.h"
 
-#define LOG_TAG "MinimediaService"
+#include <cutils/properties.h>
 
-// echo "persist.camera.shutter.disable=1" >> /system/build.prop
-// echo "camera.fifo.disable=1" >> /system/build.prop
+#define LOG_TAG "MinimediaService"
 
 using namespace android;
 
@@ -49,6 +48,10 @@ main(int, char**)
 {
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();
+
+    // Disable things which break hybris once and for all.
+    property_set("persist.camera.shutter.disable", "1");
+    property_set("camera.fifo.disable", "1");
 
     MediaPlayerService::instantiate();
     CameraService::instantiate();
