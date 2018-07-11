@@ -54,7 +54,7 @@ echo FORCE_HAL := %{force_hal} >> external/droidmedia/env.mk
 
 %build
 echo "building for %{device_rpm_architecture_string}"
-
+droid-make "clean; gettargetarch > lunch_arch || echo unknown > lunch_arch"
 droid-make %{?_smp_mflags} $(external/droidmedia/detect_build_targets.sh %{device_rpm_architecture_string})
 
 %install
