@@ -8,9 +8,9 @@ LIB_TARGET=
 if [ $# -gt 1 ]; then # override arch
   ANDROID_ARCH=$2
 else
-  if [ -f droid-cmd ]; then # On OBS with new cmd
+  if [ -x "$(which droid-cmd)" ]; then # On OBS with new cmd
     >&2 droid-cmd "gettargetarch > lunch_arch || echo unknown > lunch_arch"
-  elif [ -f droid-make ]; then # On OBS
+  elif [ -x "$(which droid-make)" ]; then # On OBS
     >&2 droid-make "clean > /dev/null; gettargetarch > lunch_arch || echo unknown > lunch_arch"
   fi
 
