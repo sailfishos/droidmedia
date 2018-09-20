@@ -76,6 +76,7 @@ void droid_media_colour_format_constants_init(DroidMediaColourFormatConstants *c
 {
   c->QOMX_COLOR_FormatYUV420PackedSemiPlanar32m = 0x7FA30C04;
   c->OMX_COLOR_FormatYUV420Planar = OMX_COLOR_FormatYUV420Planar;
+  c->OMX_COLOR_FormatYUV420SemiPlanar = OMX_COLOR_FormatYUV420SemiPlanar;
 }
 
 };
