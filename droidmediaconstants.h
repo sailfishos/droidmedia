@@ -73,6 +73,7 @@ typedef struct {
 typedef struct {
   int QOMX_COLOR_FormatYUV420PackedSemiPlanar32m;
   int OMX_COLOR_FormatYUV420Planar;
+  int OMX_COLOR_FormatYUV420SemiPlanar;
 } DroidMediaColourFormatConstants;
 
 void droid_media_camera_constants_init(DroidMediaCameraConstants *c);
