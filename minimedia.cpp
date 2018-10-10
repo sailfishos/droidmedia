@@ -53,6 +53,7 @@ main(int, char**)
 
     // Disable things which break hybris once and for all.
     property_set("persist.camera.shutter.disable", "1");
+    property_set("persist.media.metrics.enabled", "0");
     property_set("camera.fifo.disable", "1");
 
     MediaPlayerService::instantiate();
