@@ -68,7 +68,15 @@ typedef struct {
   DroidMediaRect crop_rect;
   uint32_t width;
   uint32_t height;
+  int32_t format;
+  int32_t stride;
 } DroidMediaBufferInfo;
+
+typedef enum {
+    DROID_MEDIA_BUFFER_LOCK_READ = 0x01,
+    DROID_MEDIA_BUFFER_LOCK_WRITE = 0x02,
+    DROID_MEDIA_BUFFER_LOCK_READ_WRITE = 0x3
+} DroidMediaBufferLockFlags;
 
 /* droidmedia.cpp */
 void droid_media_init();
@@ -80,6 +88,11 @@ DroidMediaBuffer *droid_media_buffer_create_from_raw_data(uint32_t w, uint32_t h
 							  uint32_t format,
 							  DroidMediaData *data,
 							  DroidMediaBufferCallbacks *cb);
+DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
+					    uint32_t format,
+					    DroidMediaBufferCallbacks *cb);
+void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags);
+void droid_media_buffer_unlock(DroidMediaBuffer *buffer);
 
 void droid_media_buffer_get_info(DroidMediaBuffer *buffer, DroidMediaBufferInfo *info);
 uint32_t droid_media_buffer_get_transform(DroidMediaBuffer * buffer);

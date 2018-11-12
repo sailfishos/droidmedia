@@ -61,19 +61,41 @@ typedef struct {
 } DroidMediaCameraConstants;
 
 typedef struct {
+  int HAL_PIXEL_FORMAT_RGBA_8888;
+  int HAL_PIXEL_FORMAT_RGBX_8888;
+  int HAL_PIXEL_FORMAT_RGB_888;
+  int HAL_PIXEL_FORMAT_RGB_565;
+  int HAL_PIXEL_FORMAT_BGRA_8888;
   int HAL_PIXEL_FORMAT_YV12;
   int HAL_PIXEL_FORMAT_RAW_SENSOR;
 #if ANDROID_MAJOR < 8
   int HAL_PIXEL_FORMAT_YCrCb_420_SP;
+  int HAL_PIXEL_FORMAT_YCbCr_422_SP;
+  int HAL_PIXEL_FORMAT_YCbCr_422_I;
 #else
   int HAL_PIXEL_FORMAT_YCRCB_420_SP;
+  int HAL_PIXEL_FORMAT_YCBCR_422_SP;
+  int HAL_PIXEL_FORMAT_YCBCR_422_I;
 #endif
+  int QOMX_COLOR_FormatYUV420PackedSemiPlanar32m;
+  int QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka;
 } DroidMediaPixelFormatConstants;
 
 typedef struct {
   int QOMX_COLOR_FormatYUV420PackedSemiPlanar32m;
+  int QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka;
   int OMX_COLOR_FormatYUV420Planar;
+  int OMX_COLOR_FormatYUV420PackedPlanar;
   int OMX_COLOR_FormatYUV420SemiPlanar;
+  int OMX_COLOR_FormatYUV422SemiPlanar;
+  int OMX_COLOR_FormatL8;
+  int OMX_COLOR_FormatYCbYCr;
+  int OMX_COLOR_FormatYCrYCb;
+  int  OMX_COLOR_FormatCbYCrY;
+  int OMX_COLOR_Format32bitARGB8888;
+  int OMX_COLOR_Format32bitBGRA8888;
+  int OMX_COLOR_Format16bitRGB565;
+  int OMX_COLOR_Format16bitBGR565;
 } DroidMediaColourFormatConstants;
 
 void droid_media_camera_constants_init(DroidMediaCameraConstants *c);

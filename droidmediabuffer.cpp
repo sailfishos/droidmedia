@@ -176,6 +176,26 @@ out:
   return new DroidMediaBuffer(buffer, cb->data, cb->ref, cb->unref);
 }
 
+DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
+					    uint32_t format,
+					    DroidMediaBufferCallbacks *cb)
+{
+  android::sp<android::GraphicBuffer>
+    buffer(new android::GraphicBuffer(w, h, format,
+				      android::GraphicBuffer::USAGE_HW_TEXTURE));
+
+  android::status_t err = buffer->initCheck();
+
+  if (err != android::NO_ERROR) {
+    ALOGE("Error 0x%x allocating buffer", -err);
+    buffer.clear();
+    return NULL;
+  }
+
+  return new DroidMediaBuffer(buffer, cb->data, cb->ref, cb->unref);
+}
+
+
 void droid_media_buffer_release(DroidMediaBuffer *buffer,
                                 EGLDisplay display, EGLSyncKHR fence)
 {
@@ -201,6 +221,38 @@ void droid_media_buffer_release(DroidMediaBuffer *buffer,
     }
 
     delete buffer;
+}
+
+void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags)
+{
+  int usage = 0;
+  void *addr = NULL;
+  android::status_t err;
+
+  if (flags & DROID_MEDIA_BUFFER_LOCK_READ) {
+    usage |= android::GraphicBuffer::USAGE_SW_READ_RARELY;
+  }
+  if (flags & DROID_MEDIA_BUFFER_LOCK_WRITE) {
+    usage |= android::GraphicBuffer::USAGE_SW_WRITE_RARELY;
+  }
+
+  err = buffer->m_buffer->lock(usage, &addr);
+
+  if (err != android::NO_ERROR) {
+    ALOGE("Error 0x%x locking buffer", -err);
+    return NULL;
+  } else {
+    return addr;
+  }
+}
+
+void droid_media_buffer_unlock(DroidMediaBuffer *buffer)
+{
+  android::status_t err = buffer->m_buffer->unlock();
+
+  if (err != android::NO_ERROR) {
+    ALOGE("Error 0x%x unlocking buffer", -err);
+  }
 }
 
 uint32_t droid_media_buffer_get_transform(DroidMediaBuffer * buffer)
@@ -258,6 +310,8 @@ void droid_media_buffer_get_info(DroidMediaBuffer *buffer, DroidMediaBufferInfo 
     info->timestamp = buffer->m_timestamp;
     info->frame_number = buffer->m_frameNumber;
     info->crop_rect = droid_media_buffer_get_crop_rect(buffer);
+    info->format = buffer->format;
+    info->stride = buffer->stride;
 }
 
 };

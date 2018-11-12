@@ -63,6 +63,11 @@ void droid_media_camera_constants_init(DroidMediaCameraConstants *c)
 
 void droid_media_pixel_format_constants_init(DroidMediaPixelFormatConstants *c)
 {
+  c->HAL_PIXEL_FORMAT_RGBA_8888 = HAL_PIXEL_FORMAT_RGBA_8888;
+  c->HAL_PIXEL_FORMAT_RGBX_8888 = HAL_PIXEL_FORMAT_RGBX_8888;
+  c->HAL_PIXEL_FORMAT_RGB_888 = HAL_PIXEL_FORMAT_RGB_888;
+  c->HAL_PIXEL_FORMAT_RGB_565 = HAL_PIXEL_FORMAT_RGB_565;
+  c->HAL_PIXEL_FORMAT_BGRA_8888 = HAL_PIXEL_FORMAT_BGRA_8888;
   c->HAL_PIXEL_FORMAT_YV12 = HAL_PIXEL_FORMAT_YV12;
 #if ANDROID_MAJOR < 6
   c->HAL_PIXEL_FORMAT_RAW_SENSOR = HAL_PIXEL_FORMAT_RAW_SENSOR;
@@ -70,13 +75,28 @@ void droid_media_pixel_format_constants_init(DroidMediaPixelFormatConstants *c)
   c->HAL_PIXEL_FORMAT_RAW_SENSOR = HAL_PIXEL_FORMAT_RAW16;
 #endif
   c->HAL_PIXEL_FORMAT_YCrCb_420_SP = HAL_PIXEL_FORMAT_YCrCb_420_SP;
+  c->HAL_PIXEL_FORMAT_YCbCr_422_SP = HAL_PIXEL_FORMAT_YCbCr_422_SP;
+  c->HAL_PIXEL_FORMAT_YCbCr_422_I = HAL_PIXEL_FORMAT_YCbCr_422_I;
+  c->QOMX_COLOR_FormatYUV420PackedSemiPlanar32m = 0x7FA30C04;
+  c->QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka = 0x7FA30C03;
 }
 
 void droid_media_colour_format_constants_init(DroidMediaColourFormatConstants *c)
 {
   c->QOMX_COLOR_FormatYUV420PackedSemiPlanar32m = 0x7FA30C04;
+  c->QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka = 0x7FA30C03;
   c->OMX_COLOR_FormatYUV420Planar = OMX_COLOR_FormatYUV420Planar;
+  c->OMX_COLOR_FormatYUV420PackedPlanar = OMX_COLOR_FormatYUV420PackedPlanar;
   c->OMX_COLOR_FormatYUV420SemiPlanar = OMX_COLOR_FormatYUV420SemiPlanar;
+  c->OMX_COLOR_FormatYUV422SemiPlanar = OMX_COLOR_FormatYUV422SemiPlanar;
+  c->OMX_COLOR_FormatL8 = OMX_COLOR_FormatL8;
+  c->OMX_COLOR_FormatYCbYCr = OMX_COLOR_FormatYCbYCr;
+  c->OMX_COLOR_FormatYCrYCb = OMX_COLOR_FormatYCrYCb;
+  c->OMX_COLOR_FormatCbYCrY = OMX_COLOR_FormatCbYCrY;
+  c->OMX_COLOR_Format32bitARGB8888 = OMX_COLOR_Format32bitARGB8888;
+  c->OMX_COLOR_Format32bitBGRA8888 = OMX_COLOR_Format32bitBGRA8888;
+  c->OMX_COLOR_Format16bitRGB565 = OMX_COLOR_Format16bitRGB565;
+  c->OMX_COLOR_Format16bitBGR565 = OMX_COLOR_Format16bitBGR565;
 }
 
 };
