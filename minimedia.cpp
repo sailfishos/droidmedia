@@ -59,9 +59,8 @@ main(int, char**)
 
     MediaPlayerService::instantiate();
     CameraService::instantiate();
-    AudioPolicyService::instantiate();
 
-// PermissionController and AppOps are needed on Android 4, but aren't allowed to be run here.
+  // PermissionController and AppOps are needed on Android 4, but aren't allowed to be run here.
 #if ANDROID_MAJOR >= 5
     FakePermissionController::instantiate();
     FakeAppOps::instantiate();
