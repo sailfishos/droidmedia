@@ -447,3 +447,71 @@ public:
     }
 };
 
+#include <android/frameworks/sensorservice/1.0/IEventQueue.h>
+#include <android/frameworks/sensorservice/1.0/ISensorManager.h>
+#include <android/frameworks/sensorservice/1.0/types.h>
+#include <android/hardware/sensors/1.0/types.h>
+
+class FakeEventQueue :
+    public android::frameworks::sensorservice::V1_0::IEventQueue
+{
+public:
+    FakeEventQueue() {}
+
+    android::hardware::Return<android::frameworks::sensorservice::V1_0::Result> enableSensor(
+            int32_t sensorHandle, int32_t samplingPeriodUs, int64_t maxBatchReportLatencyUs) {
+        return android::frameworks::sensorservice::V1_0::Result::BAD_VALUE;
+    }
+
+    android::hardware::Return<android::frameworks::sensorservice::V1_0::Result> disableSensor(
+            int32_t sensorHandle) {
+        return android::frameworks::sensorservice::V1_0::Result::BAD_VALUE;
+    }
+};
+
+class FakeSensorManager :
+    public android::frameworks::sensorservice::V1_0::ISensorManager
+{
+
+    // Methods from ::android::frameworks::sensorservice::V1_0::ISensorManager follow.
+    android::hardware::Return<void> getSensorList(getSensorList_cb _hidl_cb) {
+        android::hardware::hidl_vec<::android::hardware::sensors::V1_0::SensorInfo> ret;
+        _hidl_cb(ret, android::frameworks::sensorservice::V1_0::Result::OK);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> getDefaultSensor(
+            android::hardware::sensors::V1_0::SensorType type,
+            getDefaultSensor_cb _hidl_cb) {
+        _hidl_cb({}, android::frameworks::sensorservice::V1_0::Result::NOT_EXIST);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> createAshmemDirectChannel(
+            const android::hardware::hidl_memory& mem, uint64_t size,
+            createAshmemDirectChannel_cb _hidl_cb) {
+        _hidl_cb(nullptr, android::frameworks::sensorservice::V1_0::Result::BAD_VALUE);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> createGrallocDirectChannel(
+            const android::hardware::hidl_handle& buffer, uint64_t size,
+            createGrallocDirectChannel_cb _hidl_cb) {
+        _hidl_cb(nullptr, android::frameworks::sensorservice::V1_0::Result::UNKNOWN_ERROR);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> createEventQueue(
+            const sp<android::frameworks::sensorservice::V1_0::IEventQueueCallback> &callback,
+            createEventQueue_cb _hidl_cb) {
+        if (callback == nullptr) {
+            _hidl_cb(nullptr, android::frameworks::sensorservice::V1_0::Result::BAD_VALUE);
+            return android::hardware::Void();
+        }
+
+        sp<android::frameworks::sensorservice::V1_0::IEventQueue> queue = new FakeEventQueue();
+
+        _hidl_cb(queue, android::frameworks::sensorservice::V1_0::Result::OK);
+        return android::hardware::Void();
+    }
+};
