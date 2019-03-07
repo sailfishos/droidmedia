@@ -84,6 +84,10 @@ main(int, char**)
         usleep(BINDER_SERVICE_CHECK_INTERVAL);
     } while (true);
     ALOGD("Allowing use of the camera for users root and bin");
+#if ANDROID_MAJOR >= 8
+    sp<android::frameworks::sensorservice::V1_0::ISensorManager> sensorManager = new FakeSensorManager;
+    status_t status = sensorManager->registerAsService();
+#endif
 #if ANDROID_MAJOR >= 7
     sp<hardware::ICameraService> gCameraService = interface_cast<hardware::ICameraService>(binder);
     std::vector<int32_t> users = {0, 1};
