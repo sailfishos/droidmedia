@@ -16,7 +16,9 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
-#if ANDROID_MAJOR >= 8
+#if ANDROID_MAJOR >= 9
+#include <media/stagefright/omx/1.0/Omx.h>
+#elif ANDROID_MAJOR >= 8
 #include <media/stagefright/omx/OMX.h>
 #else
 #include <media/stagefright/OMXClient.h>
@@ -42,7 +44,11 @@
 #include <media/stagefright/SimpleDecodingSource.h>
 #endif
 
+#if ANDROID_MAJOR >= 9
+#include <media/MediaSource.h>
+#else
 #include <media/stagefright/MediaSource.h>
+#endif
 #include <media/stagefright/MetaData.h>
 #include <media/stagefright/MediaDefs.h>
 #include <gui/BufferQueue.h>
@@ -53,6 +59,7 @@
 #include "private.h"
 #include "droidmediabuffer.h"
 
+#undef LOG_TAG
 #define LOG_TAG "DroidMediaCodec"
 #define DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS 5
 
@@ -206,7 +213,11 @@ private:
         return android::OK;
     }
 
+#if ANDROID_MAJOR >= 9
+    android::status_t read(android::MediaBufferBase **buffer,
+#else
     android::status_t read(android::MediaBuffer **buffer,
+#endif
                            const android::MediaSource::ReadOptions *options DM_UNUSED = NULL) {
         *buffer = get();
 
@@ -258,7 +269,11 @@ struct _DroidMediaCodec : public android::MediaBufferObserver
 #endif
     }
 
+#if ANDROID_MAJOR >= 9
+    void signalBufferReturned(android::MediaBufferBase *buff)
+#else
     void signalBufferReturned(android::MediaBuffer *buff)
+#endif
     {
         InputBuffer *buffer = (InputBuffer *) buff;
 
@@ -736,8 +751,13 @@ void droid_media_codec_destroy(DroidMediaCodec *codec)
 void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb)
 {
     InputBuffer *buffer = new InputBuffer(data->data.data, data->data.size, cb->data, cb->unref);
+#if ANDROID_MAJOR >= 9
+    buffer->meta_data().setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
+    buffer->meta_data().setInt64(android::kKeyTime, data->ts);
+#else
     buffer->meta_data()->setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
     buffer->meta_data()->setInt64(android::kKeyTime, data->ts);
+#endif
     buffer->setObserver(codec);
     buffer->set_range(0, data->data.size);
     buffer->add_ref();
@@ -768,8 +788,11 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
     int err;
     android::MediaBuffer *buffer = NULL;
 
+#if ANDROID_MAJOR >= 9
+    err = codec->m_codec->read((android::MediaBufferBase **)&buffer);
+#else
     err = codec->m_codec->read(&buffer);
-
+#endif
     if (err == android::INFO_FORMAT_CHANGED) {
         ALOGI("Format changed from codec");
 	if (codec->notifySizeChanged()) {
@@ -818,7 +841,12 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 	return DROID_MEDIA_CODEC_LOOP_OK;
     }
 
+#if ANDROID_MAJOR >= 9
+    // Obtaining graphic buffer currently disabled because of API changes
+    android::sp<android::GraphicBuffer> buff = NULL;
+#else
     android::sp<android::GraphicBuffer> buff = buffer->graphicBuffer();
+#endif
     if (buff == NULL) {
         if (codec->m_data_cb.data_available) {
             DroidMediaCodecData data;
@@ -827,7 +855,11 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
             data.ts = 0;
             data.decoding_ts = 0;
 
+#if ANDROID_MAJOR >= 9
+            if (!buffer->meta_data().findInt64(android::kKeyTime, &data.ts)) {
+#else
             if (!buffer->meta_data()->findInt64(android::kKeyTime, &data.ts)) {
+#endif
                 // I really don't know what to do here and I doubt we will reach that anyway.
                 ALOGE("Received a buffer without a timestamp!");
             } else {
@@ -835,7 +867,11 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
                 data.ts *= 1000;
             }
 
+#if ANDROID_MAJOR >= 9
+            buffer->meta_data().findInt64(android::kKeyDecodingTime, &data.decoding_ts);
+#else
             buffer->meta_data()->findInt64(android::kKeyDecodingTime, &data.decoding_ts);
+#endif
             if (data.decoding_ts) {
                 // Convert from usec to nsec.
                 data.decoding_ts *= 1000;
@@ -843,14 +879,22 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 
             int32_t sync = 0;
             data.sync = false;
+#if ANDROID_MAJOR >= 9
+            buffer->meta_data().findInt32(android::kKeyIsSyncFrame, &sync);
+#else
             buffer->meta_data()->findInt32(android::kKeyIsSyncFrame, &sync);
+#endif
             if (sync) {
                 data.sync = true;
             }
 
             int32_t codecConfig = 0;
             data.codec_config = false;
+#if ANDROID_MAJOR >= 9
+            if (buffer->meta_data().findInt32(android::kKeyIsCodecConfig, &codecConfig)
+#else
             if (buffer->meta_data()->findInt32(android::kKeyIsCodecConfig, &codecConfig)
+#endif
                 && codecConfig) {
                 data.codec_config = true;
             }
@@ -863,7 +907,11 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
         }
     } else {
         int64_t timestamp = 0;
+#if ANDROID_MAJOR >= 9
+        if (!buffer->meta_data().findInt64(android::kKeyTime, &timestamp)) {
+#else
         if (!buffer->meta_data()->findInt64(android::kKeyTime, &timestamp)) {
+#endif
             // I really don't know what to do here and I doubt we will reach that anyway.
             ALOGE("Received a buffer without a timestamp!");
         } else {
@@ -880,7 +928,11 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
         if (err != android::NO_ERROR) {
             ALOGE("queueBuffer failed with error 0x%d", -err);
         } else {
+#if ANDROID_MAJOR >= 9
+            buffer->meta_data().setInt32(android::kKeyRendered, 1);
+#else
             buffer->meta_data()->setInt32(android::kKeyRendered, 1);
+#endif
         }
     }
 

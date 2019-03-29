@@ -28,10 +28,15 @@
 #include <media/stagefright/foundation/ALooper.h>
 #endif
 
+#undef LOG_TAG
 #define LOG_TAG "DroidMediaRecorder"
 
 namespace android {
+#if ANDROID_MAJOR >= 9
+  struct CameraSourceListener {
+#else
   class CameraSourceListener {
+#endif
   public:
     static int32_t getColorFormat(android::sp<android::CameraSource> src, android::CameraParameters p) {
       return src->isCameraColorFormatSupported (p) == android::NO_ERROR ? src->mColorFormat : -1;
@@ -48,7 +53,11 @@ struct _DroidMediaRecorder {
 
   android::status_t tick() {
     android::MediaBuffer *buffer;
+#if ANDROID_MAJOR >= 9
+    android::status_t err = m_codec->read((android::MediaBufferBase **)&buffer);
+#else
     android::status_t err = m_codec->read(&buffer);
+#endif
 
     if (err == android::OK) {
       DroidMediaCodecData data;
@@ -58,26 +67,42 @@ struct _DroidMediaRecorder {
       data.decoding_ts = 0;
       int32_t codecConfig = 0;
       data.codec_config = false;
+#if ANDROID_MAJOR >= 9
+      if (buffer->meta_data().findInt32(android::kKeyIsCodecConfig, &codecConfig)
+#else
       if (buffer->meta_data()->findInt32(android::kKeyIsCodecConfig, &codecConfig)
+#endif
       && codecConfig) {
         data.codec_config = true;
       }
 
+#if ANDROID_MAJOR >= 9
+      if (buffer->meta_data().findInt64(android::kKeyTime, &data.ts)) {
+#else
       if (buffer->meta_data()->findInt64(android::kKeyTime, &data.ts)) {
+#endif
         // Convert timestamp from useconds to nseconds
         data.ts *= 1000;
       } else {
         if (!data.codec_config) ALOGE("Recorder received a buffer without a timestamp!");
       }
 
+#if ANDROID_MAJOR >= 9
+      if (buffer->meta_data().findInt64(android::kKeyDecodingTime, &data.decoding_ts)) {
+#else
       if (buffer->meta_data()->findInt64(android::kKeyDecodingTime, &data.decoding_ts)) {
+#endif
         // Convert from usec to nsec.
         data.decoding_ts *= 1000;
       }
 
       int32_t sync = 0;
       data.sync = false;
+#if ANDROID_MAJOR >= 9
+      buffer->meta_data().findInt32(android::kKeyIsSyncFrame, &sync);
+#else
       buffer->meta_data()->findInt32(android::kKeyIsSyncFrame, &sync);
+#endif
       if (sync) {
         data.sync = true;
       }

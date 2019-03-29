@@ -24,6 +24,7 @@
 #include <gui/Surface.h>
 #endif
 
+#undef LOG_TAG
 #define LOG_TAG "DroidMediaBufferQueue"
 
 DroidMediaBufferQueueListener::DroidMediaBufferQueueListener() :

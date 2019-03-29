@@ -19,6 +19,7 @@
 #include "droidmediabuffer.h"
 #include "private.h"
 
+#undef LOG_TAG
 #define LOG_TAG "DroidMediaBuffer"
 
 #if ANDROID_MAJOR < 5
