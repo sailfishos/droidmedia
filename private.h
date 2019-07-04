@@ -22,7 +22,11 @@
 #include "droidmedia.h"
 #include <gui/BufferQueue.h>
 #include <camera/Camera.h>
+#if ANDROID_MAJOR >= 9
+#include <media/MediaSource.h>
+#else
 #include <media/stagefright/MediaSource.h>
+#endif
 #include "droidmediacamera.h"
 #include "droidmediacodec.h"
 #if ANDROID_MAJOR >=5

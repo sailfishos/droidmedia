@@ -25,6 +25,7 @@
 
 typedef void (*_getI420ColorConverter)(II420ColorConverter *converter);
 
+#undef LOG_TAG
 #define LOG_TAG "DroidMediaConvert"
 
 extern "C" {

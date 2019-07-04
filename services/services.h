@@ -57,4 +57,8 @@
 #include "services_8_1_0.h"
 #endif
 
+#if ANDROID_MAJOR == 9
+#include "services_9_0_0.h"
+#endif
+
 #endif
