@@ -527,3 +527,42 @@ class FakeSensorManager :
         return android::hardware::Void();
     }
 };
+
+#include <binder/IActivityManager.h>
+
+class BnFakeActivityManager : public BnInterface<IActivityManager>
+{
+public:
+    virtual status_t    onTransact( uint32_t code,
+                                    const Parcel& data,
+                                    Parcel* reply,
+                                    uint32_t flags = 0) {
+        return NO_ERROR;
+    };
+};
+
+class FakeActivityManager : public BinderService<FakeActivityManager>,
+                                public BnFakeActivityManager
+{
+public:
+    static char const *getServiceName() {
+        return "activity";
+    }
+    
+    virtual int openContentUri(const String16& stringUri) {
+        return 0;
+    };
+    
+    virtual void registerUidObserver(const sp<IUidObserver>& observer,
+                                     const int32_t event,
+                                     const int32_t cutpoint,
+                                     const String16& callingPackage) {
+    };
+                                    
+    virtual void unregisterUidObserver(const sp<IUidObserver>& observer) {
+    };
+    
+    virtual bool isUidActive(const uid_t uid, const String16& callingPackage) {
+        return false;
+    };
+};
