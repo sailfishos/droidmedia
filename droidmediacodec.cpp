@@ -204,7 +204,7 @@ private:
         m_framesBeingProcessed.lock.lock();
 
         while (!m_framesBeingProcessed.buffers.empty()) {
-            ALOGW("stop(): waiting for %d frames", m_framesBeingProcessed.buffers.size());
+            ALOGW("stop(): waiting for %zu frames", m_framesBeingProcessed.buffers.size());
             m_framesBeingProcessed.cond.wait(m_framesBeingProcessed.lock);
         }
 
@@ -899,7 +899,7 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
                 data.codec_config = true;
             }
 
-            ALOGV("sync? %i, codec config? %i, ts = %lli", sync, codecConfig, data.ts);
+            ALOGV("sync? %i, codec config? %i, ts = %" PRId64, sync, codecConfig, data.ts);
 
             codec->m_data_cb.data_available (codec->m_data_cb_data, &data);
         } else {
