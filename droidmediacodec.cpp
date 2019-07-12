@@ -52,6 +52,7 @@
 #include <media/stagefright/MetaData.h>
 #include <media/stagefright/MediaDefs.h>
 #include <gui/BufferQueue.h>
+#include <inttypes.h>
 #include "droidmediacodec.h"
 #if ANDROID_MAJOR < 8
 #include "allocator.h"
