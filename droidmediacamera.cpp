@@ -130,6 +130,11 @@ public:
                     m_cam->m_cb.zoom_cb(m_cam->m_cb_data, ext1, ext2);
                 }
                 break;
+            case CAMERA_MSG_RAW_IMAGE_NOTIFY:
+                if (m_cam->m_cb.raw_image_notify_cb) {
+                    m_cam->m_cb.raw_image_notify_cb(m_cam->m_cb_data);
+                }
+                break;
             default:
                 ALOGW("unknown notify message 0x%x", msgType);
                 break;
