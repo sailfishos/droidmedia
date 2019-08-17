@@ -110,6 +110,20 @@ LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libcutils \
                           libui
 
+ifeq ($(MINIMEDIA_AUDIOPOLICYSERVICE_ENABLE),1)
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),5))
+LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy
+else
+LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy \
+                    frameworks/av/services/audiopolicy/common/include \
+                    frameworks/av/services/audiopolicy/common/managerdefinitions/include \
+                    frameworks/av/services/audiopolicy/engine/interface \
+                    frameworks/av/services/audiopolicy/managerdefault \
+                    frameworks/av/services/audiopolicy/service
+endif
+LOCAL_SHARED_LIBRARIES += libaudiopolicyservice
+endif
+
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
 LOCAL_C_INCLUDES += frameworks/native/libs/sensor/include \
                     frameworks/av/media/libstagefright/omx/include
@@ -131,6 +145,9 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter
 ifeq ($(MINIMEDIA_SENSORSERVER_DISABLE),1)
     LOCAL_CPPFLAGS += -DSENSORSERVER_DISABLE
+endif
+ifeq ($(MINIMEDIA_AUDIOPOLICYSERVICE_ENABLE),1)
+    LOCAL_CPPFLAGS += -DAUDIOPOLICYSERVICE_ENABLE
 endif
 LOCAL_MODULE := minimediaservice
 ifeq ($(strip $(DROIDMEDIA_32)), true)
