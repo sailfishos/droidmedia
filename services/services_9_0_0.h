@@ -131,6 +131,18 @@ public:
         return BAD_VALUE;
     }
 
+    status_t captureScreen(const sp<IBinder>&,
+            sp<GraphicBuffer>*, bool&, Rect, uint32_t, uint32_t,
+            int32_t, int32_t, bool, Rotation, bool) {
+        return BAD_VALUE;
+    }
+
+    status_t captureScreen(const sp<IBinder>&,
+            sp<GraphicBuffer>*, Rect, uint32_t, uint32_t,
+            int32_t, int32_t, bool, Rotation, bool) {
+        return BAD_VALUE;
+    }
+
     status_t captureLayers(const sp<IBinder>&, sp<GraphicBuffer>*,
             const Rect&, float, bool) {
         return 0;
