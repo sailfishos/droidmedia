@@ -92,6 +92,7 @@ typedef struct {
 DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec);
 DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData *meta);
 DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta);
+bool droid_media_codec_is_supported(DroidMediaCodecMetaData *meta, bool encoder);
 
 void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data);
 void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec,
