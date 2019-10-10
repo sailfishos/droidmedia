@@ -508,6 +508,27 @@ public:
     }
   }
 
+  static uint32_t flags(DroidMediaCodecMetaData *meta, uint32_t currentFlags) {
+    // We will not do any validation for the flags. Stagefright should take care of that.
+    if (meta->flags & DROID_MEDIA_CODEC_SW_ONLY) {
+#if ANDROID_MAJOR < 7
+      currentFlags |= android::OMXCodec::kSoftwareCodecsOnly;
+#else
+      currentFlags |= android::MediaCodecList::kPreferSoftwareCodecs;
+#endif
+    }
+
+    if (meta->flags & DROID_MEDIA_CODEC_HW_ONLY) {
+#if ANDROID_MAJOR < 7
+      currentFlags |= android::OMXCodec::kHardwareCodecsOnly;
+#else
+      currentFlags |= android::MediaCodecList::kHardwareCodecsOnly;
+#endif
+    }
+
+    return currentFlags;
+  }
+
 private:
   android::sp<android::MetaData> buildMetaData(DroidMediaCodecEncoderMetaData *meta) {
     android::sp<android::MetaData> md(new android::MetaData);
@@ -577,27 +598,6 @@ private:
     SET_PARAM(kKeySampleRate, sample_rate);
 
     return md;
-  }
-
-  uint32_t flags(DroidMediaCodecMetaData *meta, uint32_t currentFlags) {
-    // We will not do any validation for the flags. Stagefright should take care of that.
-    if (meta->flags & DROID_MEDIA_CODEC_SW_ONLY) {
-#if ANDROID_MAJOR < 7
-      currentFlags |= android::OMXCodec::kSoftwareCodecsOnly;
-#else
-      currentFlags |= android::MediaCodecList::kPreferSoftwareCodecs;
-#endif
-    }
-
-    if (meta->flags & DROID_MEDIA_CODEC_HW_ONLY) {
-#if ANDROID_MAJOR < 7
-      currentFlags |= android::OMXCodec::kHardwareCodecsOnly;
-#else
-      currentFlags |= android::MediaCodecList::kHardwareCodecsOnly;
-#endif
-    }
-
-    return currentFlags;
   }
 
   DroidMediaCodecEncoderMetaData *m_enc;
@@ -692,6 +692,29 @@ DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData
   DroidMediaCodecBuilder builder(meta);
 
   return droid_media_codec_create(builder);
+}
+
+bool droid_media_codec_is_supported(DroidMediaCodecMetaData *meta, bool encoder)
+{
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR < 2
+    android::Vector<android::String8> matchingCodecs;
+#elif ANDROID_MAJOR < 7
+    android::Vector<android::OMXCodec::CodecNameAndQuirks> matchingCodecs;
+#else
+    android::Vector<android::AString> matchingCodecs;
+#endif
+
+#if ANDROID_MAJOR < 7
+    android::OMXCodec::findMatchingCodecs(
+            meta->type, encoder, NULL,
+#else
+    android::MediaCodecList::findMatchingCodecs(
+            meta->type, encoder,
+#endif
+            DroidMediaCodecBuilder::flags(meta, 0),
+            &matchingCodecs);
+
+    return matchingCodecs.size() > 0;
 }
 
 bool droid_media_codec_start(DroidMediaCodec *codec)
