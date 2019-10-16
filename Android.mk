@@ -13,7 +13,10 @@ FORCE_HAL_PARAM := -DFORCE_HAL=$(FORCE_HAL)
 endif
 
 ifndef ANDROID_MAJOR
+# First check if version_defaults.mk was already loaded.
+ifndef PLATFORM_VERSION
 include build/core/version_defaults.mk
+endif
 ifeq ($(strip $(PLATFORM_VERSION)),)
 $error(*** Cannot get Android platform version)
 endif
