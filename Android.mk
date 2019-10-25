@@ -125,6 +125,7 @@ endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9))
 LOCAL_SHARED_LIBRARIES += android.hidl.memory@1.0
+LOCAL_SHARED_LIBRARIES += vendor.qti.hardware.camera.device@1.0
 endif
 
 LOCAL_MODULE_TAGS := optional
