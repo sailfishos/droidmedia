@@ -137,7 +137,8 @@ ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
 endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR), 10))
-	LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5
+	LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5 \
+				  android.hardware.camera.device@3.4
 endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9 10))
@@ -237,7 +238,8 @@ ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
 endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR), 10))
-	LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5
+	LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5 \
+				  android.hardware.camera.device@3.4
 endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9 10))
