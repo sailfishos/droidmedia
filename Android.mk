@@ -68,13 +68,16 @@ LOCAL_SHARED_LIBRARIES := libc \
                           libstagefright_foundation \
                           libmedia
 
-ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9 10))
 LOCAL_SHARED_LIBRARIES += liblog
 endif
 
-ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9))
-LOCAL_SHARED_LIBRARIES += libmediaextractor \
-                          android.hidl.memory@1.0
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
+	LOCAL_SHARED_LIBRARIES += libmediaextractor
+endif
+
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9 10))
+LOCAL_SHARED_LIBRARIES += android.hidl.memory@1.0
 endif
 
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) -Wno-unused-parameter
@@ -84,7 +87,7 @@ LOCAL_MODULE := libdroidmedia
 ifeq ($(strip $(ANDROID_MAJOR)),7)
 LOCAL_C_INCLUDES := frameworks/native/include/media/openmax \
                     frameworks/native/include/media/hardware
-else ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
+else ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9 10))
 LOCAL_C_INCLUDES := frameworks/native/include/media/openmax \
                     frameworks/native/include/media/hardware \
                     frameworks/native/libs/nativewindow/include \
@@ -129,7 +132,7 @@ endif
 LOCAL_SHARED_LIBRARIES += libaudiopolicyservice
 endif
 
-ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9 10))
 LOCAL_C_INCLUDES += frameworks/native/libs/sensor/include \
                     frameworks/av/media/libstagefright/omx/include
 LOCAL_SHARED_LIBRARIES += liblog \
@@ -142,7 +145,7 @@ LOCAL_SHARED_LIBRARIES += liblog \
                           android.hardware.camera.provider@2.4
 endif
 
-ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9))
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9 10))
 LOCAL_SHARED_LIBRARIES += android.hidl.memory@1.0
 endif
 
@@ -169,7 +172,7 @@ LOCAL_SHARED_LIBRARIES := libutils \
                           libcutils \
                           libui
 
-ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9 10))
 LOCAL_C_INCLUDES := frameworks/native/libs/sensor/include \
                     frameworks/native/include
 LOCAL_SHARED_LIBRARIES += liblog \
@@ -216,7 +219,12 @@ endif
 ifneq ($(shell cat frameworks/native/services/surfaceflinger/SurfaceFlinger.h |grep getDisplayInfoEx),)
 LOCAL_CPPFLAGS += -DUSE_SERVICES_VENDOR_EXTENSION
 endif
+
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
+	LOCAL_SHARED_LIBRARIES += libmediaextractor
+endif
+
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9 10))
 LOCAL_SHARED_LIBRARIES += liblog \
                           libcamera_client \
                           libhidlbase \
@@ -228,7 +236,7 @@ LOCAL_SHARED_LIBRARIES += liblog \
                           android.hardware.camera.provider@2.4
 endif
 
-ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9))
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9 10))
 LOCAL_SHARED_LIBRARIES += android.hidl.memory@1.0
 endif
 
