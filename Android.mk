@@ -132,6 +132,14 @@ endif
 LOCAL_SHARED_LIBRARIES += libaudiopolicyservice
 endif
 
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
+	LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.4
+endif
+
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR), 10))
+	LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5
+endif
+
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9 10))
 LOCAL_C_INCLUDES += frameworks/native/libs/sensor/include \
                     frameworks/av/media/libstagefright/omx/include
@@ -141,8 +149,7 @@ LOCAL_SHARED_LIBRARIES += liblog \
                           libhwbinder \
                           libsensor \
                           android.frameworks.sensorservice@1.0 \
-                          android.hardware.camera.common@1.0 \
-                          android.hardware.camera.provider@2.4
+                          android.hardware.camera.common@1.0
 endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9 10))
@@ -162,6 +169,7 @@ ifeq ($(strip $(DROIDMEDIA_32)), true)
 LOCAL_32_BIT_ONLY := true
 endif
 include $(BUILD_EXECUTABLE)
+
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minisf.cpp allocator.cpp
@@ -224,6 +232,14 @@ ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
 	LOCAL_SHARED_LIBRARIES += libmediaextractor
 endif
 
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
+	LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.4
+endif
+
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR), 10))
+	LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5
+endif
+
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9 10))
 LOCAL_SHARED_LIBRARIES += liblog \
                           libcamera_client \
@@ -232,8 +248,7 @@ LOCAL_SHARED_LIBRARIES += liblog \
                           libhwbinder \
                           libsensor \
                           android.frameworks.sensorservice@1.0 \
-                          android.hardware.camera.common@1.0 \
-                          android.hardware.camera.provider@2.4
+                          android.hardware.camera.common@1.0
 endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9 10))
