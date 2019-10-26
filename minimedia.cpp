@@ -75,7 +75,7 @@ main(int, char**)
     FakePermissionController::instantiate();
     FakeAppOps::instantiate();
     FakeBatteryStats::instantiate();
-#ifndef SENSORSERVER_DISABLE
+#if ! defined(SENSORSERVER_DISABLE) && ANDROID_MAJOR <= 9
     FakeSensorServer::instantiate();
 #endif
 #endif
@@ -97,7 +97,7 @@ main(int, char**)
         usleep(BINDER_SERVICE_CHECK_INTERVAL);
     } while (true);
     ALOGD("Allowing use of the camera for users root and bin");
-#if ANDROID_MAJOR >= 8
+#if ANDROID_MAJOR >= 8 && ANDROID_MAJOR <= 9
     sp<android::frameworks::sensorservice::V1_0::ISensorManager> sensorManager = new FakeSensorManager;
     status_t status = sensorManager->registerAsService();
     (void)status;
