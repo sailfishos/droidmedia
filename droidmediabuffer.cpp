@@ -114,9 +114,28 @@ DroidMediaBuffer *droid_media_buffer_create_from_raw_data(uint32_t w, uint32_t h
 							  DroidMediaBufferCallbacks *cb)
 {
   void *addr = NULL;
-  uint32_t width, height, dstStride;
+  uint32_t linesY, linesUV,
+           lineWidthY, lineWidthUV,
+           dstStrideY, dstStrideUV;
   uint8_t *dst;
   uint8_t *src;
+
+  // Make sure the format is supported before continue
+  switch (format) {
+  case HAL_PIXEL_FORMAT_RGBA_8888:
+  case HAL_PIXEL_FORMAT_RGBX_8888:
+  case HAL_PIXEL_FORMAT_BGRA_8888:
+  case HAL_PIXEL_FORMAT_RGB_888:
+  case HAL_PIXEL_FORMAT_RGB_565:
+  case HAL_PIXEL_FORMAT_YCbCr_422_I:
+  case HAL_PIXEL_FORMAT_YV12:
+  case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+  case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+    break;
+  default:
+    ALOGE("Unsupported format 0x%x", format);
+    return NULL;
+  }
 
   android::sp<android::GraphicBuffer>
     buffer(new android::GraphicBuffer(w, h, format,
@@ -138,9 +157,72 @@ DroidMediaBuffer *droid_media_buffer_create_from_raw_data(uint32_t w, uint32_t h
     return NULL;
   }
 
-  dstStride = buffer->getStride();
+  switch (format) {
+  case HAL_PIXEL_FORMAT_RGBA_8888:
+  case HAL_PIXEL_FORMAT_RGBX_8888:
+  case HAL_PIXEL_FORMAT_BGRA_8888:
+    linesY = h;
+    lineWidthY = 4 * w;
+    dstStrideY = 4 * buffer->getStride();
+    break;
+  case HAL_PIXEL_FORMAT_RGB_888:
+    linesY = h;
+    lineWidthY = 3 * w;
+    dstStrideY = 3 * buffer->getStride();
+    break;
+  case HAL_PIXEL_FORMAT_RGB_565:
+  case HAL_PIXEL_FORMAT_YCbCr_422_I:
+    linesY = h;
+    lineWidthY = 2 * w;
+    dstStrideY = 2 * buffer->getStride();
+    break;
+  case HAL_PIXEL_FORMAT_YV12:
+  case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+  case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+    linesY = h;
+    lineWidthY = w;
+    dstStrideY = buffer->getStride();
+    break;
+  }
 
-  if (strideY == dstStride) {
+  switch (format) {
+  case HAL_PIXEL_FORMAT_YV12:
+    // U plane is followed by V plane. So let's do 2-in-1 by not halving h.
+    linesUV = h;
+    lineWidthUV = w / 2;
+    dstStrideUV = dstStrideY / 2;
+    break;
+  case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+    linesUV = h; // Twice the lines as 4:2:0.
+    lineWidthUV = w;
+    dstStrideUV = dstStrideY;
+    break;
+  case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+    linesUV = h / 2;
+    lineWidthUV = w;
+    dstStrideUV = dstStrideY;
+    break;
+  default: // RGB, and YCbCr_422_I
+    if (strideUV != 0) {
+      ALOGW("Get unexpected 2nd plane for the format that shouldn't have one.");
+      // In this case, the global memcpy below should still happen if the caller
+      // erroneously passed a strideUV for an RGB format. Setting strideUV to 0
+      // allow this to happen.
+      strideUV = 0;
+    }
+
+    linesUV = 0;
+    lineWidthUV = 0;
+    dstStrideUV = 0;
+    break;
+  }
+
+  if (abs((int32_t)dstStrideUV - (int32_t)strideUV) > 128) {
+    ALOGW("dstStride and (src) strideUV is too much apart. Program might get SIGSEGV."
+          "(format = %d, dstStrideUV = %d, strideUV = %d)", format, dstStrideUV, strideUV);
+  }
+
+  if (strideY == dstStrideY && strideUV == dstStrideUV) {
     memcpy(addr, data->data, data->size);
     goto out;
   }
@@ -148,21 +230,17 @@ DroidMediaBuffer *droid_media_buffer_create_from_raw_data(uint32_t w, uint32_t h
   dst = (uint8_t *)addr;
   src = (uint8_t *)data->data;
 
-  // Y
-  height = h;
-  while (height-- > 0) {
-    memcpy(dst, src, w);
-    dst += dstStride;
+  // First plane
+  while (linesY-- > 0) {
+    memcpy(dst, src, lineWidthY);
+    dst += dstStrideY;
     src += strideY;
   }
 
-  dstStride /= 2;
-  height = h; // U and V together so we are not dividing height by 2
-  width = w / 2;
-
-  while (height-- > 0) {
-    memcpy(dst, src, width);
-    dst += dstStride;
+  // Second (and third) plane(s)
+  while (linesUV-- > 0) {
+    memcpy(dst, src, lineWidthUV);
+    dst += dstStrideUV;
     src += strideUV;
   }
 
