@@ -151,16 +151,17 @@ public:
     }
 
     void removeProcessedBuffer(android::MediaBuffer *buffer) {
+        m_framesBeingProcessed.lock.lock();
         for (android::List<android::MediaBuffer *>::iterator iter = m_framesBeingProcessed.buffers.begin();
              iter != m_framesBeingProcessed.buffers.end(); iter++) {
             if (*iter == buffer) {
-                m_framesBeingProcessed.buffers.erase(iter);
-                m_framesBeingProcessed.lock.lock();
+                m_framesBeingProcessed.buffers.erase(iter);                
                 m_framesBeingProcessed.cond.signal();
                 m_framesBeingProcessed.lock.unlock();
                 return;
             }
         }
+        m_framesBeingProcessed.lock.unlock();
 
         ALOGW("A buffer we don't know about is being finished!");
     }
