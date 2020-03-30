@@ -178,16 +178,18 @@ HYBRIS_WRAPPER_1_2(bool, DroidMediaCamera*,const char *,droid_media_camera_set_p
 HYBRIS_WRAPPER_1_1(char *, DroidMediaCamera*, droid_media_camera_get_parameters)
 HYBRIS_WRAPPER_1_2(bool, DroidMediaCamera*, int, droid_media_camera_take_picture)
 HYBRIS_WRAPPER_1_1(DroidMediaBufferQueue*, DroidMediaCamera*, droid_media_camera_get_buffer_queue)
+HYBRIS_WRAPPER_0_1(DroidMediaBuffer*,droid_media_buffer_destroy)
 HYBRIS_WRAPPER_0_3(DroidMediaBuffer*,EGLDisplay,EGLSyncKHR,droid_media_buffer_release)
 HYBRIS_WRAPPER_0_2(DroidMediaCamera*, DroidMediaCameraRecordingData*,droid_media_camera_release_recording_frame)
 HYBRIS_WRAPPER_1_1(nsecs_t,DroidMediaCameraRecordingData*,droid_media_camera_recording_frame_get_timestamp)
 HYBRIS_WRAPPER_1_1(size_t,DroidMediaCameraRecordingData*,droid_media_camera_recording_frame_get_size)
 HYBRIS_WRAPPER_1_1(void*,DroidMediaCameraRecordingData*,droid_media_camera_recording_frame_get_data)
 HYBRIS_WRAPPER_1_3(bool,DroidMediaCamera*,DroidMediaCameraFaceDetectionType,bool,droid_media_camera_enable_face_detection)
-HYBRIS_WRAPPER_1_7(DroidMediaBuffer*,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,DroidMediaData*,DroidMediaBufferCallbacks*,droid_media_buffer_create_from_raw_data)
-HYBRIS_WRAPPER_1_4(DroidMediaBuffer*,uint32_t,uint32_t,uint32_t,DroidMediaBufferCallbacks*,droid_media_buffer_create)
+HYBRIS_WRAPPER_1_3(DroidMediaBuffer*,uint32_t,uint32_t,uint32_t,droid_media_buffer_create)
 HYBRIS_WRAPPER_1_2(void*,DroidMediaBuffer*,uint32_t,droid_media_buffer_lock)
 HYBRIS_WRAPPER_0_1(DroidMediaBuffer*,droid_media_buffer_unlock)
+HYBRIS_WRAPPER_0_2(DroidMediaBuffer*,void *,droid_media_buffer_set_user_data)
+HYBRIS_WRAPPER_1_1(void*,DroidMediaBuffer*,droid_media_buffer_get_user_data)
 HYBRIS_WRAPPER_0_2(DroidMediaBuffer*,DroidMediaBufferInfo*,droid_media_buffer_get_info)
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer*,droid_media_buffer_get_transform)
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer*,droid_media_buffer_get_scaling_mode)
@@ -197,6 +199,7 @@ HYBRIS_WRAPPER_1_1(DroidMediaRect,DroidMediaBuffer*,droid_media_buffer_get_crop_
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer*,droid_media_buffer_get_width);
 HYBRIS_WRAPPER_1_1(uint32_t,DroidMediaBuffer*,droid_media_buffer_get_height);
 HYBRIS_WRAPPER_1_1(const void*,DroidMediaBuffer*,droid_media_buffer_get_handle);
+HYBRIS_WRAPPER_1_0(int,droid_media_buffer_queue_length);
 HYBRIS_WRAPPER_1_1(DroidMediaCodec*,DroidMediaCodecDecoderMetaData*,droid_media_codec_create_decoder);
 HYBRIS_WRAPPER_1_1(DroidMediaCodec*,DroidMediaCodecEncoderMetaData*,droid_media_codec_create_encoder);
 HYBRIS_WRAPPER_1_2(bool,DroidMediaCodecMetaData*,bool,droid_media_codec_is_supported);

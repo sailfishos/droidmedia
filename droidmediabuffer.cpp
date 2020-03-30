@@ -22,23 +22,11 @@
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaBuffer"
 
-#if ANDROID_MAJOR < 5
-static const int staleBuffer = android::BufferQueue::STALE_BUFFER_SLOT;
-#else
-static const int staleBuffer = android::IGraphicBufferConsumer::STALE_BUFFER_SLOT;
-#endif
-
-#if ANDROID_MAJOR < 6
-_DroidMediaBuffer::_DroidMediaBuffer(android::BufferQueue::BufferItem& buffer,
-#else
-_DroidMediaBuffer::_DroidMediaBuffer(android::BufferItem& buffer,
-#endif
-				     android::sp<DroidMediaBufferQueue> queue,
-				     void *data,
-				     DroidMediaCallback ref,
-				     DroidMediaCallback unref) :
+_DroidMediaBuffer::_DroidMediaBuffer(DroidMediaBufferItem& buffer,
+                                     android::sp<DroidMediaBufferQueue> queue) :
     m_buffer(buffer.mGraphicBuffer),
     m_queue(queue),
+    m_refCount(0),
     m_transform(buffer.mTransform),
     m_scalingMode(buffer.mScalingMode),
     m_timestamp(buffer.mTimestamp),
@@ -49,9 +37,7 @@ _DroidMediaBuffer::_DroidMediaBuffer(android::BufferItem& buffer,
 #else
     m_slot(buffer.mBuf),
 #endif
-    m_data(data),
-    m_ref(ref),
-    m_unref(unref)
+    m_userData(0)
 {
     width  = buffer.mGraphicBuffer->width;
     height = buffer.mGraphicBuffer->height;
@@ -64,19 +50,15 @@ _DroidMediaBuffer::_DroidMediaBuffer(android::BufferItem& buffer,
     common.decRef = decRef;
 }
 
-_DroidMediaBuffer::_DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer,
-				     void *data,
-				     DroidMediaCallback ref,
-				     DroidMediaCallback unref) :
+_DroidMediaBuffer::_DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer) :
     m_buffer(buffer),
+    m_refCount(0),
     m_transform(-1),
     m_scalingMode(-1),
     m_timestamp(-1),
     m_frameNumber(-1),
     m_slot(-1),
-    m_data(data),
-    m_ref(ref),
-    m_unref(unref)
+    m_userData(0)
 {
     width  = m_buffer->width;
     height = m_buffer->height;
@@ -91,95 +73,28 @@ _DroidMediaBuffer::_DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer
 
 _DroidMediaBuffer::~_DroidMediaBuffer()
 {
-
 }
 
 void _DroidMediaBuffer::incRef(struct android_native_base_t* base)
 {
-    DroidMediaBuffer *self = reinterpret_cast<DroidMediaBuffer *>(base);
-    self->m_ref(self->m_data);
+  DroidMediaBuffer * const buffer = reinterpret_cast<DroidMediaBuffer *>(base);
+
+  android_atomic_inc(&buffer->m_refCount);
 }
 
 void _DroidMediaBuffer::decRef(struct android_native_base_t* base)
 {
-    DroidMediaBuffer *self = reinterpret_cast<DroidMediaBuffer *>(base);
-    self->m_unref(self->m_data);
+  DroidMediaBuffer * const buffer = reinterpret_cast<DroidMediaBuffer *>(base);
+
+  if (android_atomic_dec(&buffer->m_refCount) == 1) {
+      delete buffer;
+  }
 }
 
 extern "C" {
-DroidMediaBuffer *droid_media_buffer_create_from_raw_data(uint32_t w, uint32_t h,
-							  uint32_t strideY, uint32_t strideUV,
-							  uint32_t format,
-							  DroidMediaData *data,
-							  DroidMediaBufferCallbacks *cb)
-{
-  void *addr = NULL;
-  uint32_t width, height, dstStride;
-  uint8_t *dst;
-  uint8_t *src;
-
-  android::sp<android::GraphicBuffer>
-    buffer(new android::GraphicBuffer(w, h, format,
-				      android::GraphicBuffer::USAGE_HW_TEXTURE));
-
-  android::status_t err = buffer->initCheck();
-
-  if (err != android::NO_ERROR) {
-    ALOGE("Error 0x%x allocating buffer", -err);
-    buffer.clear();
-    return NULL;
-  }
-
-  err = buffer->lock(android::GraphicBuffer::USAGE_SW_READ_RARELY
-		     | android::GraphicBuffer::USAGE_SW_WRITE_RARELY, &addr);
-  if (err != android::NO_ERROR) {
-    ALOGE("Error 0x%x locking buffer", -err);
-    buffer.clear();
-    return NULL;
-  }
-
-  dstStride = buffer->getStride();
-
-  if (strideY == dstStride) {
-    memcpy(addr, data->data, data->size);
-    goto out;
-  }
-
-  dst = (uint8_t *)addr;
-  src = (uint8_t *)data->data;
-
-  // Y
-  height = h;
-  while (height-- > 0) {
-    memcpy(dst, src, w);
-    dst += dstStride;
-    src += strideY;
-  }
-
-  dstStride /= 2;
-  height = h; // U and V together so we are not dividing height by 2
-  width = w / 2;
-
-  while (height-- > 0) {
-    memcpy(dst, src, width);
-    dst += dstStride;
-    src += strideUV;
-  }
-
-out:
-  err = buffer->unlock();
-  if (err != android::NO_ERROR) {
-    ALOGE("Error 0x%x unlocking buffer", -err);
-    buffer.clear();
-    return NULL;
-  }
-
-  return new DroidMediaBuffer(buffer, cb->data, cb->ref, cb->unref);
-}
 
 DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
-					    uint32_t format,
-					    DroidMediaBufferCallbacks *cb)
+                                            uint32_t format)
 {
   android::sp<android::GraphicBuffer>
     buffer(new android::GraphicBuffer(w, h, format,
@@ -193,35 +108,34 @@ DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
     return NULL;
   }
 
-  return new DroidMediaBuffer(buffer, cb->data, cb->ref, cb->unref);
+  DroidMediaBuffer *droidBuffer = new DroidMediaBuffer(buffer);
+  droidBuffer->incStrong(0);
+  return droidBuffer;
 }
 
+void droid_media_buffer_destroy(DroidMediaBuffer *buffer)
+{
+  buffer->decStrong(0);
+}
+
+void droid_media_buffer_set_user_data(DroidMediaBuffer *buffer, void *data)
+{
+  buffer->m_userData = data;
+}
+
+void *droid_media_buffer_get_user_data(DroidMediaBuffer *buffer)
+{
+  return buffer->m_userData;
+}
 
 void droid_media_buffer_release(DroidMediaBuffer *buffer,
                                 EGLDisplay display, EGLSyncKHR fence)
 {
     if (buffer->m_queue == NULL) {
-      // TODO: what should we do with fence?
-      delete buffer;
       return;
     }
 
-    int err = buffer->m_queue->releaseMediaBuffer(buffer, display, fence);
-
-    switch (err) {
-    case android::NO_ERROR:
-        break;
-
-    case staleBuffer:
-        ALOGW("Released stale buffer %d", buffer->m_slot);
-        break;
-
-    default:
-        ALOGE("Error 0x%x releasing buffer %d", -err, buffer->m_slot);
-        break;
-    }
-
-    delete buffer;
+    buffer->m_queue->releaseMediaBuffer(buffer, display, fence);
 }
 
 void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags)
