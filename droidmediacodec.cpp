@@ -94,13 +94,24 @@ class Source : public android::MediaSource {
 public:
     Source(android::sp<android::MetaData>& metaData) :
         m_metaData(metaData),
-        m_running(false)
+        m_running(false),
+        m_draining(false)
     {
     }
 
     void unlock() {
         m_framesReceived.lock.lock();
-        m_framesReceived.cond.signal();
+        m_framesReceived.cond.broadcast();
+        m_framesReceived.lock.unlock();
+    }
+
+    // After this is called all new buffers will be rejected. get() will still return any already
+    // queued buffers but once the queue has been emptied it will return a null buffer indicating
+    // the end of the stream. There is no coming back from this.
+    void drain() {
+        m_framesReceived.lock.lock();
+        m_draining = true;
+        m_framesReceived.cond.broadcast();
         m_framesReceived.lock.unlock();
     }
 
@@ -109,45 +120,61 @@ public:
 
         // drain buffer gets added without checking to avoid a deadlock
 
+        while (!m_draining) {
         // TODO: I am not sure this is the right approach here.
-        if (buffer && m_framesReceived.buffers.size() >= DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS) {
+            if (m_framesReceived.buffers.size() < DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS) {
+                m_framesReceived.buffers.push_back(buffer);
+                m_framesReceived.cond.signal();
+                m_framesReceived.lock.unlock();
+
+                return;
+            }
             // either get() will signal us or we will be signaled in case of an error
             m_framesReceived.cond.wait(m_framesReceived.lock);
         }
 
-        m_framesReceived.buffers.push_back(buffer);
-        m_framesReceived.cond.signal();
         m_framesReceived.lock.unlock();
+
+        buffer->release();
     }
 
     android::MediaBuffer *get() {
         m_framesReceived.lock.lock();
 
-        while (m_running && m_framesReceived.buffers.empty()) {
+        for (;;) {
+            if (!m_running) {
+                m_framesReceived.lock.unlock();
+                return NULL;
+            }
+
+            if (!m_framesReceived.buffers.empty()) {
+                android::List<android::MediaBuffer *>::iterator iter = m_framesReceived.buffers.begin();
+                android::MediaBuffer *buffer = *iter;
+
+                m_framesReceived.buffers.erase(iter);
+
+                m_framesReceived.cond.signal();
+
+                m_framesReceived.lock.unlock();
+
+                m_framesBeingProcessed.lock.lock();
+                m_framesBeingProcessed.buffers.push_back(buffer);
+                m_framesBeingProcessed.lock.unlock();
+
+                return buffer;
+            }
+
+            if (m_draining) {
+                m_framesReceived.lock.unlock();
+
+                return NULL;
+            }
+
             m_framesReceived.cond.wait(m_framesReceived.lock);
         }
 
-        if (!m_running) {
-            m_framesReceived.lock.unlock();
-            return NULL;
-        }
-
-        android::List<android::MediaBuffer *>::iterator iter = m_framesReceived.buffers.begin();
-        android::MediaBuffer *buffer = *iter;
-
-        m_framesReceived.buffers.erase(iter);
-
-        m_framesReceived.cond.signal();
-
-        m_framesReceived.lock.unlock();
-
-        if (buffer != NULL) {
-            m_framesBeingProcessed.lock.lock();
-            m_framesBeingProcessed.buffers.push_back(buffer);
-            m_framesBeingProcessed.lock.unlock();
-        }
-
-        return buffer;
+        // unreachable
+        return NULL;
     }
 
     void removeProcessedBuffer(android::MediaBuffer *buffer) {
@@ -235,6 +262,7 @@ private:
 
     android::sp<android::MetaData> m_metaData;
     bool m_running;
+    bool m_draining;
     Buffers m_framesReceived;
     Buffers m_framesBeingProcessed;
 };
@@ -952,7 +980,6 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 				     , -1 /* TODO: Where do we get the fence from? */
 #endif
 );
-
         if (err != android::NO_ERROR) {
             ALOGE("queueBuffer failed with error 0x%d", -err);
         } else {
@@ -989,9 +1016,7 @@ void droid_media_codec_flush(DroidMediaCodec *codec)
 
 void droid_media_codec_drain(DroidMediaCodec *codec)
 {
-    // This will cause read to return error to OMX and OMX will signal EOS
-    // In practice we can get any other error instead of ERROR_END_OF_STREAM
-    codec->m_src->add(NULL);
+    codec->m_src->drain();
 }
 
 void droid_media_codec_get_output_info(DroidMediaCodec *codec,
