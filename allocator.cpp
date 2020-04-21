@@ -41,6 +41,8 @@ DroidMediaAllocator::createGraphicBuffer(uint32_t w, uint32_t h,
 #endif
                                          android::status_t* error)
 {
+    usage |= android::GraphicBuffer::USAGE_HW_TEXTURE;
+
     // Copied from SurfaceFlinger.cpp
     android::sp<android::GraphicBuffer>
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 2)

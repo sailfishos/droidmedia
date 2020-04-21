@@ -797,6 +797,9 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
         ALOGE("error 0x%x stopping codec", -err);
     }
 
+    if (codec->m_queue.get()) {
+        codec->m_queue->buffersReleased();
+     }
 }
 
 void droid_media_codec_destroy(DroidMediaCodec *codec)
@@ -881,6 +884,7 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 	    return DROID_MEDIA_CODEC_LOOP_EOS;
         } else {
             ALOGE("Error 0x%x reading from codec", -err);
+
             if (codec->m_cb.error) {
                 codec->m_cb.error(codec->m_cb_data, err);
             }

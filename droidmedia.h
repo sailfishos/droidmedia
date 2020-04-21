@@ -56,8 +56,9 @@ typedef struct {
 } DroidMediaRect;
 
 typedef struct {
+  bool (* buffer_created)(void *data, DroidMediaBuffer *buffer);
+  bool (* frame_available)(void *data, DroidMediaBuffer *buffer);
   void (* buffers_released)(void *data);
-  void (* frame_available)(void *data);
 } DroidMediaBufferQueueCallbacks;
 
 typedef struct {
@@ -83,14 +84,8 @@ void droid_media_init();
 void droid_media_deinit();
 
 /* droidmediabuffer.cpp */
-DroidMediaBuffer *droid_media_buffer_create_from_raw_data(uint32_t w, uint32_t h,
-							  uint32_t strideY, uint32_t strideUV,
-							  uint32_t format,
-							  DroidMediaData *data,
-							  DroidMediaBufferCallbacks *cb);
 DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
-					    uint32_t format,
-					    DroidMediaBufferCallbacks *cb);
+                                            uint32_t format);
 void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags);
 void droid_media_buffer_unlock(DroidMediaBuffer *buffer);
 
@@ -104,14 +99,17 @@ uint32_t droid_media_buffer_get_width(DroidMediaBuffer * buffer);
 uint32_t droid_media_buffer_get_height(DroidMediaBuffer * buffer);
 const void *droid_media_buffer_get_handle(DroidMediaBuffer *buffer);
 void droid_media_buffer_release(DroidMediaBuffer *buffer,
-				EGLDisplay display, EGLSyncKHR fence);
+                                EGLDisplay display, EGLSyncKHR fence);
+void droid_media_buffer_destroy(DroidMediaBuffer *buffer);
+void droid_media_buffer_set_user_data(DroidMediaBuffer *buffer, void *data);
+void *droid_media_buffer_get_user_data(DroidMediaBuffer *buffer);
+
+
 
 /* private.h */
-DroidMediaBuffer *droid_media_buffer_queue_acquire_buffer(DroidMediaBufferQueue *queue,
-							  DroidMediaBufferCallbacks *cb);
 void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
 					    DroidMediaBufferQueueCallbacks *cb, void *data);
-bool droid_media_buffer_queue_acquire_and_release(DroidMediaBufferQueue *queue, DroidMediaBufferInfo *info);
+int droid_media_buffer_queue_length();
 
 #ifdef __cplusplus
 };

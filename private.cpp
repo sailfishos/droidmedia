@@ -27,52 +27,45 @@
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaBufferQueue"
 
-DroidMediaBufferQueueListener::DroidMediaBufferQueueListener() :
+#if ANDROID_MAJOR >= 6
+static int slotIndex(const android::BufferItem &item) { return item.mSlot; }
+#else
+static int slotIndex(const android::BufferQueue::BufferItem &item) { return item.mBuf; }
+#endif
+
+DroidMediaBufferQueueListener::DroidMediaBufferQueueListener(_DroidMediaBufferQueue *queue) :
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
   ProxyConsumerListener(NULL),
 #endif
-  m_data(0)
+  m_queue(queue)
 {
-  memset(&m_cb, 0x0, sizeof(m_cb));
+}
+
+DroidMediaBufferQueueListener::~DroidMediaBufferQueueListener()
+{
 }
 
 void DroidMediaBufferQueueListener::onFrameAvailable()
 {
-  m_lock.lock();
-
-  if (m_cb.frame_available) {
-    m_cb.frame_available(m_data);
+  android::sp<_DroidMediaBufferQueue> queue(m_queue.promote());
+  if (queue.get()) {
+    queue->frameAvailable();
   }
-
-  m_lock.unlock();
 }
 
 void DroidMediaBufferQueueListener::onBuffersReleased()
 {
-  m_lock.lock();
-
-  if (m_cb.buffers_released) {
-    m_cb.buffers_released(m_data);
+  android::sp<_DroidMediaBufferQueue> queue(m_queue.promote());
+  if (queue.get()) {
+    queue->buffersReleased();
   }
-
-  m_lock.unlock();
 }
 
-void DroidMediaBufferQueueListener::setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data) {
-  m_lock.lock();
+_DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) :
+  m_listener(new DroidMediaBufferQueueListener(this)),
+  m_data(0) {
 
-  if (!cb) {
-    memset(&m_cb, 0x0, sizeof(m_cb));
-  } else {
-    memcpy(&m_cb, cb, sizeof(m_cb));
-  }
-
-  m_data = data;
-
-  m_lock.unlock();
-}
-
-_DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) {
+  memset(&m_cb, 0x0, sizeof(m_cb));
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 2)
   m_queue = new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS);
 #elif ANDROID_MAJOR < 5
@@ -91,8 +84,6 @@ _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) {
 
   m_queue->setConsumerName(android::String8(name));
   m_queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
-
-  m_listener = new DroidMediaBufferQueueListener;
 }
 
 _DroidMediaBufferQueue::~_DroidMediaBufferQueue()
@@ -144,119 +135,155 @@ ANativeWindow *_DroidMediaBufferQueue::window() {
 #endif
 }
 
-DroidMediaBuffer *_DroidMediaBufferQueue::acquireMediaBuffer(DroidMediaBufferCallbacks *cb)
-{
-#if ANDROID_MAJOR < 6
-  android::BufferQueue::BufferItem buffer;
-#else
-  android::BufferItem buffer;
-#endif
-  int num;
+void _DroidMediaBufferQueue::frameAvailable() {
+  DroidMediaBufferItem item;
 
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
-  int err = m_queue->acquireBuffer(&buffer);
+  int err = m_queue->acquireBuffer(&item);
 #else
-  int err = m_queue->acquireBuffer(&buffer, 0);
+  int err = m_queue->acquireBuffer(&item, 0);
 #endif
 
   if (err != android::OK) {
-    ALOGE("Failed to acquire buffer from the queue. Error 0x%x", -err);
-    return NULL;
-  }
-
-  // TODO: Here we are working around the fact that BufferQueue will send us an mGraphicBuffer
-  // only when it changes. We can integrate SurfaceTexture but thart needs a lot of
-  // change in the whole stack
-#if ANDROID_MAJOR >= 6
-  num = buffer.mSlot;
-#else
-  num = buffer.mBuf;
-#endif
-
-  if (buffer.mGraphicBuffer != NULL) {
-    m_slots[num] = buffer;
-  } else {
-    m_slots[num].mTransform = buffer.mTransform;
-    m_slots[num].mScalingMode = buffer.mScalingMode;
-    m_slots[num].mTimestamp = buffer.mTimestamp;
-    m_slots[num].mFrameNumber = buffer.mFrameNumber;
-    m_slots[num].mCrop = buffer.mCrop;
-  }
-
-  if (m_slots[num].mGraphicBuffer == NULL) {
-    ALOGE("Got a buffer without real data");
-
-    DroidMediaBuffer *buffer = new DroidMediaBuffer(m_slots[num], this, NULL, NULL, NULL);
-    err = releaseMediaBuffer(buffer, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
-
-    if (err != android::NO_ERROR) {
-      ALOGE("error releasing buffer. Error 0x%x", -err);
+    // Invalid operation means we've tried to acquire too many concurrent buffers. That's expected,
+    // we'll attempt to over acquire a few times at the start and then an equilibrium will be
+    // reached.
+    if (err != android::INVALID_OPERATION) {
+        ALOGE("Failed to acquire item from the queue. Error 0x%x", -err);
     }
-
-    return NULL;
+    return;
   }
 
-  return new DroidMediaBuffer(m_slots[num], this,
-                              cb ? cb->data : NULL,
-                              cb ? cb->ref : NULL,
-                              cb ? cb->unref : NULL);
+  m_lock.lock();
+
+  DroidMediaBufferSlot &slot = m_slots[slotIndex(item)];
+
+  if (item.mGraphicBuffer != NULL) {
+    static_cast<DroidMediaBufferItem &>(slot) = item;
+
+    slot.droidBuffer = new DroidMediaBuffer(slot, this);
+
+    // Keep the original reference count for ourselves and give one to the buffer_created
+    // callback to release with droid_media_buffer_destroy. If there is no buffer_created
+    // callback or it returns false we dereference both.
+    slot.droidBuffer->incStrong(0);
+
+    if (!m_data || !m_cb.buffer_created(m_data, slot.droidBuffer.get())) {
+      slot.droidBuffer->decStrong(0);
+      slot.droidBuffer.clear();
+    }
+  } else {
+    slot.mTransform = item.mTransform;
+    slot.mScalingMode = item.mScalingMode;
+    slot.mTimestamp = item.mTimestamp;
+    slot.mFrameNumber = item.mFrameNumber;
+    slot.mCrop = item.mCrop;
+
+    // Recreate the user data if it was cleared for some reason like the buffer pool resetting
+    // itself without the queue being recreated. In reality buffer pools may always outlive
+    // queue so may never trigger.
+    if (slot.droidBuffer.get() && !slot.droidBuffer->m_userData && m_data) {
+      slot.droidBuffer->incStrong(0);
+      if (!m_cb.buffer_created(m_data, slot.droidBuffer.get())) {
+          slot.droidBuffer->decStrong(0);
+          slot.droidBuffer.clear();
+      }
+    }
+  }
+
+  if (slot.droidBuffer.get() && m_data && m_cb.frame_available(m_data, slot.droidBuffer.get())) {
+    m_lock.unlock();
+  } else {
+    m_lock.unlock();
+
+    ALOGE("Client wasn't able to handle a received frame.");
+
+    releaseMediaBuffer(slotIndex(slot), 0, 0);
+  }
 }
 
-int _DroidMediaBufferQueue::releaseMediaBuffer(DroidMediaBuffer *buffer,
-					       EGLDisplay dpy, EGLSyncKHR fence) {
+void _DroidMediaBufferQueue::buffersReleased() {
+  for (int i = 0; i < android::BufferQueue::NUM_BUFFER_SLOTS; ++i) {
+    DroidMediaBufferSlot &slot = m_slots[i];
+    slot.droidBuffer.clear();
+    slot.mGraphicBuffer = 0;
+  }
 
-    int err = m_queue->releaseBuffer(buffer->m_slot,
+  android::AutoMutex locker(&m_lock);
+
+  if (m_data) {
+    m_cb.buffers_released(m_data);
+  }
+}
+
+int _DroidMediaBufferQueue::releaseMediaBuffer(int index, EGLDisplay dpy, EGLSyncKHR fence) {
+
+    int err = m_queue->releaseBuffer(index,
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
     // TODO: fix this when we do video rendering
-    buffer->m_frameNumber,
+    m_slots[index].mFrameNumber,
 #endif
     dpy, fence
 #if (ANDROID_MAJOR == 4 && (ANDROID_MINOR >= 2)) || ANDROID_MAJOR >= 5
-					     // TODO: fix this when we do video rendering
+                                             // TODO: fix this when we do video rendering
     , android::Fence::NO_FENCE
 #endif
-					     );
+                                             );
+  if (err != android::NO_ERROR) {
+    ALOGE("error releasing item. Error 0x%x", -err);
+  }
 
-    return err;
+  return err;
+}
+
+#if ANDROID_MAJOR < 5
+static const int staleBuffer = android::BufferQueue::STALE_BUFFER_SLOT;
+#else
+static const int staleBuffer = android::IGraphicBufferConsumer::STALE_BUFFER_SLOT;
+#endif
+
+void _DroidMediaBufferQueue::releaseMediaBuffer(DroidMediaBuffer *buffer,
+					       EGLDisplay dpy, EGLSyncKHR fence) {
+
+  int err = releaseMediaBuffer(buffer->m_slot, dpy, fence);
+
+  switch (err) {
+  case android::NO_ERROR:
+      break;
+
+  case staleBuffer:
+      ALOGW("Released stale buffer %d", buffer->m_slot);
+      break;
+
+  default:
+      ALOGE("Error 0x%x releasing buffer %d", -err, buffer->m_slot);
+      break;
+  }
 }
 
 void _DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data) {
-  assert(m_listener.get());
-  m_listener->setCallbacks(cb, data);
-}
+  android::AutoMutex locker(&m_lock);
 
-bool _DroidMediaBufferQueue::acquireAndRelease(DroidMediaBufferInfo *info) {
-  DroidMediaBuffer *buff = acquireMediaBuffer(NULL);
-
-  if (buff) {
-    if (info) {
-      droid_media_buffer_get_info (buff, info);
-    }
-
-    droid_media_buffer_release(buff, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
-    return true;
+  if (!cb) {
+    memset(&m_cb, 0x0, sizeof(m_cb));
+  } else {
+    memcpy(&m_cb, cb, sizeof(m_cb));
   }
 
-  return false;
+  m_data = data;
 }
+
 
 extern "C" {
-DroidMediaBuffer *droid_media_buffer_queue_acquire_buffer(DroidMediaBufferQueue *queue,
-    DroidMediaBufferCallbacks *cb)
-{
-  return queue->acquireMediaBuffer(cb);
-}
 
 void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
-    DroidMediaBufferQueueCallbacks *cb, void *data)
-{
+    DroidMediaBufferQueueCallbacks *cb, void *data) {
 
   return queue->setCallbacks(cb, data);
 }
 
-bool droid_media_buffer_queue_acquire_and_release(DroidMediaBufferQueue *queue, DroidMediaBufferInfo *info)
-{
-  return queue->acquireAndRelease(info);
+int droid_media_buffer_queue_length() {
+  return android::BufferQueue::NUM_BUFFER_SLOTS;
 }
 
 };
