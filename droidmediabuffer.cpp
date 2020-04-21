@@ -19,6 +19,8 @@
 #include "droidmediabuffer.h"
 #include "private.h"
 
+#include <cutils/atomic.h>
+
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaBuffer"
 
