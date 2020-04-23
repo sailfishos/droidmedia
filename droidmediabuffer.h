@@ -42,6 +42,8 @@ public:
   static void incRef(struct android_native_base_t* base);
   static void decRef(struct android_native_base_t* base);
 
+  void update(const DroidMediaBufferItem& buffer);
+
   android::sp<android::GraphicBuffer> m_buffer;
   android::sp<DroidMediaBufferQueue> m_queue;
 
