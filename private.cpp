@@ -179,14 +179,18 @@ void _DroidMediaBufferQueue::frameAvailable() {
     slot.mFrameNumber = item.mFrameNumber;
     slot.mCrop = item.mCrop;
 
-    // Recreate the user data if it was cleared for some reason like the buffer pool resetting
-    // itself without the queue being recreated. In reality buffer pools may always outlive
-    // queue so may never trigger.
-    if (slot.droidBuffer.get() && !slot.droidBuffer->m_userData && m_data) {
-      slot.droidBuffer->incStrong(0);
-      if (!m_cb.buffer_created(m_data, slot.droidBuffer.get())) {
-          slot.droidBuffer->decStrong(0);
-          slot.droidBuffer.clear();
+    if (slot.droidBuffer.get()) {
+      slot.droidBuffer->update(slot);
+
+      // Recreate the user data if it was cleared for some reason like the buffer pool resetting
+      // itself without the queue being recreated. In reality buffer pools may always outlive
+      // queue so may never trigger.
+      if (!slot.droidBuffer->m_userData && m_data) {
+        slot.droidBuffer->incStrong(0);
+        if (!m_cb.buffer_created(m_data, slot.droidBuffer.get())) {
+            slot.droidBuffer->decStrong(0);
+            slot.droidBuffer.clear();
+        }
       }
     }
   }

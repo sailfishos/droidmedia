@@ -93,6 +93,15 @@ void _DroidMediaBuffer::decRef(struct android_native_base_t* base)
   }
 }
 
+void _DroidMediaBuffer::update(const DroidMediaBufferItem& buffer)
+{
+  m_transform = buffer.mTransform;
+  m_scalingMode = buffer.mScalingMode;
+  m_timestamp = buffer.mTimestamp;
+  m_frameNumber = buffer.mFrameNumber;
+  m_crop = buffer.mCrop;
+}
+
 extern "C" {
 
 DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
