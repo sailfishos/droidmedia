@@ -813,9 +813,15 @@ void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data, 
 #if ANDROID_MAJOR >= 9
     buffer->meta_data().setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
     buffer->meta_data().setInt64(android::kKeyTime, data->ts);
+    if (data->duration > 0) {
+        buffer->meta_data().setInt64(android::kKeyDuration, data->duration);
+    }
 #else
     buffer->meta_data()->setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
     buffer->meta_data()->setInt64(android::kKeyTime, data->ts);
+    if (data->duration > 0) {
+        buffer->meta_data()->setInt64(android::kKeyDuration, data->duration);
+    }
 #endif
     buffer->setObserver(codec);
     buffer->set_range(0, data->data.size);
@@ -925,6 +931,16 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
             } else {
                 // Convert timestamp from useconds to nseconds
                 data.ts *= 1000;
+            }
+
+#if ANDROID_MAJOR >= 9
+            buffer->meta_data().findInt64(android::kKeyDuration, &data.duration);
+#else
+            buffer->meta_data()->findInt64(android::kKeyDuration, &data.duration);
+#endif
+            if (data.duration) {
+                // Convert duration from useconds to nseconds
+                data.duration *= 1000;
             }
 
 #if ANDROID_MAJOR >= 9
