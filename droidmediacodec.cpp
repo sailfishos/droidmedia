@@ -811,18 +811,15 @@ void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data, 
 {
     InputBuffer *buffer = new InputBuffer(data->data.data, data->data.size, cb->data, cb->unref);
 #if ANDROID_MAJOR >= 9
-    buffer->meta_data().setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
-    buffer->meta_data().setInt64(android::kKeyTime, data->ts);
-    if (data->duration > 0) {
-        buffer->meta_data().setInt64(android::kKeyDuration, data->duration);
-    }
+    android::MetaDataBase meta_data_base = &(buffer->meta_data());
 #else
-    buffer->meta_data()->setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
-    buffer->meta_data()->setInt64(android::kKeyTime, data->ts);
-    if (data->duration > 0) {
-        buffer->meta_data()->setInt64(android::kKeyDuration, data->duration);
-    }
+    android::sp<android::MetaData> meta_data = buffer->meta_data();
 #endif
+    meta_data->setInt32(android::kKeyIsSyncFrame, data->sync ? 1 : 0);
+    meta_data->setInt64(android::kKeyTime, data->ts);
+    if (data->duration > 0) {
+        meta_data->setInt64(android::kKeyDuration, data->duration);
+    }
     buffer->setObserver(codec);
     buffer->set_range(0, data->data.size);
     buffer->add_ref();
@@ -910,8 +907,10 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 #if ANDROID_MAJOR >= 9
     // Obtaining graphic buffer currently disabled because of API changes
     android::sp<android::GraphicBuffer> buff = NULL;
+    android::MetaDataBase meta_data_base = &(buffer->meta_data());
 #else
     android::sp<android::GraphicBuffer> buff = buffer->graphicBuffer();
+    android::sp<android::MetaData> meta_data = buffer->meta_data();
 #endif
     if (buff == NULL) {
         if (codec->m_data_cb.data_available) {
@@ -921,11 +920,7 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
             data.ts = 0;
             data.decoding_ts = 0;
 
-#if ANDROID_MAJOR >= 9
-            if (!buffer->meta_data().findInt64(android::kKeyTime, &data.ts)) {
-#else
-            if (!buffer->meta_data()->findInt64(android::kKeyTime, &data.ts)) {
-#endif
+            if (!meta_data->findInt64(android::kKeyTime, &data.ts)) {
                 // I really don't know what to do here and I doubt we will reach that anyway.
                 ALOGE("Received a buffer without a timestamp!");
             } else {
@@ -933,21 +928,13 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
                 data.ts *= 1000;
             }
 
-#if ANDROID_MAJOR >= 9
-            buffer->meta_data().findInt64(android::kKeyDuration, &data.duration);
-#else
-            buffer->meta_data()->findInt64(android::kKeyDuration, &data.duration);
-#endif
+            meta_data->findInt64(android::kKeyDuration, &data.duration);
             if (data.duration) {
                 // Convert duration from useconds to nseconds
                 data.duration *= 1000;
             }
 
-#if ANDROID_MAJOR >= 9
-            buffer->meta_data().findInt64(android::kKeyDecodingTime, &data.decoding_ts);
-#else
-            buffer->meta_data()->findInt64(android::kKeyDecodingTime, &data.decoding_ts);
-#endif
+            meta_data->findInt64(android::kKeyDecodingTime, &data.decoding_ts);
             if (data.decoding_ts) {
                 // Convert from usec to nsec.
                 data.decoding_ts *= 1000;
@@ -955,22 +942,16 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 
             int32_t sync = 0;
             data.sync = false;
-#if ANDROID_MAJOR >= 9
-            buffer->meta_data().findInt32(android::kKeyIsSyncFrame, &sync);
-#else
-            buffer->meta_data()->findInt32(android::kKeyIsSyncFrame, &sync);
-#endif
+
+            meta_data->findInt32(android::kKeyIsSyncFrame, &sync);
             if (sync) {
                 data.sync = true;
             }
 
             int32_t codecConfig = 0;
             data.codec_config = false;
-#if ANDROID_MAJOR >= 9
-            if (buffer->meta_data().findInt32(android::kKeyIsCodecConfig, &codecConfig)
-#else
-            if (buffer->meta_data()->findInt32(android::kKeyIsCodecConfig, &codecConfig)
-#endif
+
+            if (meta_data->findInt32(android::kKeyIsCodecConfig, &codecConfig)
                 && codecConfig) {
                 data.codec_config = true;
             }
@@ -983,11 +964,7 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
         }
     } else {
         int64_t timestamp = 0;
-#if ANDROID_MAJOR >= 9
-        if (!buffer->meta_data().findInt64(android::kKeyTime, &timestamp)) {
-#else
-        if (!buffer->meta_data()->findInt64(android::kKeyTime, &timestamp)) {
-#endif
+        if (!meta_data->findInt64(android::kKeyTime, &timestamp)) {
             // I really don't know what to do here and I doubt we will reach that anyway.
             ALOGE("Received a buffer without a timestamp!");
         } else {
@@ -1003,11 +980,7 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
         if (err != android::NO_ERROR) {
             ALOGE("queueBuffer failed with error 0x%d", -err);
         } else {
-#if ANDROID_MAJOR >= 9
-            buffer->meta_data().setInt32(android::kKeyRendered, 1);
-#else
-            buffer->meta_data()->setInt32(android::kKeyRendered, 1);
-#endif
+            meta_data->setInt32(android::kKeyRendered, 1);
         }
     }
 
