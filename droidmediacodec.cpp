@@ -849,7 +849,7 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 {
     int err;
     android::MediaBuffer *buffer = NULL;
-
+    ALOGI("DroidMediaCodecLoop - tick");
 #if ANDROID_MAJOR >= 9
     err = codec->m_codec->read((android::MediaBufferBase **)&buffer);
 #else
