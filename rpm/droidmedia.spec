@@ -4,6 +4,20 @@
 %global debug_package       %{nil}
 %define __provides_exclude_from ^.*$
 
+%if 0%{!?device_rpm_architecture_string:1}
+%if 0%{?_repository:1}
+%if "%{_repository}" == "latest_aarch64"
+%define device_rpm_architecture_string aarch64
+%endif
+%if "%{_repository}" == "latest_armv7hl"
+%define device_rpm_architecture_string armv7hl
+%endif
+%if "%{_repository}" == "latest_i486"
+%define device_rpm_architecture_string i486
+%endif
+%endif
+%endif
+
 %define _target_cpu %{device_rpm_architecture_string}
 
 Name:          droidmedia
