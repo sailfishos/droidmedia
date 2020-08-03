@@ -28,6 +28,7 @@ extern "C" {
 #endif
 
 #define DM_UNUSED __attribute__((unused))
+#define DROID_MEDIA_EXPORT __attribute__ ((visibility ("default")))
 
 typedef struct _DroidMediaBuffer DroidMediaBuffer;
 typedef struct _DroidMediaBufferQueue DroidMediaBufferQueue;
@@ -80,36 +81,34 @@ typedef enum {
 } DroidMediaBufferLockFlags;
 
 /* droidmedia.cpp */
-void droid_media_init();
-void droid_media_deinit();
+DROID_MEDIA_EXPORT void droid_media_init();
+DROID_MEDIA_EXPORT void droid_media_deinit();
 
 /* droidmediabuffer.cpp */
-DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
-                                            uint32_t format);
-void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags);
-void droid_media_buffer_unlock(DroidMediaBuffer *buffer);
+DROID_MEDIA_EXPORT DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
+                                                               uint32_t format);
+DROID_MEDIA_EXPORT void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags);
+DROID_MEDIA_EXPORT void droid_media_buffer_unlock(DroidMediaBuffer *buffer);
 
-void droid_media_buffer_get_info(DroidMediaBuffer *buffer, DroidMediaBufferInfo *info);
-uint32_t droid_media_buffer_get_transform(DroidMediaBuffer * buffer);
-uint32_t droid_media_buffer_get_scaling_mode(DroidMediaBuffer * buffer);
-int64_t droid_media_buffer_get_timestamp(DroidMediaBuffer * buffer);
-uint64_t droid_media_buffer_get_frame_number(DroidMediaBuffer * buffer);
-DroidMediaRect droid_media_buffer_get_crop_rect(DroidMediaBuffer * buffer);
-uint32_t droid_media_buffer_get_width(DroidMediaBuffer * buffer);
-uint32_t droid_media_buffer_get_height(DroidMediaBuffer * buffer);
-const void *droid_media_buffer_get_handle(DroidMediaBuffer *buffer);
-void droid_media_buffer_release(DroidMediaBuffer *buffer,
-                                EGLDisplay display, EGLSyncKHR fence);
-void droid_media_buffer_destroy(DroidMediaBuffer *buffer);
-void droid_media_buffer_set_user_data(DroidMediaBuffer *buffer, void *data);
-void *droid_media_buffer_get_user_data(DroidMediaBuffer *buffer);
-
-
+DROID_MEDIA_EXPORT void droid_media_buffer_get_info(DroidMediaBuffer *buffer, DroidMediaBufferInfo *info);
+DROID_MEDIA_EXPORT uint32_t droid_media_buffer_get_transform(DroidMediaBuffer * buffer);
+DROID_MEDIA_EXPORT uint32_t droid_media_buffer_get_scaling_mode(DroidMediaBuffer * buffer);
+DROID_MEDIA_EXPORT int64_t droid_media_buffer_get_timestamp(DroidMediaBuffer * buffer);
+DROID_MEDIA_EXPORT uint64_t droid_media_buffer_get_frame_number(DroidMediaBuffer * buffer);
+DROID_MEDIA_EXPORT DroidMediaRect droid_media_buffer_get_crop_rect(DroidMediaBuffer * buffer);
+DROID_MEDIA_EXPORT uint32_t droid_media_buffer_get_width(DroidMediaBuffer * buffer);
+DROID_MEDIA_EXPORT uint32_t droid_media_buffer_get_height(DroidMediaBuffer * buffer);
+DROID_MEDIA_EXPORT const void *droid_media_buffer_get_handle(DroidMediaBuffer *buffer);
+DROID_MEDIA_EXPORT void droid_media_buffer_release(DroidMediaBuffer *buffer,
+                                                   EGLDisplay display, EGLSyncKHR fence);
+DROID_MEDIA_EXPORT void droid_media_buffer_destroy(DroidMediaBuffer *buffer);
+DROID_MEDIA_EXPORT void droid_media_buffer_set_user_data(DroidMediaBuffer *buffer, void *data);
+DROID_MEDIA_EXPORT void *droid_media_buffer_get_user_data(DroidMediaBuffer *buffer);
 
 /* private.h */
-void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
-					    DroidMediaBufferQueueCallbacks *cb, void *data);
-int droid_media_buffer_queue_length();
+DROID_MEDIA_EXPORT void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
+                                                               DroidMediaBufferQueueCallbacks *cb, void *data);
+DROID_MEDIA_EXPORT int droid_media_buffer_queue_length();
 
 #ifdef __cplusplus
 };

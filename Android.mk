@@ -72,7 +72,7 @@ LOCAL_SHARED_LIBRARIES += libmediaextractor \
                           android.hidl.memory@1.0
 endif
 
-LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) -Wno-unused-parameter
+LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) -Wno-unused-parameter -fvisibility=hidden
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
 

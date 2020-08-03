@@ -28,8 +28,6 @@ typedef void (*_getI420ColorConverter)(II420ColorConverter *converter);
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaConvert"
 
-extern "C" {
-
 struct _DroidMediaConvert : public II420ColorConverter
 {
 public:
@@ -132,4 +130,3 @@ void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRec
 bool droid_media_convert_is_i420(DroidMediaConvert *convert) {
     return convert->getDecoderOutputFormat() == OMX_COLOR_FormatYUV420Planar;
 }
-};
