@@ -36,48 +36,6 @@
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaCamera"
 
-namespace android {
-	int32_t getColorFormat(const char* colorFormat) {
-		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV420P)) {
-		   return OMX_COLOR_FormatYUV420Planar;
-		}
-
-		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV422SP)) {
-		   return OMX_COLOR_FormatYUV422SemiPlanar;
-		}
-
-		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV420SP)) {
-			return OMX_COLOR_FormatYUV420SemiPlanar;
-		}
-
-		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV422I)) {
-			return OMX_COLOR_FormatYCbYCr;
-		}
-
-		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_RGB565)) {
-		   return OMX_COLOR_Format16bitRGB565;
-		}
-
-		if (!strcmp(colorFormat, "OMX_TI_COLOR_FormatYUV420PackedSemiPlanar")) {
-		   return OMX_TI_COLOR_FormatYUV420PackedSemiPlanar;
-		}
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR >= 5
-		if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_ANDROID_OPAQUE)) {
-			return OMX_COLOR_FormatAndroidOpaque;
-		}
-#endif
-		return -1;
-	}
-}
-
-extern "C" {
-
-struct _DroidMediaCameraRecordingData
-{
-    android::sp<android::IMemory> mem;
-    nsecs_t ts;
-};
-
 struct _DroidMediaCamera
 {
     _DroidMediaCamera() :
@@ -90,6 +48,47 @@ struct _DroidMediaCamera
     DroidMediaCameraCallbacks m_cb;
     void *m_cb_data;
 };
+
+struct _DroidMediaCameraRecordingData
+{
+    android::sp<android::IMemory> mem;
+    nsecs_t ts;
+};
+
+namespace {
+
+int32_t getColorFormat(const char* colorFormat)
+{
+    if (!strcmp(colorFormat, android::CameraParameters::PIXEL_FORMAT_YUV420P)) {
+        return OMX_COLOR_FormatYUV420Planar;
+    }
+
+    if (!strcmp(colorFormat, android::CameraParameters::PIXEL_FORMAT_YUV422SP)) {
+        return OMX_COLOR_FormatYUV422SemiPlanar;
+    }
+
+    if (!strcmp(colorFormat, android::CameraParameters::PIXEL_FORMAT_YUV420SP)) {
+        return OMX_COLOR_FormatYUV420SemiPlanar;
+    }
+
+    if (!strcmp(colorFormat, android::CameraParameters::PIXEL_FORMAT_YUV422I)) {
+        return OMX_COLOR_FormatYCbYCr;
+    }
+
+    if (!strcmp(colorFormat, android::CameraParameters::PIXEL_FORMAT_RGB565)) {
+        return OMX_COLOR_Format16bitRGB565;
+    }
+
+    if (!strcmp(colorFormat, "OMX_TI_COLOR_FormatYUV420PackedSemiPlanar")) {
+        return OMX_TI_COLOR_FormatYUV420PackedSemiPlanar;
+    }
+#if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR >= 5
+    if (!strcmp(colorFormat, android::CameraParameters::PIXEL_FORMAT_ANDROID_OPAQUE)) {
+        return OMX_COLOR_FormatAndroidOpaque;
+    }
+#endif
+    return -1;
+}
 
 class CameraListener : public android::CameraListener {
 public:
@@ -262,6 +261,8 @@ public:
 private:
     DroidMediaCamera *m_cam;
 };
+
+}
 
 DroidMediaBufferQueue *droid_media_camera_get_buffer_queue (DroidMediaCamera *camera)
 {
@@ -510,10 +511,8 @@ int32_t droid_media_camera_get_video_color_format (DroidMediaCamera *camera)
 
   android::CameraParameters p(camera->m_camera->getParameters());
 
-  return android::getColorFormat(p.get(android::CameraParameters::KEY_VIDEO_FRAME_FORMAT));
+  return getColorFormat(p.get(android::CameraParameters::KEY_VIDEO_FRAME_FORMAT));
 }
-
-};
 
 android::sp<android::Camera> droid_media_camera_get_camera (DroidMediaCamera *camera) {
   return camera->m_camera;

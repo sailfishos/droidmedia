@@ -19,6 +19,8 @@
 #ifndef DROID_MEDIA_CONSTANTS_H
 #define DROID_MEDIA_CONSTANTS_H
 
+#include "droidmedia.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -98,9 +100,9 @@ typedef struct {
   int OMX_COLOR_Format16bitBGR565;
 } DroidMediaColourFormatConstants;
 
-void droid_media_camera_constants_init(DroidMediaCameraConstants *c);
-void droid_media_pixel_format_constants_init(DroidMediaPixelFormatConstants *c);
-void droid_media_colour_format_constants_init(DroidMediaColourFormatConstants *c);
+DROID_MEDIA_EXPORT void droid_media_camera_constants_init(DroidMediaCameraConstants *c);
+DROID_MEDIA_EXPORT void droid_media_pixel_format_constants_init(DroidMediaPixelFormatConstants *c);
+DROID_MEDIA_EXPORT void droid_media_colour_format_constants_init(DroidMediaColourFormatConstants *c);
 
 #ifdef __cplusplus
 };

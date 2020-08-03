@@ -102,8 +102,6 @@ void _DroidMediaBuffer::update(const DroidMediaBufferItem& buffer)
   m_crop = buffer.mCrop;
 }
 
-extern "C" {
-
 DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
                                             uint32_t format)
 {
@@ -239,5 +237,3 @@ void droid_media_buffer_get_info(DroidMediaBuffer *buffer, DroidMediaBufferInfo 
     info->format = buffer->format;
     info->stride = buffer->stride;
 }
-
-};

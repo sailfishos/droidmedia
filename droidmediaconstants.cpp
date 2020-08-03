@@ -21,8 +21,6 @@
 #include <system/graphics.h>
 #include <OMX_IVCommon.h>
 
-extern "C" {
-
 void droid_media_camera_constants_init(DroidMediaCameraConstants *c)
 {
     c->CAMERA_FRAME_CALLBACK_FLAG_ENABLE_MASK = CAMERA_FRAME_CALLBACK_FLAG_ENABLE_MASK;
@@ -98,5 +96,3 @@ void droid_media_colour_format_constants_init(DroidMediaColourFormatConstants *c
   c->OMX_COLOR_Format16bitRGB565 = OMX_COLOR_Format16bitRGB565;
   c->OMX_COLOR_Format16bitBGR565 = OMX_COLOR_Format16bitBGR565;
 }
-
-};

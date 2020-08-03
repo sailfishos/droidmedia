@@ -29,7 +29,7 @@
 using namespace android;
 
 extern "C"
-void startMiniSurfaceFlinger()
+__attribute__ ((visibility ("default"))) void startMiniSurfaceFlinger()
 {
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();

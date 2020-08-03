@@ -75,48 +75,48 @@ typedef struct {
   void (* video_frame_cb) (void *data, DroidMediaCameraRecordingData *video_data);
 } DroidMediaCameraCallbacks;
 
-DroidMediaBufferQueue *droid_media_camera_get_buffer_queue (DroidMediaCamera *camera);
-int droid_media_camera_get_number_of_cameras();
-bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number);
+DROID_MEDIA_EXPORT DroidMediaBufferQueue *droid_media_camera_get_buffer_queue (DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT int droid_media_camera_get_number_of_cameras();
+DROID_MEDIA_EXPORT bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number);
 
-DroidMediaCamera *droid_media_camera_connect(int camera_number);
-bool droid_media_camera_reconnect(DroidMediaCamera *camera);
-void droid_media_camera_disconnect(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT DroidMediaCamera *droid_media_camera_connect(int camera_number);
+DROID_MEDIA_EXPORT bool droid_media_camera_reconnect(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT void droid_media_camera_disconnect(DroidMediaCamera *camera);
 
-bool droid_media_camera_lock(DroidMediaCamera *camera);
-bool droid_media_camera_unlock(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT bool droid_media_camera_lock(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT bool droid_media_camera_unlock(DroidMediaCamera *camera);
 
-bool droid_media_camera_start_preview(DroidMediaCamera *camera);
-void droid_media_camera_stop_preview(DroidMediaCamera *camera);
-bool droid_media_camera_is_preview_enabled(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT bool droid_media_camera_start_preview(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT void droid_media_camera_stop_preview(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT bool droid_media_camera_is_preview_enabled(DroidMediaCamera *camera);
 
-bool droid_media_camera_start_recording(DroidMediaCamera *camera);
-void droid_media_camera_stop_recording(DroidMediaCamera *camera);
-bool droid_media_camera_is_recording_enabled(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT bool droid_media_camera_start_recording(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT void droid_media_camera_stop_recording(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT bool droid_media_camera_is_recording_enabled(DroidMediaCamera *camera);
 
-bool droid_media_camera_start_auto_focus(DroidMediaCamera *camera);
-bool droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT bool droid_media_camera_start_auto_focus(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT bool droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera);
 
-void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb, void *data);
-bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2);
-bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, bool enabled);
-void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera, int preview_callback_flag);
+DROID_MEDIA_EXPORT void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb, void *data);
+DROID_MEDIA_EXPORT bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2);
+DROID_MEDIA_EXPORT bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, bool enabled);
+DROID_MEDIA_EXPORT void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera, int preview_callback_flag);
 
-bool droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *params);
-char *droid_media_camera_get_parameters(DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT bool droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *params);
+DROID_MEDIA_EXPORT char *droid_media_camera_get_parameters(DroidMediaCamera *camera);
 
-bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType);
+DROID_MEDIA_EXPORT bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType);
 
-void droid_media_camera_release_recording_frame(DroidMediaCamera *camera, DroidMediaCameraRecordingData *data);
+DROID_MEDIA_EXPORT void droid_media_camera_release_recording_frame(DroidMediaCamera *camera, DroidMediaCameraRecordingData *data);
 
-nsecs_t droid_media_camera_recording_frame_get_timestamp(DroidMediaCameraRecordingData *data);
-size_t droid_media_camera_recording_frame_get_size(DroidMediaCameraRecordingData *data);
-void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData *data);
+DROID_MEDIA_EXPORT nsecs_t droid_media_camera_recording_frame_get_timestamp(DroidMediaCameraRecordingData *data);
+DROID_MEDIA_EXPORT size_t droid_media_camera_recording_frame_get_size(DroidMediaCameraRecordingData *data);
+DROID_MEDIA_EXPORT void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData *data);
 
-bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
-					      DroidMediaCameraFaceDetectionType type, bool enable);
+DROID_MEDIA_EXPORT bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
+                                                                 DroidMediaCameraFaceDetectionType type, bool enable);
 
-int32_t droid_media_camera_get_video_color_format (DroidMediaCamera *camera);
+DROID_MEDIA_EXPORT int32_t droid_media_camera_get_video_color_format (DroidMediaCamera *camera);
 
 #ifdef __cplusplus
 };
