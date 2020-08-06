@@ -27,7 +27,7 @@
 #include <stdlib.h>
 
 #ifndef LIB_DROID_MEDIA_PATH
-#define LIB_DROID_MEDIA_PATH "/usr/libexec/droid-hybris/system/lib/libdroidmedia.so"
+#define LIB_DROID_MEDIA_PATH "libdroidmedia.so"
 #endif
 
 void *android_dlopen(const char *name, int flags);
