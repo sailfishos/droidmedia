@@ -24,6 +24,8 @@
 #include <gui/Surface.h>
 #endif
 
+#include <stdio.h>
+
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaBufferQueue"
 
@@ -39,14 +41,17 @@ DroidMediaBufferQueueListener::DroidMediaBufferQueueListener(_DroidMediaBufferQu
 #endif
   m_queue(queue)
 {
+    fprintf(stderr, "DroidMediaBufferQueueListener::DroidMediaBufferQueueListener()\n");
 }
 
 DroidMediaBufferQueueListener::~DroidMediaBufferQueueListener()
 {
+    fprintf(stderr, "DroidMediaBufferQueueListener::~DroidMediaBufferQueueListener()\n");
 }
 
 void DroidMediaBufferQueueListener::onFrameAvailable()
 {
+    fprintf(stderr, "DroidMediaBufferQueueListener::onFrameAvailable()\n");
   android::sp<_DroidMediaBufferQueue> queue(m_queue.promote());
   if (queue.get()) {
     queue->frameAvailable();
@@ -55,6 +60,7 @@ void DroidMediaBufferQueueListener::onFrameAvailable()
 
 void DroidMediaBufferQueueListener::onBuffersReleased()
 {
+    fprintf(stderr, "DroidMediaBufferQueueListener::onBuffersReleased()\n");
   android::sp<_DroidMediaBufferQueue> queue(m_queue.promote());
   if (queue.get()) {
     queue->buffersReleased();
@@ -68,15 +74,20 @@ _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) :
   memset(&m_cb, 0x0, sizeof(m_cb));
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 2)
   m_queue = new android::BufferQueue(true, android::BufferQueue::MIN_UNDEQUEUED_BUFFERS);
+  fprintf(stderr, "_DroidMediaBufferQueue::_DroidMediaBufferQueue() new buffer queue, min %p\n", m_queue.get());
 #elif ANDROID_MAJOR < 5
   m_queue = new android::BufferQueue();
+  fprintf(stderr, "_DroidMediaBufferQueue::_DroidMediaBufferQueue() new buffer queue no args %p\n", m_queue.get());
 #else
   android::BufferQueue::createBufferQueue(&m_producer, &m_queue);
+  fprintf(stderr, "_DroidMediaBufferQueue::_DroidMediaBufferQueue() createBufferQueue %p\n", m_queue.get());
 #endif
 
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
-  m_queue->setSynchronousMode(false);
+  fprintf(stderr, "_DroidMediaBufferQueue::_DroidMediaBufferQueue() not synchronsou mode\n", m_queue.get());
+//  m_queue->setSynchronousMode(false);
 #else
+  fprintf(stderr, "_DroidMediaBufferQueue::_DroidMediaBufferQueue() max acquired buffer count set %p\n", m_queue.get());
   // We need to acquire up to 2 buffers
   // One is being rendered and the other one is waiting to be rendered.
   m_queue->setMaxAcquiredBufferCount(2);
@@ -99,10 +110,13 @@ bool _DroidMediaBufferQueue::connectListener()
 #else
   if (m_queue->consumerConnect(m_listener, false) != android::NO_ERROR) {
 #endif
+    fprintf(stderr, "_DroidMediaBufferQueue::connectListener() ERRORED\n");
     ALOGE("Failed to set buffer consumer");
 
     return false;
   }
+
+  fprintf(stderr, "_DroidMediaBufferQueue::connectListener() connected\n");
 
   return true;
 }
@@ -113,6 +127,7 @@ void _DroidMediaBufferQueue::disconnectListener()
 }
 
 void _DroidMediaBufferQueue::attachToCamera(android::sp<android::Camera>& camera) {
+    fprintf(stderr, "_DroidMediaBufferQueue::attachToCamera()\n");
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR < 4
     camera->setPreviewTexture(m_queue);
 #elif ANDROID_MAJOR < 5
@@ -124,9 +139,11 @@ void _DroidMediaBufferQueue::attachToCamera(android::sp<android::Camera>& camera
 
 ANativeWindow *_DroidMediaBufferQueue::window() {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR < 4
+    fprintf(stderr, "_DroidMediaBufferQueue::window() new surface texture client\n");
     android::sp<android::ISurfaceTexture> texture = m_queue;
     return new android::SurfaceTextureClient(texture);
 #elif ANDROID_MAJOR < 5
+    fprintf(stderr, "_DroidMediaBufferQueue::window() new surface\n");
     android::sp<android::IGraphicBufferProducer> texture = m_queue;
     return new android::Surface(texture, true);
 #else

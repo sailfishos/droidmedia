@@ -165,9 +165,10 @@ void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags)
   err = buffer->m_buffer->lock(usage, &addr);
 
   if (err != android::NO_ERROR) {
-    ALOGE("Error 0x%x locking buffer", -err);
+    ALOGE("Error 0x%x locking buffer %p", -err, buffer);
     return NULL;
   } else {
+    ALOGE("Did lock buffer %p", buffer);
     return addr;
   }
 }
@@ -177,7 +178,9 @@ void droid_media_buffer_unlock(DroidMediaBuffer *buffer)
   android::status_t err = buffer->m_buffer->unlock();
 
   if (err != android::NO_ERROR) {
-    ALOGE("Error 0x%x unlocking buffer", -err);
+    ALOGE("Error 0x%x unlocking buffer %[", -err, buffer);
+  } else {
+    ALOGE("Did unlock buffer %p", buffer);
   }
 }
 
