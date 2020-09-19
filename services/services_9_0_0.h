@@ -164,6 +164,10 @@ public:
     status_t getLayerDebugInfo(std::vector<LayerDebugInfo>*) const {
         return 0;
     }
+
+    status_t getLayerDebugInfo(std::vector<LayerDebugInfo>*) {
+        return 0;
+    }
 };
 
 #include <binder/IPermissionController.h>
