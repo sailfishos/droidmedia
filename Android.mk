@@ -202,7 +202,9 @@ LOCAL_SHARED_LIBRARIES := libutils \
                           libmedia \
                           libgui \
                           libcutils \
-                          libui
+                          libui \
+                          libstagefright
+
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter -fvisibility=hidden
 ifneq ($(CM_BUILD),)
