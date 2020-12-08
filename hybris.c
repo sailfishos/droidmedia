@@ -35,7 +35,7 @@ void *android_dlsym(void *handle, const char *name);
 
 static void *__handle = NULL;
 
-static inline void __load_library() {
+static inline void __load_library(void) {
   if (!__handle) {
     __handle = android_dlopen(LIB_DROID_MEDIA_PATH, RTLD_NOW);
     if (!__handle) {
@@ -47,9 +47,10 @@ static inline void __load_library() {
 
 static inline void *__resolve_sym(const char *sym)
 {
+  void *ptr = NULL;
   __load_library();
 
-  void *ptr = android_dlsym(__handle, sym);
+  ptr = android_dlsym(__handle, sym);
   assert(ptr != NULL);
   if (!ptr) {
     // calling abort() is bad but it does not matter anyway as we will crash.
@@ -60,8 +61,8 @@ static inline void *__resolve_sym(const char *sym)
 }
 
 #define HYBRIS_WRAPPER_1_0(ret,sym)		    \
-  ret sym() {					    \
-    static ret (* _sym)() = NULL;		    \
+  ret sym(void) {					    \
+    static ret (* _sym)(void) = NULL;		    \
     if (!_sym)					    \
       _sym = __resolve_sym(#sym);		    \
     return _sym();				    \
@@ -140,8 +141,8 @@ static inline void *__resolve_sym(const char *sym)
   }									\
 
 #define HYBRIS_WRAPPER_0_0(sym)						\
-  void sym() {								\
-    static void (* _sym)() = NULL;					\
+  void sym(void) {								\
+    static void (* _sym)(void) = NULL;					\
     if (!_sym)								\
       _sym = __resolve_sym(#sym);					\
     _sym();								\
