@@ -51,6 +51,10 @@ LOCAL_SRC_FILES := droidmedia.cpp \
                    droidmediabuffer.cpp \
                    private.cpp
 
+ifneq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),4 5 6))
+LOCAL_SRC_FILES += AsyncDecodingSource.cpp
+endif
+
 LOCAL_SHARED_LIBRARIES := libc \
                           libdl \
                           libutils \
@@ -69,7 +73,8 @@ endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9))
 LOCAL_SHARED_LIBRARIES += libmediaextractor \
-                          android.hidl.memory@1.0
+                          android.hidl.memory@1.0 \
+                          libmedia_omx
 endif
 
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) -Wno-unused-parameter

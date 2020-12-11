@@ -41,7 +41,7 @@
 #include <media/stagefright/OMXCodec.h>
 #else
 #include <media/hardware/MetadataBufferType.h>
-#include <media/stagefright/SimpleDecodingSource.h>
+#include "AsyncDecodingSource.h"
 #endif
 
 #if ANDROID_MAJOR >= 9
@@ -505,7 +505,7 @@ public:
        src,
        NULL, flags(), window);
 #else
-  return android::SimpleDecodingSource::Create(src, flags(), window);
+    return android::AsyncDecodingSource::Create(src, flags(), window, looper);
 #endif
   }
 
