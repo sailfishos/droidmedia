@@ -147,7 +147,9 @@ endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 10 && echo true),true)
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5 \
-                          android.hardware.camera.device@3.4
+                          android.hardware.camera.device@3.4 \
+                          libsensorprivacy
+LOCAL_AIDL_INCLUDES := frameworks/native/libs/sensorprivacy/aidl
 endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
@@ -207,6 +209,11 @@ ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9))
 LOCAL_SHARED_LIBRARIES += android.hidl.memory@1.0
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 10 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libsensorprivacy
+LOCAL_AIDL_INCLUDES := frameworks/native/libs/sensorprivacy/aidl
+endif
+
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter
 ifneq ($(CM_BUILD),)
@@ -243,7 +250,9 @@ endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 10 && echo true),true)
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5 \
-                          android.hardware.camera.device@3.4
+                          android.hardware.camera.device@3.4 \
+                          libsensorprivacy
+LOCAL_AIDL_INCLUDES := frameworks/native/libs/sensorprivacy/aidl
 endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)

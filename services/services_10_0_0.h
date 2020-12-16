@@ -536,3 +536,31 @@ public:
         return 0;
     }
 };
+
+#include <android/hardware/BnSensorPrivacyManager.h>
+
+class FakeSensorPrivacyManager : public BinderService<FakeSensorPrivacyManager>,
+                                 public hardware::BnSensorPrivacyManager
+{
+public:
+    static char const *getServiceName() {
+        return "sensor_privacy";
+    }
+
+    ::android::binder::Status addSensorPrivacyListener(const sp<hardware::ISensorPrivacyListener>& listener) {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status removeSensorPrivacyListener(const sp<hardware::ISensorPrivacyListener>& listener) {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status isSensorPrivacyEnabled(bool *enabled) {
+        *enabled = false;
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status setSensorPrivacy(bool enable) {
+        return ::android::binder::Status::ok();
+    }
+};

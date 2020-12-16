@@ -73,6 +73,9 @@ main(int, char**)
     FakePermissionController::instantiate();
     FakeAppOps::instantiate();
     FakeBatteryStats::instantiate();
+#if ANDROID_MAJOR >= 10
+    FakeSensorPrivacyManager::instantiate();
+#endif
 #if !defined(SENSORSERVER_DISABLE) && ANDROID_MAJOR <= 9
     FakeSensorServer::instantiate();
 #endif
