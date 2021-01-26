@@ -63,7 +63,6 @@ main(int, char**)
 #if ANDROID_MAJOR >= 9
     FakeActivityManager::instantiate();
 #endif
-    
     MediaPlayerService::instantiate();
 #ifdef AUDIOPOLICYSERVICE_ENABLE
     AudioPolicyService::instantiate();
@@ -74,11 +73,14 @@ main(int, char**)
     FakePermissionController::instantiate();
     FakeAppOps::instantiate();
     FakeBatteryStats::instantiate();
-#ifndef SENSORSERVER_DISABLE
+#if ANDROID_MAJOR >= 10
+    FakeSensorPrivacyManager::instantiate();
+#endif
+#if !defined(SENSORSERVER_DISABLE) && ANDROID_MAJOR <= 9
     FakeSensorServer::instantiate();
 #endif
 #endif
-#if ANDROID_MAJOR >= 8
+#if ANDROID_MAJOR >= 8 && ANDROID_MAJOR <= 9
     sp<android::frameworks::sensorservice::V1_0::ISensorManager> sensorManager = new FakeSensorManager;
     status_t status = sensorManager->registerAsService();
     (void)status;
