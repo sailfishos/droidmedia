@@ -138,6 +138,10 @@ LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy \
                     frameworks/av/services/audiopolicy/managerdefault \
                     frameworks/av/services/audiopolicy/service
 endif
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 10 && echo true),true)
+LOCAL_C_INCLUDES += frameworks/av/media/utils/include
+endif
+
 LOCAL_SHARED_LIBRARIES += libaudiopolicyservice
 endif
 
