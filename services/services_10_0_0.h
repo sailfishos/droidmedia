@@ -201,6 +201,11 @@ public:
         return sp<IDisplayEventConnection>();
     }
 
+    sp<IDisplayEventConnection> createDisplayEventConnection(
+            VsyncSource) {
+        return sp<IDisplayEventConnection>();
+    }
+
 
     sp<IBinder> createDisplay(const String8&, bool) {
         return NULL;
@@ -611,8 +616,15 @@ public:
         const Vector<MediaResource> &) {
     }
 
+    void addResource(int, int64_t, const sp<IResourceManagerClient>,
+        const Vector<MediaResource> &) {
+    }
+
     void removeResource(int, int64_t,
         const Vector<MediaResource> &) {
+    }
+
+    void removeResource(int, int64_t) {
     }
 
     void removeClient(int, int64_t) {
