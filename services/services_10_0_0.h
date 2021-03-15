@@ -18,6 +18,7 @@
 
 using namespace android;
 
+#include <binder/BinderService.h>
 #include <gui/ISurfaceComposer.h>
 #include <gui/IDisplayEventConnection.h>
 #include <gui/ISurfaceComposerClient.h>
