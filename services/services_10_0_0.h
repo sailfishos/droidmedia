@@ -24,6 +24,20 @@ using namespace android;
 #include <gui/ISurfaceComposerClient.h>
 #include <ui/Rect.h>
 #include <system/graphics.h>
+#include <type_traits>
+
+namespace detect::ConfigChanged_type
+{
+    enum not_implemented {};
+    using ConfigChanged = not_implemented;
+}
+
+namespace android::detect_ConfigChanged_impl
+{
+    using namespace ::detect::ConfigChanged_type;
+    constexpr bool is_defined = !std::is_same_v<ConfigChanged, ::detect::ConfigChanged_type::not_implemented>;
+    using ConfigChangedRedefine = ConfigChanged;
+}
 
 class MiniSurfaceFlinger : public BinderService<MiniSurfaceFlinger>,
                            public BnSurfaceComposer,
@@ -47,8 +61,10 @@ public:
         return sp<ISurfaceComposerClient>();
     }
 
-    sp<IDisplayEventConnection> createDisplayEventConnection(
-            VsyncSource, ConfigChanged) {
+    template< typename ret_type = sp<IDisplayEventConnection>>
+    typename std::enable_if< android::detect_ConfigChanged_impl::is_defined, ret_type >::type
+    createDisplayEventConnection(
+            VsyncSource, android::detect_ConfigChanged_impl::ConfigChangedRedefine) {
         return sp<IDisplayEventConnection>();
     }
 
