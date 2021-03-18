@@ -70,20 +70,25 @@ sp<AsyncDecodingSource> AsyncDecodingSource::Create(
         ALOGV("Attempting to allocate codec '%s'", componentName.c_str());
         sp<AsyncDecodingSource> res = new AsyncDecodingSource(componentName, source, looper,
                         strcmp(mime, MEDIA_MIMETYPE_AUDIO_VORBIS) == 0);
-        ALOGI("Successfully allocated codec '%s'", componentName.c_str());
 
-        if (res->configure(format, surface, 0)) {
-            if (surface != nullptr) {
+        if (res->mCodec != NULL) {
+            ALOGI("Successfully allocated codec '%s'", componentName.c_str());
+            if (res->configure(format, surface, 0)) {
+                if (surface != nullptr) {
 #if ANDROID_MAJOR > 7
-                nativeWindowConnect(nativeWindow.get(), "AsyncDecodingSource");
+                    nativeWindowConnect(nativeWindow.get(), "AsyncDecodingSource");
 #else
-                native_window_api_connect(nativeWindow.get(),
-                                              NATIVE_WINDOW_API_MEDIA);
+                    native_window_api_connect(nativeWindow.get(),
+                                                NATIVE_WINDOW_API_MEDIA);
 #endif
+                }
+                return res;
+            } else {
+                ALOGE("Failed to configure codec '%s'", componentName.c_str());
             }
-            return res;
-        } else {
-            ALOGE("Failed to configure codec '%s'", componentName.c_str());
+        }
+        else {
+            ALOGE("Failed to allocate codec '%s'", componentName.c_str());
         }
     }
 
