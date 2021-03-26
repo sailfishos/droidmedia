@@ -283,7 +283,9 @@ extern "C" {
 void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
     DroidMediaBufferQueueCallbacks *cb, void *data) {
 
-  return queue->setCallbacks(cb, data);
+  if (queue) {
+    queue->setCallbacks(cb, data);
+  }
 }
 
 int droid_media_buffer_queue_length() {
