@@ -75,6 +75,9 @@ struct DroidMediaCodecMetaDataKey {
     int key;
     int type;
 } metaDataKeys[] = {
+#if ANDROID_MAJOR >= 10
+    {android::MEDIA_MIMETYPE_VIDEO_AV1, android::kKeyAV1C, android::kKeyAV1C},
+#endif
 #if ANDROID_MAJOR >= 5
     {android::MEDIA_MIMETYPE_VIDEO_HEVC, android::kKeyHVCC, android::kKeyHVCC},
 #endif
