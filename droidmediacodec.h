@@ -60,6 +60,12 @@ typedef struct {
   DroidMediaData codec_data;
 } DroidMediaCodecDecoderMetaData;
 
+typedef struct DroidMediaCodecEncoderH264Settings {
+  int32_t profile;
+  int32_t level;
+  int32_t prepend_header_to_sync_frames;
+} DroidMediaCodecEncoderH264Settings;
+
 typedef struct {
   DroidMediaCodecMetaData parent;
 
@@ -69,6 +75,9 @@ typedef struct {
   int32_t stride;
   int32_t slice_height;
   int32_t max_input_size;
+  union {
+    DroidMediaCodecEncoderH264Settings h264;
+  } codec_specific;
 } DroidMediaCodecEncoderMetaData;
 
 typedef struct {
