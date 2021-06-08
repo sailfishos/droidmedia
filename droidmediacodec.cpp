@@ -463,7 +463,11 @@ public:
 
         if (!level) {
           level = android::ACodec::getAVCLevelFor(width, height, frames, bitrate,
+#if (ANDROID_MAJOR == 8 && ANDROID_MINOR >= 1) || ANDROID_MAJOR >= 9
                                                   (OMX_VIDEO_AVCPROFILEEXTTYPE)profile);
+#else
+                                                  (OMX_VIDEO_AVCPROFILETYPE)profile);
+#endif
         }
 
         format->setInt32("profile", profile);
