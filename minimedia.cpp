@@ -76,11 +76,11 @@ main(int, char**)
 #if ANDROID_MAJOR >= 10
     FakeSensorPrivacyManager::instantiate();
 #endif
-#if !defined(SENSORSERVER_DISABLE) && ANDROID_MAJOR <= 9
+#if !defined(SENSORSERVER_DISABLE)
     FakeSensorServer::instantiate();
 #endif
 #endif
-#if ANDROID_MAJOR >= 8 && ANDROID_MAJOR <= 9
+#if ANDROID_MAJOR >= 8
     sp<android::frameworks::sensorservice::V1_0::ISensorManager> sensorManager = new FakeSensorManager;
     status_t status = sensorManager->registerAsService();
     (void)status;

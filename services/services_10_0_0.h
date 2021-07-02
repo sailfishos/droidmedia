@@ -16,6 +16,156 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
+#include <sensor/ISensorServer.h>
+#include <sensor/ISensorEventConnection.h>
+#include <sensor/Sensor.h>
+#include <sensor/BitTube.h>
+
+class FakeSensorEventConnection : public android::BnSensorEventConnection
+{
+    android::sp<android::BitTube> mChannel;
+public:
+    FakeSensorEventConnection() {
+        mChannel = new android::BitTube(0);
+    }
+
+    android::sp<android::BitTube> getSensorChannel() const {
+        return mChannel;
+    }
+
+    android::status_t enableDisable(int, bool, nsecs_t,
+           nsecs_t, int) {
+        return 0;
+    }
+
+    android::status_t setEventRate(int, nsecs_t) {
+        return 0;
+    }
+
+    android::status_t flush() {
+        return 0;
+    }
+
+    virtual int32_t configureChannel(int32_t, int32_t) {
+        return 0;
+    }
+
+protected:
+    void destroy() {
+    }
+
+};
+
+class FakeSensorServer : public android::BinderService<FakeSensorServer>,
+                         public android::BnSensorServer
+{
+public:
+    static char const *getServiceName() {
+        return "sensorservice";
+    }
+
+    android::Vector<android::Sensor> getSensorList(const android::String16&) {
+        return android::Vector<android::Sensor>();
+    }
+
+    android::Vector<android::Sensor> getDynamicSensorList(const android::String16&) {
+        return android::Vector<android::Sensor>();
+    }
+
+    android::sp<android::ISensorEventConnection> createSensorEventConnection(
+            const android::String8&, int, const android::String16&) {
+        return android::sp<android::ISensorEventConnection>(new FakeSensorEventConnection);
+    }
+
+    android::sp<android::ISensorEventConnection> createSensorDirectConnection(
+            const android::String16&, uint32_t, int32_t, int32_t, const native_handle_t *) {
+        return android::sp<android::ISensorEventConnection>(new FakeSensorEventConnection);
+    }
+
+    int setOperationParameter(
+            int32_t, int32_t, const android::Vector<float> &, const android::Vector<int32_t> &) {
+        return 0;
+    }
+
+    int32_t isDataInjectionEnabled() {
+        return 0;
+    }
+
+    virtual android::status_t shellCommand(int, int, int,
+            android::Vector<android::String16>&) {
+        return 0;
+    }
+};
+
+#include <android/frameworks/sensorservice/1.0/IEventQueue.h>
+#include <android/frameworks/sensorservice/1.0/ISensorManager.h>
+#include <android/frameworks/sensorservice/1.0/types.h>
+#include <android/hardware/sensors/1.0/types.h>
+
+class FakeEventQueue :
+    public android::frameworks::sensorservice::V1_0::IEventQueue
+{
+public:
+    FakeEventQueue() {}
+
+    android::hardware::Return<android::frameworks::sensorservice::V1_0::Result> enableSensor(
+            int32_t sensorHandle, int32_t samplingPeriodUs, int64_t maxBatchReportLatencyUs) {
+        return android::frameworks::sensorservice::V1_0::Result::BAD_VALUE;
+    }
+
+    android::hardware::Return<android::frameworks::sensorservice::V1_0::Result> disableSensor(
+            int32_t sensorHandle) {
+        return android::frameworks::sensorservice::V1_0::Result::BAD_VALUE;
+    }
+};
+
+class FakeSensorManager :
+    public android::frameworks::sensorservice::V1_0::ISensorManager
+{
+
+    // Methods from ::android::frameworks::sensorservice::V1_0::ISensorManager follow.
+    android::hardware::Return<void> getSensorList(getSensorList_cb _hidl_cb) {
+        android::hardware::hidl_vec<::android::hardware::sensors::V1_0::SensorInfo> ret;
+        _hidl_cb(ret, android::frameworks::sensorservice::V1_0::Result::OK);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> getDefaultSensor(
+            android::hardware::sensors::V1_0::SensorType type,
+            getDefaultSensor_cb _hidl_cb) {
+        _hidl_cb({}, android::frameworks::sensorservice::V1_0::Result::NOT_EXIST);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> createAshmemDirectChannel(
+            const android::hardware::hidl_memory& mem, uint64_t size,
+            createAshmemDirectChannel_cb _hidl_cb) {
+        _hidl_cb(nullptr, android::frameworks::sensorservice::V1_0::Result::BAD_VALUE);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> createGrallocDirectChannel(
+            const android::hardware::hidl_handle& buffer, uint64_t size,
+            createGrallocDirectChannel_cb _hidl_cb) {
+        _hidl_cb(nullptr, android::frameworks::sensorservice::V1_0::Result::UNKNOWN_ERROR);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> createEventQueue(
+            const android::sp<android::frameworks::sensorservice::V1_0::IEventQueueCallback> &callback,
+            createEventQueue_cb _hidl_cb) {
+        if (callback == nullptr) {
+            _hidl_cb(nullptr, android::frameworks::sensorservice::V1_0::Result::BAD_VALUE);
+            return android::hardware::Void();
+        }
+
+        android::sp<android::frameworks::sensorservice::V1_0::IEventQueue> queue = new FakeEventQueue();
+
+        _hidl_cb(queue, android::frameworks::sensorservice::V1_0::Result::OK);
+        return android::hardware::Void();
+    }
+};
+
 using namespace android;
 
 #include <gui/ISurfaceComposer.h>
@@ -470,28 +620,6 @@ public:
 
     bool reclaimResource(int, const Vector<MediaResource> &) {
         return true;
-    }
-};
-
-#include <android/frameworks/sensorservice/1.0/IEventQueue.h>
-#include <android/frameworks/sensorservice/1.0/ISensorManager.h>
-#include <android/frameworks/sensorservice/1.0/types.h>
-#include <android/hardware/sensors/1.0/types.h>
-
-class FakeEventQueue :
-    public android::frameworks::sensorservice::V1_0::IEventQueue
-{
-public:
-    FakeEventQueue() {}
-
-    android::hardware::Return<android::frameworks::sensorservice::V1_0::Result> enableSensor(
-            int32_t sensorHandle, int32_t samplingPeriodUs, int64_t maxBatchReportLatencyUs) {
-        return android::frameworks::sensorservice::V1_0::Result::BAD_VALUE;
-    }
-
-    android::hardware::Return<android::frameworks::sensorservice::V1_0::Result> disableSensor(
-            int32_t sensorHandle) {
-        return android::frameworks::sensorservice::V1_0::Result::BAD_VALUE;
     }
 };
 
