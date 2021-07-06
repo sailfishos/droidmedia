@@ -72,6 +72,8 @@ namespace android {
 
 extern "C" {
 
+class CameraListener;
+
 struct _DroidMediaCameraRecordingData
 {
     android::sp<android::IMemory> mem;
@@ -86,6 +88,7 @@ struct _DroidMediaCamera
     }
 
     android::sp<android::Camera> m_camera;
+    android::sp<CameraListener> m_camera_listener;
     android::sp<DroidMediaBufferQueue> m_queue;
     DroidMediaCameraCallbacks m_cb;
     void *m_cb_data;
@@ -100,6 +103,10 @@ public:
 
     void notify(int32_t msgType, int32_t ext1, int32_t ext2)
     {
+        android::Mutex::Autolock _l(m_camLock);
+        if (!m_cam)
+            return;
+
         switch (msgType) {
             case CAMERA_MSG_SHUTTER:
                 if (m_cam->m_cb.shutter_cb) {
@@ -139,6 +146,10 @@ public:
     void postData(int32_t msgType, const android::sp<android::IMemory>& dataPtr,
                   camera_frame_metadata_t *metadata)
     {
+        android::Mutex::Autolock _l(m_camLock);
+        if (!m_cam)
+            return;
+
         int32_t dataMsgType = msgType & ~CAMERA_MSG_PREVIEW_METADATA;
         DroidMediaData mem;
 
@@ -200,6 +211,10 @@ public:
 
     void postDataTimestamp(nsecs_t timestamp, int32_t msgType, const android::sp<android::IMemory>& dataPtr)
     {
+        android::Mutex::Autolock _l(m_camLock);
+        if (!m_cam)
+            return;
+
         switch (msgType) {
             case CAMERA_MSG_VIDEO_FRAME:
                 if (m_cam->m_cb.video_frame_cb) {
@@ -236,6 +251,13 @@ public:
 
     void sendPreviewMetadata(camera_frame_metadata_t *metadata)
     {
+        {
+            // Opportunistic return before processing the result without a lock.
+            android::Mutex::Autolock _l(m_camLock);
+            if (!m_cam)
+                return;
+        }
+
         android::Vector<DroidMediaCameraFace> faces;
 
         for (int x = 0; x < metadata->number_of_faces; x++) {
@@ -256,11 +278,22 @@ public:
             faces.push_back(face);
         }
 
+        android::Mutex::Autolock _l(m_camLock);
+        if (!m_cam)
+            return;
+
         m_cam->m_cb.preview_metadata_cb(m_cam->m_cb_data, faces.array(), faces.size());
+    }
+
+    void disconnectFromDroidCam()
+    {
+        android::Mutex::Autolock _l(m_camLock);
+        m_cam = NULL;
     }
 
 private:
     DroidMediaCamera *m_cam;
+    android::Mutex m_camLock;
 };
 
 DroidMediaBufferQueue *droid_media_camera_get_buffer_queue (DroidMediaCamera *camera)
@@ -336,7 +369,8 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 
     cam->m_queue->attachToCamera(cam->m_camera);
 
-    cam->m_camera->setListener(new CameraListener(cam));
+    cam->m_camera_listener = new CameraListener(cam);
+    cam->m_camera->setListener(cam->m_camera_listener);
 
     return cam;
 }
@@ -347,7 +381,11 @@ bool droid_media_camera_reconnect(DroidMediaCamera *camera) {
 
 void droid_media_camera_disconnect(DroidMediaCamera *camera)
 {
+    camera->m_camera->setListener(NULL);
     camera->m_camera->disconnect();
+
+    // Ensure that any remaining references won't call to to-be-deleted camera.
+    camera->m_camera_listener->disconnectFromDroidCam();
 
     camera->m_queue->setCallbacks(0, 0);
 
