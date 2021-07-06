@@ -69,6 +69,8 @@
     md->setInt32(android::k, meta->v); \
   }
 
+namespace {
+
 struct DroidMediaCodecMetaDataKey {
     const char *mime;
     int key;
@@ -282,6 +284,8 @@ public:
     DroidMediaCallback m_unref;
 };
 
+}
+
 struct _DroidMediaCodec : public android::MediaBufferObserver
 {
     _DroidMediaCodec() :
@@ -355,6 +359,8 @@ struct _DroidMediaCodec : public android::MediaBufferObserver
     DroidMediaCodecDataCallbacks m_data_cb;
     void *m_data_cb_data;
 };
+
+namespace {
 
 class DroidMediaCodecLoop : public android::Thread {
 public:
@@ -652,6 +658,8 @@ private:
   DroidMediaCodecDecoderMetaData *m_dec;
 };
 
+}
+
 android::sp<android::MediaSource> droid_media_codec_create_encoder_raw(DroidMediaCodecEncoderMetaData *meta,
 #if ANDROID_MAJOR >=5
 							      android::sp<android::ALooper> looper,
@@ -665,8 +673,6 @@ android::sp<android::MediaSource> droid_media_codec_create_encoder_raw(DroidMedi
   return builder.createCodec(src, NULL);
 #endif
 }
-
-extern "C" {
 
 DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec)
 {
@@ -1065,5 +1071,3 @@ void droid_media_codec_get_output_info(DroidMediaCodec *codec,
     crop->bottom += 1;
   }
 }
-
-};

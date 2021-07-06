@@ -98,23 +98,23 @@ typedef struct {
   void (* data_available) (void *data, DroidMediaCodecData *encoded);
 } DroidMediaCodecDataCallbacks;
 
-DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec);
-DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData *meta);
-DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta);
-bool droid_media_codec_is_supported(DroidMediaCodecMetaData *meta, bool encoder);
+DROID_MEDIA_EXPORT DroidMediaBufferQueue *droid_media_codec_get_buffer_queue (DroidMediaCodec *codec);
+DROID_MEDIA_EXPORT DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData *meta);
+DROID_MEDIA_EXPORT DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta);
+DROID_MEDIA_EXPORT bool droid_media_codec_is_supported(DroidMediaCodecMetaData *meta, bool encoder);
 
-void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data);
-void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec,
-					  DroidMediaCodecDataCallbacks *cb, void *data);
+DROID_MEDIA_EXPORT void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data);
+DROID_MEDIA_EXPORT void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec,
+                                                             DroidMediaCodecDataCallbacks *cb, void *data);
 
-bool droid_media_codec_start(DroidMediaCodec *codec);
-void droid_media_codec_stop(DroidMediaCodec *codec);
-void droid_media_codec_destroy(DroidMediaCodec *codec);
-void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb);
-void droid_media_codec_flush(DroidMediaCodec *codec);
-void droid_media_codec_drain(DroidMediaCodec *codec);
-DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec);
-void droid_media_codec_get_output_info(DroidMediaCodec *codec, DroidMediaCodecMetaData *info, DroidMediaRect *crop);
+DROID_MEDIA_EXPORT bool droid_media_codec_start(DroidMediaCodec *codec);
+DROID_MEDIA_EXPORT void droid_media_codec_stop(DroidMediaCodec *codec);
+DROID_MEDIA_EXPORT void droid_media_codec_destroy(DroidMediaCodec *codec);
+DROID_MEDIA_EXPORT void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb);
+DROID_MEDIA_EXPORT void droid_media_codec_flush(DroidMediaCodec *codec);
+DROID_MEDIA_EXPORT void droid_media_codec_drain(DroidMediaCodec *codec);
+DROID_MEDIA_EXPORT DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec);
+DROID_MEDIA_EXPORT void droid_media_codec_get_output_info(DroidMediaCodec *codec, DroidMediaCodecMetaData *info, DroidMediaRect *crop);
 
 #ifdef __cplusplus
 };

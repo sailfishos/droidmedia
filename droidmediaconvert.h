@@ -27,13 +27,13 @@ extern "C" {
 
 typedef struct _DroidMediaConvert DroidMediaConvert;
 
-DroidMediaConvert *droid_media_convert_create();
-void droid_media_convert_destroy(DroidMediaConvert *convert);
+DROID_MEDIA_EXPORT DroidMediaConvert *droid_media_convert_create();
+DROID_MEDIA_EXPORT void droid_media_convert_destroy(DroidMediaConvert *convert);
 
-bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in, void *out);
-void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRect rect,
+DROID_MEDIA_EXPORT bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in, void *out);
+DROID_MEDIA_EXPORT void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRect rect,
 				       int32_t width, int32_t height);
-bool droid_media_convert_is_i420(DroidMediaConvert *convert);
+DROID_MEDIA_EXPORT bool droid_media_convert_is_i420(DroidMediaConvert *convert);
 
 #ifdef __cplusplus
 };

@@ -277,9 +277,6 @@ void _DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, vo
   m_data = data;
 }
 
-
-extern "C" {
-
 void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
     DroidMediaBufferQueueCallbacks *cb, void *data) {
 
@@ -291,5 +288,3 @@ void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
 int droid_media_buffer_queue_length() {
   return android::BufferQueue::NUM_BUFFER_SLOTS;
 }
-
-};

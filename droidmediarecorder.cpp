@@ -139,7 +139,6 @@ struct _DroidMediaRecorder {
   pthread_t m_thread;
 };
 
-extern "C" {
 DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidMediaCodecEncoderMetaData *meta) {
 
   android::Size size(meta->parent.width, meta->parent.height);
@@ -232,5 +231,3 @@ void droid_media_recorder_set_data_callbacks(DroidMediaRecorder *recorder,
   memcpy(&recorder->m_cb, cb, sizeof(recorder->m_cb));
   recorder->m_cb_data = data;
 }
-
-};
