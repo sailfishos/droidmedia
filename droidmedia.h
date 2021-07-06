@@ -80,8 +80,8 @@ typedef enum {
 } DroidMediaBufferLockFlags;
 
 /* droidmedia.cpp */
-void droid_media_init();
-void droid_media_deinit();
+void droid_media_init(void);
+void droid_media_deinit(void);
 
 /* droidmediabuffer.cpp */
 DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,

@@ -91,7 +91,7 @@ typedef struct {
   int OMX_COLOR_FormatL8;
   int OMX_COLOR_FormatYCbYCr;
   int OMX_COLOR_FormatYCrYCb;
-  int  OMX_COLOR_FormatCbYCrY;
+  int OMX_COLOR_FormatCbYCrY;
   int OMX_COLOR_Format32bitARGB8888;
   int OMX_COLOR_Format32bitBGRA8888;
   int OMX_COLOR_Format16bitRGB565;
