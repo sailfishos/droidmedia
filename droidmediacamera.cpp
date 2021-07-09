@@ -295,7 +295,6 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 {
     android::sp<DroidMediaBufferQueue>
       queue(new DroidMediaBufferQueue("DroidMediaCameraBufferQueue"));
-    android::sp<DroidMediaBufferQueueListener> listener(new DroidMediaBufferQueueListener(queue.get()));
     if (!queue->connectListener()) {
         ALOGE("Failed to connect buffer queue listener");
         return NULL;
