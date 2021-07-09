@@ -71,7 +71,8 @@ public:
   bool connectListener();
   void disconnectListener();
 
-  void attachToCamera(android::sp<android::Camera>& camera);
+  void attachToCameraPreview(android::sp<android::Camera>& camera);
+  void attachToCameraVideo(android::sp<android::Camera>& camera);
   ANativeWindow *window();
 
   void releaseMediaBuffer(DroidMediaBuffer *buffer, EGLDisplay dpy, EGLSyncKHR fence);

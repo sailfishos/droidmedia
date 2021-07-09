@@ -84,6 +84,7 @@ _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) :
 
   m_queue->setConsumerName(android::String8(name));
   m_queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+  m_queue->setDefaultBufferFormat(HAL_PIXEL_FORMAT_YCrCb_420_SP);
 }
 
 _DroidMediaBufferQueue::~_DroidMediaBufferQueue()
@@ -112,7 +113,7 @@ void _DroidMediaBufferQueue::disconnectListener()
   m_queue->consumerDisconnect();
 }
 
-void _DroidMediaBufferQueue::attachToCamera(android::sp<android::Camera>& camera) {
+void _DroidMediaBufferQueue::attachToCameraPreview(android::sp<android::Camera>& camera) {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR < 4
     camera->setPreviewTexture(m_queue);
 #elif ANDROID_MAJOR < 5
@@ -122,17 +123,29 @@ void _DroidMediaBufferQueue::attachToCamera(android::sp<android::Camera>& camera
 #endif
 }
 
-ANativeWindow *_DroidMediaBufferQueue::window() {
-#if ANDROID_MAJOR == 4 && ANDROID_MINOR < 4
-    android::sp<android::ISurfaceTexture> texture = m_queue;
-    return new android::SurfaceTextureClient(texture);
-#elif ANDROID_MAJOR < 5
-    android::sp<android::IGraphicBufferProducer> texture = m_queue;
-    return new android::Surface(texture, true);
-#else
-    android::sp<android::IGraphicBufferProducer> texture = m_producer;
-    return new android::Surface(texture, true);
+void _DroidMediaBufferQueue::attachToCameraVideo(android::sp<android::Camera>& camera) {
+#if ANDROID_MAJOR >= 8
+    camera->setVideoTarget(m_producer);
 #endif
+}
+
+ANativeWindow *_DroidMediaBufferQueue::window() {
+  ANativeWindow *window;
+
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR < 4
+  android::sp<android::ISurfaceTexture> texture = m_queue;
+  window = new android::SurfaceTextureClient(texture);
+#elif ANDROID_MAJOR < 5
+  android::sp<android::IGraphicBufferProducer> texture = m_queue;
+  window = new android::Surface(texture, true);
+#else
+  android::sp<android::IGraphicBufferProducer> texture = m_producer;
+  window = new android::Surface(texture, true);
+#endif
+
+  native_window_set_buffers_format(window, HAL_PIXEL_FORMAT_YCrCb_420_SP);
+
+  return window;
 }
 
 void _DroidMediaBufferQueue::frameAvailable() {
