@@ -76,6 +76,7 @@ typedef struct {
 } DroidMediaCameraCallbacks;
 
 DroidMediaBufferQueue *droid_media_camera_get_buffer_queue (DroidMediaCamera *camera);
+DroidMediaBufferQueue *droid_media_camera_get_recording_buffer_queue (DroidMediaCamera *camera);
 int droid_media_camera_get_number_of_cameras();
 bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number);
 

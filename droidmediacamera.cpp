@@ -87,6 +87,7 @@ struct _DroidMediaCamera
 
     android::sp<android::Camera> m_camera;
     android::sp<DroidMediaBufferQueue> m_queue;
+    android::sp<DroidMediaBufferQueue> m_recording_queue;
     DroidMediaCameraCallbacks m_cb;
     void *m_cb_data;
 };
@@ -268,6 +269,11 @@ DroidMediaBufferQueue *droid_media_camera_get_buffer_queue (DroidMediaCamera *ca
   return camera->m_queue.get();
 }
 
+DroidMediaBufferQueue *droid_media_camera_get_recording_buffer_queue (DroidMediaCamera *camera)
+{
+  return camera->m_recording_queue.get();
+}
+
 int droid_media_camera_get_number_of_cameras()
 {
     return android::Camera::getNumberOfCameras();
@@ -332,8 +338,20 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     }
 
     cam->m_queue = queue;
+    cam->m_queue->attachToCameraPreview(cam->m_camera);
 
-    cam->m_queue->attachToCamera(cam->m_camera);
+#if ANDROID_MAJOR >= 8
+    android::sp<DroidMediaBufferQueue>
+      recording_queue(new DroidMediaBufferQueue("DroidMediaCameraBufferRecordingQueue"));
+    if (!recording_queue->connectListener()) {
+        ALOGE("Failed to connect video buffer queue listener");
+    } else {
+      cam->m_recording_queue = recording_queue;
+      cam->m_recording_queue->attachToCameraVideo(cam->m_camera);
+      cam->m_camera->setVideoBufferMode(
+                      android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE);
+    }
+#endif
 
     cam->m_camera->setListener(new CameraListener(cam));
 
@@ -349,6 +367,12 @@ void droid_media_camera_disconnect(DroidMediaCamera *camera)
     camera->m_camera->disconnect();
 
     camera->m_queue->setCallbacks(0, 0);
+
+#if ANDROID_MAJOR >= 8
+    if (camera->m_recording_queue.get()) {
+      camera->m_recording_queue->setCallbacks(0, 0);
+    }
+#endif
 
     delete camera;
 }

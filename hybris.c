@@ -200,6 +200,7 @@ HYBRIS_WRAPPER_1_2(bool, DroidMediaCamera*,const char *,droid_media_camera_set_p
 HYBRIS_WRAPPER_1_1(char *, DroidMediaCamera*, droid_media_camera_get_parameters)
 HYBRIS_WRAPPER_1_2(bool, DroidMediaCamera*, int, droid_media_camera_take_picture)
 HYBRIS_WRAPPER_1_1(DroidMediaBufferQueue*, DroidMediaCamera*, droid_media_camera_get_buffer_queue)
+HYBRIS_WRAPPER_1_1(DroidMediaBufferQueue*, DroidMediaCamera*, droid_media_camera_get_recording_buffer_queue)
 HYBRIS_WRAPPER_0_1(DroidMediaBuffer*,droid_media_buffer_destroy)
 HYBRIS_WRAPPER_0_3(DroidMediaBuffer*,EGLDisplay,EGLSyncKHR,droid_media_buffer_release)
 HYBRIS_WRAPPER_0_2(DroidMediaCamera*, DroidMediaCameraRecordingData*,droid_media_camera_release_recording_frame)
