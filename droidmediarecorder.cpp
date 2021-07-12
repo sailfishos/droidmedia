@@ -183,6 +183,13 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 #else
   recorder->m_codec = droid_media_codec_create_encoder_raw(meta, recorder->m_src);
 #endif
+  if (!recorder->m_codec.get()) {
+    ALOGE("Cannot create codec");
+    recorder->m_src.clear();
+    recorder->m_looper->stop();
+    delete recorder;
+    return NULL;
+  }
 
   return recorder;
 
