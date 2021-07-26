@@ -172,6 +172,42 @@ void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags)
   }
 }
 
+bool droid_media_buffer_lock_ycbcr(DroidMediaBuffer *buffer,
+                                   uint32_t flags,
+                                   DroidMediaBufferYCbCr *ycbcr)
+{
+  int usage = 0;
+  android_ycbcr droid_ycbcr;
+  android::status_t err;
+
+  if (!ycbcr) {
+    ALOGE("No buffer for ycbcr data provided");
+    return false;
+  }
+
+  if (flags & DROID_MEDIA_BUFFER_LOCK_READ) {
+    usage |= android::GraphicBuffer::USAGE_SW_READ_RARELY;
+  }
+  if (flags & DROID_MEDIA_BUFFER_LOCK_WRITE) {
+    usage |= android::GraphicBuffer::USAGE_SW_WRITE_RARELY;
+  }
+
+  err = buffer->m_buffer->lockYCbCr(usage, &droid_ycbcr);
+
+  if (err != android::NO_ERROR) {
+    ALOGE("Error 0x%x locking buffer", -err);
+    return false;
+  } else {
+    ycbcr->y = droid_ycbcr.y;
+    ycbcr->cb = droid_ycbcr.cb;
+    ycbcr->cr = droid_ycbcr.cr;
+    ycbcr->ystride = droid_ycbcr.ystride;
+    ycbcr->cstride = droid_ycbcr.cstride;
+    ycbcr->chroma_step = droid_ycbcr.chroma_step;
+    return true;
+  }
+}
+
 void droid_media_buffer_unlock(DroidMediaBuffer *buffer)
 {
   android::status_t err = buffer->m_buffer->unlock();

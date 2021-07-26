@@ -210,6 +210,7 @@ HYBRIS_WRAPPER_1_1(void*,DroidMediaCameraRecordingData*,droid_media_camera_recor
 HYBRIS_WRAPPER_1_3(bool,DroidMediaCamera*,DroidMediaCameraFaceDetectionType,bool,droid_media_camera_enable_face_detection)
 HYBRIS_WRAPPER_1_3(DroidMediaBuffer*,uint32_t,uint32_t,uint32_t,droid_media_buffer_create)
 HYBRIS_WRAPPER_1_2(void*,DroidMediaBuffer*,uint32_t,droid_media_buffer_lock)
+HYBRIS_WRAPPER_1_3(bool,DroidMediaBuffer*,uint32_t,DroidMediaBufferYCbCr*,droid_media_buffer_lock_ycbcr)
 HYBRIS_WRAPPER_0_1(DroidMediaBuffer*,droid_media_buffer_unlock)
 HYBRIS_WRAPPER_0_2(DroidMediaBuffer*,void *,droid_media_buffer_set_user_data)
 HYBRIS_WRAPPER_1_1(void*,DroidMediaBuffer*,droid_media_buffer_get_user_data)
