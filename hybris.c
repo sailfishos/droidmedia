@@ -30,26 +30,48 @@
 #define LIB_DROID_MEDIA_PATH "libdroidmedia.so"
 #endif
 
-void *android_dlopen(const char *name, int flags);
-void *android_dlsym(void *handle, const char *name);
+#ifndef LIBHYBRIS_PATH
+#define LIBHYBRIS_PATH "libhybris-common.so.1"
+#endif
+
+static void *(*_android_dlopen)(const char *name, int flags);
+static void *(*_android_dlsym)(void *handle, const char *name);
 
 static void *__handle = NULL;
 
-static inline void __load_library() {
-  if (!__handle) {
-    __handle = android_dlopen(LIB_DROID_MEDIA_PATH, RTLD_NOW);
-    if (!__handle) {
-      // calling abort() is bad but it does not matter anyway as we will crash.
-      abort();
+static bool __init_glue(void)
+{
+  void *handle = dlopen(LIBHYBRIS_PATH, RTLD_LAZY);
+  if (handle) {
+    _android_dlopen = dlsym(handle, "android_dlopen");
+    _android_dlsym = dlsym(handle, "android_dlsym");
+    if (_android_dlopen && _android_dlsym) {
+      return true;
     }
+    dlclose(handle);
+  }
+  return false;
+}
+
+static void __load_library()
+{
+  if (!_android_dlopen && !__init_glue()) {
+    // calling abort() is bad but it does not matter anyway as we will crash.
+    abort();
+  }
+  __handle = _android_dlopen(LIB_DROID_MEDIA_PATH, RTLD_NOW);
+  if (!__handle) {
+    abort();
   }
 }
 
 static inline void *__resolve_sym(const char *sym)
 {
-  __load_library();
+  if (!__handle) {
+    __load_library();
+  }
 
-  void *ptr = android_dlsym(__handle, sym);
+  void *ptr = _android_dlsym(__handle, sym);
   assert(ptr != NULL);
   if (!ptr) {
     // calling abort() is bad but it does not matter anyway as we will crash.
@@ -215,7 +237,7 @@ HYBRIS_WRAPPER_0_1(DroidMediaCodec *, droid_media_codec_flush);
 HYBRIS_WRAPPER_0_1(DroidMediaCodec *, droid_media_codec_drain);
 HYBRIS_WRAPPER_1_1(DroidMediaCodecLoopReturn,DroidMediaCodec*,droid_media_codec_loop);
 HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaCodecMetaData*,DroidMediaRect*,droid_media_codec_get_output_info);
-HYBRIS_WRAPPER_0_0(droid_media_init)
+HYBRIS_WRAPPER_0_0(_droid_media_init)
 HYBRIS_WRAPPER_0_0(droid_media_deinit)
 HYBRIS_WRAPPER_1_2(DroidMediaBuffer*,DroidMediaBufferQueue*,DroidMediaBufferCallbacks*,droid_media_buffer_queue_acquire_buffer)
 HYBRIS_WRAPPER_0_3(DroidMediaBufferQueue*,DroidMediaBufferQueueCallbacks*,void*,droid_media_buffer_queue_set_callbacks)
@@ -235,3 +257,12 @@ HYBRIS_WRAPPER_0_1(DroidMediaRecorder*,droid_media_recorder_destroy);
 HYBRIS_WRAPPER_1_1(bool,DroidMediaRecorder*,droid_media_recorder_start);
 HYBRIS_WRAPPER_0_1(DroidMediaRecorder*,droid_media_recorder_stop);
 HYBRIS_WRAPPER_0_3(DroidMediaRecorder*,DroidMediaCodecDataCallbacks*,void*,droid_media_recorder_set_data_callbacks);
+
+bool droid_media_init(void)
+{
+  if (__init_glue()) {
+    _droid_media_init();
+    return true;
+  }
+  return false;
+}

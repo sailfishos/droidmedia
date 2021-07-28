@@ -24,7 +24,6 @@ Name:          droidmedia
 Summary:       Android media wrapper library
 Version:       0.20170214.0
 Release:       1
-Group:         System/Libraries
 License:       ASL 2.0
 BuildRequires: ubu-trusty
 BuildRequires: sudo-for-abuild
@@ -33,14 +32,6 @@ Source0:       %{name}-%{version}.tgz
 AutoReqProv:   no
 
 %description
-%{summary}
-
-%package       devel
-Summary:       droidmedia development headers
-Requires:      droidmedia = %{version}-%{release}
-BuildArch:     noarch
-
-%description   devel
 %{summary}
 
 %prep
@@ -81,8 +72,6 @@ fi
 
 mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
-mkdir -p $RPM_BUILD_ROOT/%{_includedir}/droidmedia/
-mkdir -p $RPM_BUILD_ROOT/%{_datadir}/droidmedia/
 
 cp out/target/product/*/system/$DROIDLIB/libdroidmedia.so \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
@@ -96,9 +85,6 @@ cp out/target/product/*/system/bin/minimediaservice \
 cp out/target/product/*/system/bin/minisfservice \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 
-cp external/droidmedia/*.h $RPM_BUILD_ROOT/%{_includedir}/droidmedia/
-cp external/droidmedia/hybris.c $RPM_BUILD_ROOT/%{_datadir}/droidmedia/
-
 LIBDMSOLOC=$RPM_BUILD_ROOT/file.list
 echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libdroidmedia.so >> %{LIBDMSOLOC}
 echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libminisf.so >> %{LIBDMSOLOC}
@@ -107,8 +93,3 @@ echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libminisf.so >> %{LIBDMSOLOC}
 %defattr(-,root,root,-)
 %{_libexecdir}/droid-hybris/system/bin/minimediaservice
 %{_libexecdir}/droid-hybris/system/bin/minisfservice
-
-%files devel
-%defattr(-,root,root,-)
-%{_includedir}/droidmedia/*.h
-%{_datadir}/droidmedia/hybris.c
