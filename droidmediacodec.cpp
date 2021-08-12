@@ -766,7 +766,7 @@ bool droid_media_codec_is_supported(DroidMediaCodecMetaData *meta, bool encoder)
     return matchingCodecs.size() > 0;
 }
 
-unsigned int droid_media_codec_get_supported_color_formats(const char *mime, int encoder, uint32_t *formats, unsigned maxFormats)
+unsigned int droid_media_codec_get_supported_color_formats(const char *mime, int encoder, uint32_t *formats, unsigned int maxFormats)
 {
     android::sp<android::MediaCodecList::IMediaCodecList> list = android::MediaCodecList::getInstance();
     int index = 0;
@@ -779,8 +779,8 @@ unsigned int droid_media_codec_get_supported_color_formats(const char *mime, int
             if (caps != nullptr) {
                 android::Vector<uint32_t> colorFormats;
                 caps->getSupportedColorFormats(&colorFormats);
-                maxFormats = std::min(maxFormats, colorFormats.size());
-                for (unsigned i = 0; i < maxFormats; i++) {
+                maxFormats = std::min<unsigned int>(maxFormats, colorFormats.size());
+                for (unsigned int i = 0; i < maxFormats; i++) {
                     formats[i] = colorFormats.itemAt(i);
                 }
                 return maxFormats;

@@ -103,7 +103,7 @@ DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData
 DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta);
 bool droid_media_codec_is_supported(DroidMediaCodecMetaData *meta, bool encoder);
 unsigned int droid_media_codec_get_supported_color_formats(const char *mime, int encoder,
-							   uint32_t *formats, unsigned maxFormats);
+                               uint32_t *formats, unsigned int maxFormats);
 
 void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data);
 void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec,
