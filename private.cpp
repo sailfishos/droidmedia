@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2014-2015 Jolla Ltd.
+ * Copyright (C) 2021 Open Mobile Platform LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,6 +85,11 @@ _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) :
 
   m_queue->setConsumerName(android::String8(name));
   m_queue->setConsumerUsageBits(android::GraphicBuffer::USAGE_HW_TEXTURE);
+#if (ANDROID_MAJOR < 8)
+  m_queue->setDefaultBufferFormat(HAL_PIXEL_FORMAT_YCbCr_420_888);
+#else
+  m_queue->setDefaultBufferFormat(HAL_PIXEL_FORMAT_YCBCR_420_888);
+#endif
 }
 
 _DroidMediaBufferQueue::~_DroidMediaBufferQueue()
@@ -112,7 +118,7 @@ void _DroidMediaBufferQueue::disconnectListener()
   m_queue->consumerDisconnect();
 }
 
-void _DroidMediaBufferQueue::attachToCamera(android::sp<android::Camera>& camera) {
+void _DroidMediaBufferQueue::attachToCameraPreview(android::sp<android::Camera>& camera) {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR < 4
     camera->setPreviewTexture(m_queue);
 #elif ANDROID_MAJOR < 5
@@ -122,16 +128,22 @@ void _DroidMediaBufferQueue::attachToCamera(android::sp<android::Camera>& camera
 #endif
 }
 
+void _DroidMediaBufferQueue::attachToCameraVideo(android::sp<android::Camera>& camera) {
+#if ANDROID_MAJOR >= 8
+    camera->setVideoTarget(m_producer);
+#endif
+}
+
 ANativeWindow *_DroidMediaBufferQueue::window() {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR < 4
-    android::sp<android::ISurfaceTexture> texture = m_queue;
-    return new android::SurfaceTextureClient(texture);
+  android::sp<android::ISurfaceTexture> texture = m_queue;
+  return new android::SurfaceTextureClient(texture);
 #elif ANDROID_MAJOR < 5
-    android::sp<android::IGraphicBufferProducer> texture = m_queue;
-    return new android::Surface(texture, true);
+  android::sp<android::IGraphicBufferProducer> texture = m_queue;
+  return new android::Surface(texture, true);
 #else
-    android::sp<android::IGraphicBufferProducer> texture = m_producer;
-    return new android::Surface(texture, true);
+  android::sp<android::IGraphicBufferProducer> texture = m_producer;
+  return new android::Surface(texture, true);
 #endif
 }
 

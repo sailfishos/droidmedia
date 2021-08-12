@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2014-2015 Jolla Ltd.
+ * Copyright (C) 2021 Open Mobile Platform LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,6 +74,15 @@ typedef struct {
   int32_t stride;
 } DroidMediaBufferInfo;
 
+typedef struct {
+  void *y;
+  void *cb;
+  void *cr;
+  size_t ystride;
+  size_t cstride;
+  size_t chroma_step;
+} DroidMediaBufferYCbCr;
+
 typedef enum {
     DROID_MEDIA_BUFFER_LOCK_READ = 0x01,
     DROID_MEDIA_BUFFER_LOCK_WRITE = 0x02,
@@ -87,6 +97,8 @@ void droid_media_deinit();
 DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
                                             uint32_t format);
 void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags);
+bool droid_media_buffer_lock_ycbcr(DroidMediaBuffer *buffer,
+                                   uint32_t flags, DroidMediaBufferYCbCr *ycbcr);
 void droid_media_buffer_unlock(DroidMediaBuffer *buffer);
 
 void droid_media_buffer_get_info(DroidMediaBuffer *buffer, DroidMediaBufferInfo *info);
