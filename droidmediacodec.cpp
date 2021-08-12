@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2021 Open Mobile Platform LLC.
  * Copyright (C) 2014-2015 Jolla Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -763,6 +764,30 @@ bool droid_media_codec_is_supported(DroidMediaCodecMetaData *meta, bool encoder)
             &matchingCodecs);
 
     return matchingCodecs.size() > 0;
+}
+
+unsigned int droid_media_codec_get_supported_color_formats(const char *mime, int encoder, uint32_t *formats, unsigned maxFormats)
+{
+    android::sp<android::MediaCodecList::IMediaCodecList> list = android::MediaCodecList::getInstance();
+    int index = 0;
+    ssize_t matchIndex = list->findCodecByType(mime, encoder, index);
+
+    if (matchIndex >= 0) {
+        const android::sp<android::MediaCodecInfo> info = list->getCodecInfo(matchIndex);
+        if (info != nullptr) {
+            const android::sp<android::MediaCodecInfo::Capabilities> caps = info->getCapabilitiesFor(mime);
+            if (caps != nullptr) {
+                android::Vector<uint32_t> colorFormats;
+                caps->getSupportedColorFormats(&colorFormats);
+                maxFormats = std::min(maxFormats, colorFormats.size());
+                for (unsigned i = 0; i < maxFormats; i++) {
+                    formats[i] = colorFormats.itemAt(i);
+                }
+                return maxFormats;
+            }
+        }
+    }
+    return 0;
 }
 
 bool droid_media_codec_start(DroidMediaCodec *codec)
