@@ -774,12 +774,14 @@ unsigned int droid_media_codec_get_supported_color_formats(const char *mime, int
 
     if (matchIndex >= 0) {
         const android::sp<android::MediaCodecInfo> info = list->getCodecInfo(matchIndex);
-        if (info != nullptr) {
+        if (info != NULL) {
             const android::sp<android::MediaCodecInfo::Capabilities> caps = info->getCapabilitiesFor(mime);
-            if (caps != nullptr) {
+            if (caps != NULL) {
                 android::Vector<uint32_t> colorFormats;
                 caps->getSupportedColorFormats(&colorFormats);
-                maxFormats = std::min<unsigned int>(maxFormats, colorFormats.size());
+                if (maxFormats > colorFormats.size()) {
+                    maxFormats = colorFormats.size();
+                }
                 for (unsigned int i = 0; i < maxFormats; i++) {
                     formats[i] = colorFormats.itemAt(i);
                 }
