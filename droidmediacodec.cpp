@@ -25,10 +25,10 @@
 #include <media/stagefright/OMXClient.h>
 #endif
 
+#include <media/stagefright/MediaCodecList.h>
 // MediaCodecSource should be used instead of OMXCodec from Android 5
 #if ANDROID_MAJOR >= 5
 #include <media/stagefright/MediaBuffer.h>
-#include <media/stagefright/MediaCodecList.h>
 #include <media/stagefright/MediaCodecSource.h>
 #include <media/stagefright/MediaCodec.h>
 #include <media/openmax/OMX_Video.h>
@@ -766,16 +766,46 @@ bool droid_media_codec_is_supported(DroidMediaCodecMetaData *meta, bool encoder)
     return matchingCodecs.size() > 0;
 }
 
-unsigned int droid_media_codec_get_supported_color_formats(const char *mime, int encoder, uint32_t *formats, unsigned int maxFormats)
+unsigned int droid_media_codec_get_supported_color_formats(DroidMediaCodecMetaData *meta, int encoder, uint32_t *formats, unsigned int maxFormats)
 {
+#if ANDROID_MAJOR >= 5
     android::sp<android::MediaCodecList::IMediaCodecList> list = android::MediaCodecList::getInstance();
-    int index = 0;
-    ssize_t matchIndex = list->findCodecByType(mime, encoder, index);
+#else
+    const android::MediaCodecList *list = android::MediaCodecList::getInstance();
+#endif
 
-    if (matchIndex >= 0) {
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR < 2
+    android::Vector<android::String8> matchingCodecs;
+#elif ANDROID_MAJOR < 7
+    android::Vector<android::OMXCodec::CodecNameAndQuirks> matchingCodecs;
+#else
+    android::Vector<android::AString> matchingCodecs;
+#endif
+
+#if ANDROID_MAJOR < 7
+    android::OMXCodec::findMatchingCodecs(
+            meta->type, encoder, NULL,
+#else
+    android::MediaCodecList::findMatchingCodecs(
+            meta->type, encoder,
+#endif
+            DroidMediaCodecBuilder::flags(meta, 0),
+            &matchingCodecs);
+
+    if (matchingCodecs.size() > 0) {
+        const char *matchName;
+#if ANDROID_MAJOR == 4 && ANDROID_MINOR < 2
+        matchName = matchingCodecs.itemAt(0).string();
+#elif ANDROID_MAJOR < 7
+        matchName = matchingCodecs.itemAt(0).mName.string();
+#else
+        matchName = matchingCodecs.itemAt(0).c_str();
+#endif
+        ssize_t matchIndex = list->findCodecByName(matchName);
+#if ANDROID_MAJOR >= 5
         const android::sp<android::MediaCodecInfo> info = list->getCodecInfo(matchIndex);
         if (info != NULL) {
-            const android::sp<android::MediaCodecInfo::Capabilities> caps = info->getCapabilitiesFor(mime);
+            const android::sp<android::MediaCodecInfo::Capabilities> caps = info->getCapabilitiesFor(meta->type);
             if (caps != NULL) {
                 android::Vector<uint32_t> colorFormats;
                 caps->getSupportedColorFormats(&colorFormats);
@@ -788,6 +818,24 @@ unsigned int droid_media_codec_get_supported_color_formats(const char *mime, int
                 return maxFormats;
             }
         }
+#else
+        android::Vector<android::MediaCodecList::ProfileLevel> profileLevels;
+        android::Vector<uint32_t> colorFormats;
+        uint32_t flags;
+
+        android::status_t err = android::MediaCodecList::getInstance()->getCodecCapabilities(
+            matchIndex, meta->type, &profileLevels, &colorFormats, &flags);
+
+        if (err == android::OK) {
+            if (maxFormats > colorFormats.size()) {
+                maxFormats = colorFormats.size();
+            }
+            for (unsigned int i = 0; i < maxFormats; i++) {
+                formats[i] = colorFormats.itemAt(i);
+            }
+            return maxFormats;
+        }
+#endif
     }
     return 0;
 }
