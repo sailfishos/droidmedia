@@ -186,7 +186,9 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
   if (!recorder->m_codec.get()) {
     ALOGE("Cannot create codec");
     recorder->m_src.clear();
+#if ANDROID_MAJOR >= 5
     recorder->m_looper->stop();
+#endif
     delete recorder;
     return NULL;
   }
