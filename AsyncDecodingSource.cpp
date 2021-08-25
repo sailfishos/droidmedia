@@ -18,7 +18,11 @@
 #include "AsyncDecodingSource.h"
 #include <utils/Log.h>
 #include <gui/Surface.h>
+#if ANDROID_MAJOR >= 11
+#include <mediadrm/ICrypto.h>
+#else
 #include <media/ICrypto.h>
+#endif
 #include <media/stagefright/MediaDefs.h>
 #include <media/stagefright/foundation/ALooper.h>
 #include <media/stagefright/foundation/AMessage.h>
