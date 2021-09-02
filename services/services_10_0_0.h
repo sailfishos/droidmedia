@@ -168,6 +168,7 @@ class FakeSensorManager :
 
 using namespace android;
 
+#include <binder/BinderService.h>
 #include <gui/ISurfaceComposer.h>
 #include <gui/IDisplayEventConnection.h>
 #include <gui/ISurfaceComposerClient.h>
@@ -198,6 +199,11 @@ public:
 
     sp<IDisplayEventConnection> createDisplayEventConnection(
             VsyncSource, ConfigChanged) {
+        return sp<IDisplayEventConnection>();
+    }
+
+    sp<IDisplayEventConnection> createDisplayEventConnection(
+            VsyncSource) {
         return sp<IDisplayEventConnection>();
     }
 
@@ -611,8 +617,15 @@ public:
         const Vector<MediaResource> &) {
     }
 
+    void addResource(int, int64_t, const sp<IResourceManagerClient>,
+        const Vector<MediaResource> &) {
+    }
+
     void removeResource(int, int64_t,
         const Vector<MediaResource> &) {
+    }
+
+    void removeResource(int, int64_t) {
     }
 
     void removeClient(int, int64_t) {
