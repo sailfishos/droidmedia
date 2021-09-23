@@ -341,7 +341,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     cam->m_queue = queue;
     cam->m_queue->attachToCameraPreview(cam->m_camera);
 
-#if ANDROID_MAJOR >= 8
+#if ANDROID_MAJOR >= 9
     android::sp<DroidMediaBufferQueue>
       recording_queue(new DroidMediaBufferQueue("DroidMediaCameraBufferRecordingQueue"));
     if (!recording_queue->connectListener()) {
@@ -369,7 +369,7 @@ void droid_media_camera_disconnect(DroidMediaCamera *camera)
 
     camera->m_queue->setCallbacks(0, 0);
 
-#if ANDROID_MAJOR >= 8
+#if ANDROID_MAJOR >= 9
     if (camera->m_recording_queue.get()) {
       camera->m_recording_queue->setCallbacks(0, 0);
     }
