@@ -129,7 +129,7 @@ void _DroidMediaBufferQueue::attachToCameraPreview(android::sp<android::Camera>&
 }
 
 void _DroidMediaBufferQueue::attachToCameraVideo(android::sp<android::Camera>& camera) {
-#if ANDROID_MAJOR >= 8
+#if ANDROID_MAJOR >= 9
     camera->setVideoTarget(m_producer);
 #endif
 }
