@@ -19,6 +19,7 @@
 %endif
 
 %define _target_cpu %{device_rpm_architecture_string}
+%bcond_with droidmedia_miniaudiopolicy
 
 Name:          droidmedia
 Summary:       Android media wrapper library
@@ -56,6 +57,9 @@ cat /dev/null > external/droidmedia/env.mk
 echo Forcing Camera HAL connect version %{force_hal}
 echo FORCE_HAL := %{force_hal} >> external/droidmedia/env.mk
 %endif
+%if %{with droidmedia_miniaudiopolicy}
+echo MINIMEDIA_AUDIOPOLICYSERVICE_ENABLE := 1 >> external/droidmedia/env.mk
+%endif
 
 %build
 echo "building for %{device_rpm_architecture_string}"
@@ -83,7 +87,17 @@ cp out/target/product/*/system/bin/minimediaservice \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 
 cp out/target/product/*/system/bin/minisfservice \
-    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
+   $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
+
+cp external/droidmedia/init/*.rc \
+   $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/etc/init/
+
+%if %{with droidmedia_miniaudiopolicy}
+    cp out/target/product/*/system/bin/miniaudiopolicy \
+       $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
+%else
+    rm $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/etc/init/miniaudiopolicy.rc
+%endif
 
 LIBDMSOLOC=$RPM_BUILD_ROOT/file.list
 echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libdroidmedia.so >> %{LIBDMSOLOC}
@@ -93,3 +107,4 @@ echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libminisf.so >> %{LIBDMSOLOC}
 %defattr(-,root,root,-)
 %{_libexecdir}/droid-hybris/system/bin/minimediaservice
 %{_libexecdir}/droid-hybris/system/bin/minisfservice
+%{_libexecdir}/droid-hybris/system/etc/init/*

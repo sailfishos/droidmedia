@@ -135,20 +135,6 @@ LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libcutils \
                           libui
 
-ifeq ($(MINIMEDIA_AUDIOPOLICYSERVICE_ENABLE),1)
-ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),5))
-LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy
-else
-LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy \
-                    frameworks/av/services/audiopolicy/common/include \
-                    frameworks/av/services/audiopolicy/common/managerdefinitions/include \
-                    frameworks/av/services/audiopolicy/engine/interface \
-                    frameworks/av/services/audiopolicy/managerdefault \
-                    frameworks/av/services/audiopolicy/service
-endif
-LOCAL_SHARED_LIBRARIES += libaudiopolicyservice
-endif
-
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.4
 endif
@@ -193,9 +179,6 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter
 ifeq ($(MINIMEDIA_SENSORSERVER_DISABLE),1)
     LOCAL_CPPFLAGS += -DSENSORSERVER_DISABLE
-endif
-ifeq ($(MINIMEDIA_AUDIOPOLICYSERVICE_ENABLE),1)
-    LOCAL_CPPFLAGS += -DAUDIOPOLICYSERVICE_ENABLE
 endif
 LOCAL_MODULE := minimediaservice
 ifeq ($(strip $(DROIDMEDIA_32)), true)
@@ -300,3 +283,81 @@ endif
 
 LOCAL_MODULE := libminisf
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+
+ifeq ($(MINIMEDIA_AUDIOPOLICYSERVICE_ENABLE),1)
+
+
+LOCAL_SRC_FILES := \
+	miniaudiopolicy.cpp \
+
+LOCAL_C_INCLUDES := \
+	$(call include-path-for, audio-utils) \
+	frameworks/av/media/libaaudio/include \
+	frameworks/av/media/libaaudio/src \
+	frameworks/av/media/libaaudio/src/binding \
+	frameworks/av/media/libmedia \
+	frameworks/av/services/audioflinger
+
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),5))
+LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy
+else
+LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy \
+                    frameworks/av/services/audiopolicy/common/include \
+                    frameworks/av/services/audiopolicy/common/managerdefinitions/include \
+                    frameworks/av/services/audiopolicy/engine/interface \
+                    frameworks/av/services/audiopolicy/managerdefault \
+                    frameworks/av/services/audiopolicy/service
+endif
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 10 && echo true),true)
+LOCAL_C_INCLUDES += frameworks/av/media/utils/include
+endif
+
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 11 && echo true),true)
+LOCAL_C_INCLUDES += frameworks/av/media/libmediametrics/include
+endif
+
+LOCAL_SHARED_LIBRARIES += libaudiopolicyservice \
+                libbinder \
+		libcutils \
+		libutils \
+		libmedia \
+		libaaudioservice \
+		libaudioflinger
+
+ifeq ($(shell test $(ANDROID_MAJOR) -le 10 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libsoundtriggerservice
+endif
+
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
+LOCAL_SHARED_LIBRARIES += liblog \
+                          libhidlbase \
+                          libhidltransport \
+                          libhwbinder
+endif
+
+# If AUDIOSERVER_MULTILIB in device.mk is non-empty then it is used to control
+# the LOCAL_MULTILIB for all audioserver exclusive libraries.
+# This is relevant for 64 bit architectures where either or both
+# 32 and 64 bit libraries may be built.
+#
+# AUDIOSERVER_MULTILIB may be set as follows:
+#   32      to build 32 bit audioserver libraries and 32 bit audioserver.
+#   64      to build 64 bit audioserver libraries and 64 bit audioserver.
+#   both    to build both 32 bit and 64 bit libraries,
+#           and use primary target architecture (32 or 64) for audioserver.
+#   first   to build libraries and audioserver for the primary target architecture only.
+#   <empty> to build both 32 and 64 bit libraries and primary target audioserver.
+
+LOCAL_MULTILIB := $(AUDIOSERVER_MULTILIB)
+
+LOCAL_MODULE := miniaudiopolicyservice
+
+LOCAL_CFLAGS := -Werror -Wall
+
+include $(BUILD_EXECUTABLE)
+
+endif
