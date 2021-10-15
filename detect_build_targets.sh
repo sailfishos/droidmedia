@@ -29,4 +29,10 @@ if [ "$RPM_ARCH" != "aarch64" ] && [ "$ANDROID_ARCH" = "arm64" ]; then
     LIB_TARGET=_32
 fi
 
-echo libdroidmedia$LIB_TARGET minimediaservice minisfservice libminisf$LIB_TARGET
+
+printf %s "libdroidmedia$LIB_TARGET minimediaservice minisfservice libminisf$LIB_TARGET"
+if grep -qE 'MINIMEDIA_AUDIOPOLICYSERVICE_ENABLE.*=.*1' external/droidmedia/env.mk ; then
+    echo " miniaudiopolicyservice"
+else
+    echo
+fi

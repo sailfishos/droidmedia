@@ -1,0 +1,4 @@
+service miniaf /usr/libexec/droid-hybris/system/bin/miniafservice
+    class main
+    user system
+    group audio
