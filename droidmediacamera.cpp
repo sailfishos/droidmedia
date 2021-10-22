@@ -147,7 +147,11 @@ public:
         switch (dataMsgType) {
             case CAMERA_MSG_RAW_IMAGE:
                 mem.size = dataPtr->size();
+#if ANDROID_MAJOR >= 11
+                mem.data = dataPtr->unsecurePointer();
+#else
                 mem.data = dataPtr->pointer();
+#endif
 
                 if (m_cam->m_cb.raw_image_cb) {
                     m_cam->m_cb.raw_image_cb(m_cam->m_cb_data, &mem);
@@ -156,7 +160,11 @@ public:
 
             case CAMERA_MSG_COMPRESSED_IMAGE:
                 mem.size = dataPtr->size();
+#if ANDROID_MAJOR >= 11
+                mem.data = dataPtr->unsecurePointer();
+#else
                 mem.data = dataPtr->pointer();
+#endif
 
                 if (m_cam->m_cb.compressed_image_cb) {
                     m_cam->m_cb.compressed_image_cb(m_cam->m_cb_data, &mem);
@@ -165,7 +173,11 @@ public:
 
             case CAMERA_MSG_POSTVIEW_FRAME:
                 mem.size = dataPtr->size();
+#if ANDROID_MAJOR >= 11
+                mem.data = dataPtr->unsecurePointer();
+#else
                 mem.data = dataPtr->pointer();
+#endif
                 if (m_cam->m_cb.postview_frame_cb) {
                     m_cam->m_cb.postview_frame_cb(m_cam->m_cb_data, &mem);
                 }
@@ -179,7 +191,11 @@ public:
 
             case CAMERA_MSG_PREVIEW_FRAME:
                 mem.size = dataPtr->size();
+#if ANDROID_MAJOR >= 11
+                mem.data = dataPtr->unsecurePointer();
+#else
                 mem.data = dataPtr->pointer();
+#endif
                 if (m_cam->m_cb.preview_frame_cb) {
                     m_cam->m_cb.preview_frame_cb(m_cam->m_cb_data, &mem);
                 }
@@ -515,7 +531,11 @@ size_t droid_media_camera_recording_frame_get_size(DroidMediaCameraRecordingData
 
 void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData *data)
 {
+#if ANDROID_MAJOR >= 11
+    return data->mem->unsecurePointer();
+#else
     return data->mem->pointer();
+#endif
 }
 
 bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,

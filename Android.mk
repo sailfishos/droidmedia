@@ -89,19 +89,27 @@ LOCAL_SHARED_LIBRARIES += android.hidl.memory@1.0 \
                           libmedia_omx
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 11 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libmedia_codeclist
+endif
+
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) -Wno-unused-parameter
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
 
-ifeq ($(strip $(ANDROID_MAJOR)),7)
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 7 && echo true),true)
 LOCAL_C_INCLUDES := frameworks/native/include/media/openmax \
                     frameworks/native/include/media/hardware
-else ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
-LOCAL_C_INCLUDES := frameworks/native/include/media/openmax \
-                    frameworks/native/include/media/hardware \
-                    frameworks/native/libs/nativewindow/include \
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
+LOCAL_C_INCLUDES += frameworks/native/libs/nativewindow/include \
                     frameworks/av/media/libstagefright/omx/include \
                     frameworks/av/media/libstagefright/xmlparser/include
+endif
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 11 && echo true),true)
+LOCAL_C_INCLUDES += frameworks/av/media/libmediametrics/include \
+                    frameworks/av/media/libstagefright/include \
+                    frameworks/av/drm/libmediadrm/interface
+endif
 else
 LOCAL_C_INCLUDES := frameworks/native/include/media/openmax
 endif
@@ -145,9 +153,16 @@ ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.4
 endif
 
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),10))
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5
+endif
+
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),11))
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.6
+endif
+
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 10 && echo true),true)
-LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5 \
-                          android.hardware.camera.device@3.4 \
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.device@3.4 \
                           libsensorprivacy
 LOCAL_AIDL_INCLUDES := frameworks/native/libs/sensorprivacy/aidl
 endif
@@ -166,6 +181,12 @@ endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 9 && echo true),true)
 LOCAL_SHARED_LIBRARIES += android.hidl.memory@1.0
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 11 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libmedia_codeclist \
+                          libresourcemanagerservice \
+                          libbinder_ndk
 endif
 
 LOCAL_MODULE_TAGS := optional
@@ -248,9 +269,16 @@ ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.4
 endif
 
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),10))
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5
+endif
+
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),11))
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.6
+endif
+
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 10 && echo true),true)
-LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.5 \
-                          android.hardware.camera.device@3.4 \
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.device@3.4 \
                           libsensorprivacy
 LOCAL_AIDL_INCLUDES := frameworks/native/libs/sensorprivacy/aidl
 endif

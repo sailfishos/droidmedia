@@ -21,7 +21,7 @@
 #include <media/stagefright/foundation/AString.h>
 #include <media/stagefright/foundation/Mutexed.h>
 #include <media/stagefright/foundation/AHandlerReflector.h>
-#if ANDROID_MAJOR >= 9
+#if ANDROID_MAJOR >= 9 && ANDROID_MAJOR <= 10
 #include <media/MediaSource.h>
 #else
 #include <media/stagefright/MediaSource.h>
