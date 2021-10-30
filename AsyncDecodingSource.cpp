@@ -62,6 +62,8 @@ sp<AsyncDecodingSource> AsyncDecodingSource::Create(
         return nullptr;
     }
 
+    format->setInt32("android._num-input-buffers", 12);
+
     Vector<AString> matchingCodecs;
     MediaCodecList::findMatchingCodecs(
             mime, false /* encoder */, flags, &matchingCodecs);
