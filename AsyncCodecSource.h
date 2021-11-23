@@ -18,6 +18,7 @@
 #ifndef ASYNC_CODEC_SOURCE_H_
 #define ASYNC_CODEC_SOURCE_H_
 
+#include <media/openmax/OMX_IVCommon.h>
 #include <media/stagefright/foundation/AString.h>
 #include <media/stagefright/foundation/Mutexed.h>
 #include <media/stagefright/foundation/AHandlerReflector.h>
@@ -52,7 +53,8 @@ public:
     static sp<MediaSource> Create(const sp<MediaSource> &source,
                     const sp<AMessage> &format, bool isEncoder, uint32_t flags,
                     const sp<ANativeWindow> &nativeWindow, const sp<ALooper> &looper,
-                    const char *desiredCodec = NULL);
+                    const char *desiredCodec = NULL,
+                    OMX_COLOR_FORMATTYPE colorFormat = OMX_COLOR_FormatUnused);
 
     bool configure(const sp<AMessage> format,
                    const sp<Surface> surface,
