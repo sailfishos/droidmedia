@@ -62,7 +62,11 @@ sp<AsyncDecodingSource> AsyncDecodingSource::Create(
         return nullptr;
     }
 
+#if ANDROID_MAJOR > 6
     format->setInt32("android._num-input-buffers", 12);
+#else
+    format->setInt32("inputbuffercnt", 12);
+#endif
 
     Vector<AString> matchingCodecs;
     MediaCodecList::findMatchingCodecs(
