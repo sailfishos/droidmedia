@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+//#define LOG_NDEBUG 0
 #include "AsyncDecodingSource.h"
 #include <utils/Log.h>
 #include <gui/Surface.h>
@@ -43,14 +44,14 @@ using namespace android;
 typedef ABuffer MediaCodecBuffer;
 #endif
 
-//#define LOG_NDEBUG 0
 #define LOG_TAG "AsyncDecodingSource"
 
 
 
 //static
 sp<AsyncDecodingSource> AsyncDecodingSource::Create(
-        const sp<MediaSource> &source, uint32_t flags, const sp<ANativeWindow> &nativeWindow,
+        const sp<MediaSource> &source, const sp<AMessage> &srcFormat,
+        bool isEncoder, uint32_t flags, const sp<ANativeWindow> &nativeWindow,
         const sp<ALooper> &looper, const char *desiredCodec) {
     sp<Surface> surface = static_cast<Surface*>(nativeWindow.get());
     const char *mime = nullptr;
@@ -58,19 +59,24 @@ sp<AsyncDecodingSource> AsyncDecodingSource::Create(
     CHECK(meta->findCString(kKeyMIMEType, &mime));
 
     sp<AMessage> format = new AMessage;
-    if (convertMetaDataToMessage(meta, &format) != OK) {
+    if (srcFormat.get()) {
+        format = srcFormat;
+    } else if (convertMetaDataToMessage(meta, &format) != OK) {
+        ALOGE("Cannot convertMetaDataToMessage()");
         return nullptr;
     }
 
+    if (!isEncoder) {
 #if ANDROID_MAJOR > 6
-    format->setInt32("android._num-input-buffers", 12);
+        format->setInt32("android._num-input-buffers", 12);
 #else
-    format->setInt32("inputbuffercnt", 12);
+        format->setInt32("inputbuffercnt", 12);
 #endif
+    }
 
     Vector<AString> matchingCodecs;
     MediaCodecList::findMatchingCodecs(
-            mime, false /* encoder */, flags, &matchingCodecs);
+            mime, isEncoder, flags, &matchingCodecs);
 
     for (const AString &componentName : matchingCodecs) {
         if (desiredCodec != nullptr && componentName.compare(desiredCodec)) {
@@ -83,7 +89,7 @@ sp<AsyncDecodingSource> AsyncDecodingSource::Create(
 
         if (res->mCodec != NULL) {
             ALOGI("Successfully allocated codec '%s'", componentName.c_str());
-            if (res->configure(format, surface, 0)) {
+            if (res->configure(format, surface, isEncoder ? MediaCodec::CONFIGURE_FLAG_ENCODE : 0)) {
                 if (surface != nullptr) {
 #if ANDROID_MAJOR > 7
                     nativeWindowConnect(nativeWindow.get(), "AsyncDecodingSource");
@@ -400,13 +406,13 @@ void AsyncDecodingSource::onMessageReceived(const sp<AMessage> &msg) {
             mCodec->releaseOutputBuffer(index);
             me->mAvailable.signal();
         }
-   } else if (cbID == MediaCodec::CB_ERROR) {
+    } else if (cbID == MediaCodec::CB_ERROR) {
         status_t err;
         CHECK(msg->findInt32("err", &err));
         ALOGE("Decoder (%s) reported error : 0x%d",
                         mComponentName.c_str(), err);
         mState = ERROR;
-   } else {
-       ALOGE("Decoder (%s) unhandled callback id : 0x%d",  mComponentName.c_str(), cbID);
-   }
+    } else {
+        ALOGE("Decoder (%s) unhandled callback id : 0x%d",  mComponentName.c_str(), cbID);
+    }
 }

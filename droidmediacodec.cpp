@@ -480,7 +480,10 @@ public:
       }
       //TODO: time-scale
 
-#if ANDROID_MAJOR >= 6
+#if ANDROID_MAJOR > 6
+      return android::AsyncDecodingSource::Create(src, format, true /* isEncoder */,
+                                                  flags(), window, looper);
+#elif ANDROID_MAJOR == 6
       return android::MediaCodecSource::Create(looper, format, src, NULL, flags());
 #else
       return android::MediaCodecSource::Create(looper, format, src, flags());
@@ -525,7 +528,8 @@ public:
        src,
        NULL, flags(), window);
 #else
-    return android::AsyncDecodingSource::Create(src, flags(), window, looper);
+    return android::AsyncDecodingSource::Create(src, nullptr, false /* isEncoder */,
+                                                flags(), window, looper);
 #endif
   }
 

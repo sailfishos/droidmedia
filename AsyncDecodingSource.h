@@ -49,8 +49,9 @@ class Surface;
 class AsyncDecodingSource : public MediaSource {
 public:
     static sp<AsyncDecodingSource> Create(const sp<MediaSource> &source,
-                    uint32_t flags, const sp<ANativeWindow> &nativeWindow,
-                    const sp<ALooper> &looper, const char *desiredCodec = NULL);
+                    const sp<AMessage> &format, bool isEncoder, uint32_t flags,
+                    const sp<ANativeWindow> &nativeWindow, const sp<ALooper> &looper,
+                    const char *desiredCodec = NULL);
 
     bool configure(const sp<AMessage> format,
                    const sp<Surface> surface,
