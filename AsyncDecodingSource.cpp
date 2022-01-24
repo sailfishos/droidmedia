@@ -177,12 +177,13 @@ status_t AsyncDecodingSource::start(MetaData *params) {
 
 status_t AsyncDecodingSource::stop() {
     Mutexed<Output>::Locked me(mOutput);
-    if (mState != STARTED) {
+    if (mState != STARTED && mState != ERROR) {
         return -EINVAL;
     }
 
     // wait for any pending reads to complete
     mState = STOPPING;
+    me->mAvailable.signal();
     while (me->mReading) {
         me.waitForCondition(me->mReadCondition);
     }
@@ -231,7 +232,8 @@ status_t AsyncDecodingSource::read(
     }
 
     *buffer = nullptr;
-    while (me->mBufferQueue.size() == 0 && !me->mReachedEOS) {
+    while (me->mBufferQueue.size() == 0 && !me->mReachedEOS
+           && mState == STARTED) {
         ALOGV("[%s] Waiting for output.", mComponentName.c_str());
         me.waitForCondition(me->mAvailable);
     }
@@ -247,7 +249,7 @@ status_t AsyncDecodingSource::read(
             res = INFO_FORMAT_CHANGED;
         }
     }
-    else if (me->mReachedEOS) {
+    else if (me->mReachedEOS || mState != STARTED) {
         res = ERROR_END_OF_STREAM;
     }
 

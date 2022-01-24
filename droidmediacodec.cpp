@@ -876,7 +876,11 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
         codec->m_thread->requestExit();
         // in case the thread is waiting in ->read()
         droid_media_codec_drain (codec);
+    }
 
+#if  ANDROID_MAJOR < 7
+    // On older devices the reader thread must be stopped first.
+    if (codec->m_thread != NULL) {
         int err = codec->m_thread->requestExitAndWait();
 
         if (err != android::NO_ERROR) {
@@ -886,10 +890,28 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
         codec->m_thread.clear();
     }
 
+    // All buffers are returned to HAL, it is safe to stop now.
     int err = codec->m_codec->stop();
     if (err != android::OK) {
         ALOGE("error 0x%x stopping codec", -err);
     }
+#else
+    // Wake up AsyncCodecSource and send EOS to it.
+    int err = codec->m_codec->stop();
+    if (err != android::OK) {
+        ALOGE("error 0x%x stopping codec", -err);
+    }
+
+    if (codec->m_thread != NULL) {
+        int err = codec->m_thread->requestExitAndWait();
+
+        if (err != android::NO_ERROR) {
+            ALOGE("Error 0x%x stopping thread", -err);
+        }
+
+        codec->m_thread.clear();
+    }
+#endif
 
     if (codec->m_queue.get()) {
         codec->m_queue->buffersReleased();
@@ -975,7 +997,10 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
                 codec->m_cb.signal_eos (codec->m_cb_data);
             }
 
-	    return DROID_MEDIA_CODEC_LOOP_EOS;
+            // Prevent new frames from being queued.
+            codec->m_src->drain();
+
+            return DROID_MEDIA_CODEC_LOOP_EOS;
         } else {
             ALOGE("Error 0x%x reading from codec", -err);
 
