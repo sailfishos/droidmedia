@@ -1170,4 +1170,19 @@ void droid_media_codec_get_output_info(DroidMediaCodec *codec,
   }
 }
 
+bool droid_media_codec_set_video_encoder_bitrate(DroidMediaCodec *codec, int32_t bitrate)
+{
+#if ANDROID_MAJOR >= 7
+    ALOGI("Setting video encoder bitrate to %d bps", bitrate);
+    android::sp<android::AMessage> params = new android::AMessage();
+    params->setInt32("video-bitrate", bitrate);
+    android::sp<android::AsyncDecodingSource> src =
+                        static_cast<android::AsyncDecodingSource*>(codec->m_codec.get());
+    android::status_t err = src->setParameters(params);
+    return err == android::NO_ERROR;
+#else
+    return false;
+#endif
+}
+
 };

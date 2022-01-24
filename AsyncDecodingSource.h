@@ -79,7 +79,7 @@ public:
     // unsupported methods
     virtual status_t pause() { return INVALID_OPERATION; }
 
-
+    status_t setParameters(const sp<AMessage> &params);
 private:
     // Construct this using a codec, source and looper.
     AsyncDecodingSource(

@@ -240,6 +240,7 @@ HYBRIS_WRAPPER_0_1(DroidMediaCodec *, droid_media_codec_flush);
 HYBRIS_WRAPPER_0_1(DroidMediaCodec *, droid_media_codec_drain);
 HYBRIS_WRAPPER_1_1(DroidMediaCodecLoopReturn,DroidMediaCodec*,droid_media_codec_loop);
 HYBRIS_WRAPPER_0_3(DroidMediaCodec*,DroidMediaCodecMetaData*,DroidMediaRect*,droid_media_codec_get_output_info);
+HYBRIS_WRAPPER_1_2(bool,DroidMediaCodec*,int32_t,droid_media_codec_set_video_encoder_bitrate);
 HYBRIS_WRAPPER_0_0(_droid_media_init)
 HYBRIS_WRAPPER_0_0(droid_media_deinit)
 HYBRIS_WRAPPER_1_2(DroidMediaBuffer*,DroidMediaBufferQueue*,DroidMediaBufferCallbacks*,droid_media_buffer_queue_acquire_buffer)

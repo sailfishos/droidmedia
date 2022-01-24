@@ -416,3 +416,11 @@ void AsyncDecodingSource::onMessageReceived(const sp<AMessage> &msg) {
         ALOGE("Decoder (%s) unhandled callback id : 0x%d",  mComponentName.c_str(), cbID);
     }
 }
+
+status_t AsyncDecodingSource::setParameters(const sp<AMessage> &params)
+{
+    if (mState == STARTED && mCodec.get()) {
+        return mCodec->setParameters(params);
+    }
+    return android::DEAD_OBJECT;
+}
