@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef ASYNC_DECODING_SOURCE_H_
-#define ASYNC_DECODING_SOURCE_H_
+#ifndef ASYNC_CODEC_SOURCE_H_
+#define ASYNC_CODEC_SOURCE_H_
 
 #include <media/stagefright/foundation/AString.h>
 #include <media/stagefright/foundation/Mutexed.h>
@@ -46,9 +46,9 @@ struct MediaCodec;
 class MetaData;
 class Surface;
 
-class AsyncDecodingSource : public MediaSource {
+class AsyncCodecSource : public MediaSource {
 public:
-    static sp<AsyncDecodingSource> Create(const sp<MediaSource> &source,
+    static sp<AsyncCodecSource> Create(const sp<MediaSource> &source,
                     const sp<AMessage> &format, bool isEncoder, uint32_t flags,
                     const sp<ANativeWindow> &nativeWindow, const sp<ALooper> &looper,
                     const char *desiredCodec = NULL);
@@ -57,7 +57,7 @@ public:
                    const sp<Surface> surface,
                    uint32_t flags = 0);
 
-    virtual ~AsyncDecodingSource();
+    virtual ~AsyncCodecSource();
 
     // starts this source (and its underlying source). |params| is ignored.
     virtual status_t start(MetaData *params = NULL);
@@ -82,7 +82,7 @@ public:
     status_t setParameters(const sp<AMessage> &params);
 private:
     // Construct this using a codec, source and looper.
-    AsyncDecodingSource(
+    AsyncCodecSource(
             const AString &codecName, const sp<MediaSource> &source, const sp<ALooper> &looper,
             bool isVorbis);
 
@@ -92,7 +92,7 @@ private:
     sp<ALooper> mLooper;
     sp<ALooper> mCodecLooper;
     sp<AMessage> mNotify = 0;
-    sp<AHandlerReflector<AsyncDecodingSource> > mReflector;
+    sp<AHandlerReflector<AsyncCodecSource> > mReflector;
     List<size_t> mAvailInputIndices;
     Mutexed<sp<MetaData>> mMeta;
     bool mUsingSurface;

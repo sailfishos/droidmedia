@@ -42,7 +42,7 @@
 #include <media/stagefright/OMXCodec.h>
 #else
 #include <media/hardware/MetadataBufferType.h>
-#include "AsyncDecodingSource.h"
+#include "AsyncCodecSource.h"
 #endif
 
 #if ANDROID_MAJOR >= 9 && ANDROID_MAJOR <= 10
@@ -481,7 +481,7 @@ public:
       //TODO: time-scale
 
 #if ANDROID_MAJOR > 6
-      return android::AsyncDecodingSource::Create(src, format, true /* isEncoder */,
+      return android::AsyncCodecSource::Create(src, format, true /* isEncoder */,
                                                   flags(), window, looper);
 #elif ANDROID_MAJOR == 6
       return android::MediaCodecSource::Create(looper, format, src, NULL, flags());
@@ -528,7 +528,7 @@ public:
        src,
        NULL, flags(), window);
 #else
-    return android::AsyncDecodingSource::Create(src, nullptr, false /* isEncoder */,
+    return android::AsyncCodecSource::Create(src, nullptr, false /* isEncoder */,
                                                 flags(), window, looper);
 #endif
   }
@@ -1176,8 +1176,8 @@ bool droid_media_codec_set_video_encoder_bitrate(DroidMediaCodec *codec, int32_t
     ALOGI("Setting video encoder bitrate to %d bps", bitrate);
     android::sp<android::AMessage> params = new android::AMessage();
     params->setInt32("video-bitrate", bitrate);
-    android::sp<android::AsyncDecodingSource> src =
-                        static_cast<android::AsyncDecodingSource*>(codec->m_codec.get());
+    android::sp<android::AsyncCodecSource> src =
+                        static_cast<android::AsyncCodecSource*>(codec->m_codec.get());
     android::status_t err = src->setParameters(params);
     return err == android::NO_ERROR;
 #else
