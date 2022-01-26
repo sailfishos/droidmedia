@@ -16,8 +16,8 @@ Suggests:      droidmedia = %{version}-%{release}
 %setup -q
 
 %build
-%meson -Dversion=%{version}-%{release}
-meson rewrite kwargs set project / version %{version}-%{release}
+%meson
+meson rewrite kwargs set project / version %{version}
 %meson_build
 
 %install
