@@ -27,6 +27,7 @@
 #include <media/stagefright/MediaSource.h>
 #endif
 #include <media/stagefright/MediaBuffer.h>
+#include <media/stagefright/MediaCodecSource.h>
 #include <utils/Condition.h>
 #include <utils/StrongPointer.h>
 
@@ -48,7 +49,7 @@ class Surface;
 
 class AsyncCodecSource : public MediaSource {
 public:
-    static sp<AsyncCodecSource> Create(const sp<MediaSource> &source,
+    static sp<MediaSource> Create(const sp<MediaSource> &source,
                     const sp<AMessage> &format, bool isEncoder, uint32_t flags,
                     const sp<ANativeWindow> &nativeWindow, const sp<ALooper> &looper,
                     const char *desiredCodec = NULL);

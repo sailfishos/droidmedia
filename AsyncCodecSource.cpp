@@ -49,7 +49,7 @@ typedef ABuffer MediaCodecBuffer;
 
 
 //static
-sp<AsyncCodecSource> AsyncCodecSource::Create(
+sp<MediaSource> AsyncCodecSource::Create(
         const sp<MediaSource> &source, const sp<AMessage> &srcFormat,
         bool isEncoder, uint32_t flags, const sp<ANativeWindow> &nativeWindow,
         const sp<ALooper> &looper, const char *desiredCodec) {
@@ -60,6 +60,11 @@ sp<AsyncCodecSource> AsyncCodecSource::Create(
 
     sp<AMessage> format = new AMessage;
     if (srcFormat.get()) {
+        // The unconfigured MediaSource comes from android::CameraSource.
+        if (isEncoder && !strcmp(mime, "video/raw")) {
+            // Use MediaCodecSource for the camera recorder.
+            return MediaCodecSource::Create(looper, srcFormat, source, nullptr, flags);
+        }
         format = srcFormat;
     } else if (convertMetaDataToMessage(meta, &format) != OK) {
         ALOGE("Cannot convertMetaDataToMessage()");
