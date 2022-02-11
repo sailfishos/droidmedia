@@ -20,7 +20,6 @@ libdroidmedia_a = static_library('droidmedia',
                                  dependencies: cc.find_library('dl', required : true))
 
 droidmedia_headers = [
-    'droidmediabuffer.h',
     'droidmediacamera.h',
     'droidmediacodec.h',
     'droidmediaconstants.h',
