@@ -61,7 +61,7 @@ LOCAL_SRC_FILES := droidmedia.cpp \
                    private.cpp
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 7 && echo true),true)
-LOCAL_SRC_FILES += AsyncDecodingSource.cpp
+LOCAL_SRC_FILES += AsyncCodecSource.cpp
 endif
 
 LOCAL_SHARED_LIBRARIES := libc \

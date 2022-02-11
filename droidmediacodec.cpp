@@ -42,7 +42,7 @@
 #include <media/stagefright/OMXCodec.h>
 #else
 #include <media/hardware/MetadataBufferType.h>
-#include "AsyncDecodingSource.h"
+#include "AsyncCodecSource.h"
 #endif
 
 #if ANDROID_MAJOR >= 9 && ANDROID_MAJOR <= 10
@@ -480,7 +480,10 @@ public:
       }
       //TODO: time-scale
 
-#if ANDROID_MAJOR >= 6
+#if ANDROID_MAJOR > 6
+      return android::AsyncCodecSource::Create(src, format, true /* isEncoder */,
+                                                  flags(), window, looper);
+#elif ANDROID_MAJOR == 6
       return android::MediaCodecSource::Create(looper, format, src, NULL, flags());
 #else
       return android::MediaCodecSource::Create(looper, format, src, flags());
@@ -525,7 +528,8 @@ public:
        src,
        NULL, flags(), window);
 #else
-    return android::AsyncDecodingSource::Create(src, flags(), window, looper);
+    return android::AsyncCodecSource::Create(src, nullptr, false /* isEncoder */,
+                                                flags(), window, looper);
 #endif
   }
 
@@ -876,7 +880,11 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
         codec->m_thread->requestExit();
         // in case the thread is waiting in ->read()
         droid_media_codec_drain (codec);
+    }
 
+#if  ANDROID_MAJOR < 7
+    // On older devices the reader thread must be stopped first.
+    if (codec->m_thread != NULL) {
         int err = codec->m_thread->requestExitAndWait();
 
         if (err != android::NO_ERROR) {
@@ -886,10 +894,28 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
         codec->m_thread.clear();
     }
 
+    // All buffers are returned to HAL, it is safe to stop now.
     int err = codec->m_codec->stop();
     if (err != android::OK) {
         ALOGE("error 0x%x stopping codec", -err);
     }
+#else
+    // Wake up AsyncCodecSource and send EOS to it.
+    int err = codec->m_codec->stop();
+    if (err != android::OK) {
+        ALOGE("error 0x%x stopping codec", -err);
+    }
+
+    if (codec->m_thread != NULL) {
+        int err = codec->m_thread->requestExitAndWait();
+
+        if (err != android::NO_ERROR) {
+            ALOGE("Error 0x%x stopping thread", -err);
+        }
+
+        codec->m_thread.clear();
+    }
+#endif
 
     if (codec->m_queue.get()) {
         codec->m_queue->buffersReleased();
@@ -975,7 +1001,10 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
                 codec->m_cb.signal_eos (codec->m_cb_data);
             }
 
-	    return DROID_MEDIA_CODEC_LOOP_EOS;
+            // Prevent new frames from being queued.
+            codec->m_src->drain();
+
+            return DROID_MEDIA_CODEC_LOOP_EOS;
         } else {
             ALOGE("Error 0x%x reading from codec", -err);
 
@@ -1139,6 +1168,21 @@ void droid_media_codec_get_output_info(DroidMediaCodec *codec,
     crop->right += 1;
     crop->bottom += 1;
   }
+}
+
+bool droid_media_codec_set_video_encoder_bitrate(DroidMediaCodec *codec, int32_t bitrate)
+{
+#if ANDROID_MAJOR >= 7
+    ALOGI("Setting video encoder bitrate to %d bps", bitrate);
+    android::sp<android::AMessage> params = new android::AMessage();
+    params->setInt32("video-bitrate", bitrate);
+    android::sp<android::AsyncCodecSource> src =
+                        static_cast<android::AsyncCodecSource*>(codec->m_codec.get());
+    android::status_t err = src->setParameters(params);
+    return err == android::NO_ERROR;
+#else
+    return false;
+#endif
 }
 
 };
