@@ -58,6 +58,7 @@ typedef struct {
   DroidMediaCodecMetaData parent;
 
   DroidMediaData codec_data;
+  int32_t color_format;
 } DroidMediaCodecDecoderMetaData;
 
 typedef struct DroidMediaCodecEncoderH264Settings {

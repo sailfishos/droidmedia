@@ -97,6 +97,7 @@ void droid_media_colour_format_constants_init(DroidMediaColourFormatConstants *c
   c->OMX_COLOR_Format32bitBGRA8888 = OMX_COLOR_Format32bitBGRA8888;
   c->OMX_COLOR_Format16bitRGB565 = OMX_COLOR_Format16bitRGB565;
   c->OMX_COLOR_Format16bitBGR565 = OMX_COLOR_Format16bitBGR565;
+  c->OMX_COLOR_FormatYUV420Flexible = OMX_COLOR_FormatYUV420Flexible;
 }
 
 };

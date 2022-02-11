@@ -52,7 +52,7 @@ typedef ABuffer MediaCodecBuffer;
 sp<MediaSource> AsyncCodecSource::Create(
         const sp<MediaSource> &source, const sp<AMessage> &srcFormat,
         bool isEncoder, uint32_t flags, const sp<ANativeWindow> &nativeWindow,
-        const sp<ALooper> &looper, const char *desiredCodec) {
+        const sp<ALooper> &looper, const char *desiredCodec, OMX_COLOR_FORMATTYPE colorFormat) {
     sp<Surface> surface = static_cast<Surface*>(nativeWindow.get());
     const char *mime = nullptr;
     sp<MetaData> meta = source->getFormat();
@@ -77,6 +77,10 @@ sp<MediaSource> AsyncCodecSource::Create(
 #else
         format->setInt32("inputbuffercnt", 12);
 #endif
+    }
+
+    if (colorFormat != OMX_COLOR_FormatUnused) {
+      format->setInt32("color-format", colorFormat);
     }
 
     Vector<AString> matchingCodecs;

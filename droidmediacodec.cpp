@@ -529,7 +529,8 @@ public:
        NULL, flags(), window);
 #else
     return android::AsyncCodecSource::Create(src, nullptr, false /* isEncoder */,
-                                                flags(), window, looper);
+                                                flags(), window, looper, nullptr,
+                                                (OMX_COLOR_FORMATTYPE)m_dec->color_format);
 #endif
   }
 
