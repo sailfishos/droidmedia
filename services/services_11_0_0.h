@@ -438,7 +438,8 @@ public:
     }
 
     bool checkPermission(const String16& permission, int32_t, int32_t) {
-        if (permission == String16("android.permission.CAMERA")) {
+        if (permission == String16("android.permission.CAMERA") ||
+            permission == String16("android.permission.SYSTEM_CAMERA")) {
             return true;
         }
 
