@@ -43,6 +43,13 @@ typedef enum {
   DROID_MEDIA_CODEC_LOOP_EOS,
 } DroidMediaCodecLoopReturn;
 
+/* See OMX_VIDEO_CONTROLRATETYPE */
+typedef enum {
+  DROID_MEDIA_CODEC_BITRATE_CONTROL_DEFAULT = 0,
+  DROID_MEDIA_CODEC_BITRATE_CONTROL_VBR = 1,
+  DROID_MEDIA_CODEC_BITRATE_CONTROL_CBR = 2,
+} DroidMediaCodecBitrateMode;
+
 typedef struct {
   const char *type;
   int32_t width;
@@ -76,6 +83,7 @@ typedef struct {
   int32_t stride;
   int32_t slice_height;
   int32_t max_input_size;
+  int32_t bitrate_mode;
   union {
     DroidMediaCodecEncoderH264Settings h264;
   } codec_specific;

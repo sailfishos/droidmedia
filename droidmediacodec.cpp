@@ -480,6 +480,10 @@ public:
         if (m_enc->codec_specific.h264.prepend_header_to_sync_frames) {
           format->setInt32("prepend-sps-pps-to-idr-frames", 1);
         }
+
+        if (m_enc->bitrate_mode != DROID_MEDIA_CODEC_BITRATE_CONTROL_DEFAULT) {
+          format->setInt32("bitrate-mode", m_enc->bitrate_mode);
+        }
       }
       //TODO: time-scale
 
