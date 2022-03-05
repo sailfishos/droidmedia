@@ -34,6 +34,13 @@
 
 struct ANativeWindow;
 
+template<typename T>
+struct Buffers {
+    android::List<T>buffers;
+    android::Condition cond;
+    android::Mutex lock;
+};
+
 namespace android {
 
 #if ANDROID_MAJOR < 9
@@ -83,11 +90,33 @@ public:
     virtual status_t pause() { return INVALID_OPERATION; }
 
     status_t setParameters(const sp<AMessage> &params);
+
+    void flush();
+
 private:
+    class SourceReader : public Thread {
+    public:
+        explicit SourceReader(AsyncCodecSource *codec, const sp<MediaSource> source);
+        void inputBufferAvailable(size_t index);
+
+    private:
+        ~SourceReader();
+        bool threadLoop() override;
+        size_t waitForInputBuffer();
+
+        volatile bool mRunning;
+        AsyncCodecSource *mCodec;
+        sp<MediaSource> mSource;
+        Buffers<size_t> mInputIndices;
+    };
+
     // Construct this using a codec, source and looper.
     AsyncCodecSource(
             const AString &codecName, const sp<MediaSource> &source, const sp<ALooper> &looper,
             bool isVorbis);
+
+    bool queueInputBuffer(DroidMediaBuffer *buffer, size_t inputBufferIndex);
+    void queueEOS(size_t index);
 
     AString mComponentName;
     sp<MediaCodec> mCodec;
@@ -96,11 +125,10 @@ private:
     sp<ALooper> mCodecLooper;
     sp<AMessage> mNotify = 0;
     sp<AHandlerReflector<AsyncCodecSource> > mReflector;
-    List<size_t> mAvailInputIndices;
+
     Mutexed<sp<MetaData>> mMeta;
     bool mUsingSurface;
     bool mIsVorbis;
-    bool mFeeding = false;
     bool mOutputChanged = false;
     enum State {
         INIT,
@@ -121,7 +149,7 @@ private:
         Condition mReadCondition;
     };
     Mutexed<Output> mOutput;
-
+    sp<SourceReader> mSourceReader;
 };
 
 } // namespace android
