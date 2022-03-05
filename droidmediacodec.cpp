@@ -84,13 +84,6 @@ struct DroidMediaCodecMetaDataKey {
     {NULL, 0, 0}
 };
 
-class Buffers {
-public:
-    android::List<android::MediaBuffer *> buffers;
-    android::Condition cond;
-    android::Mutex lock;
-};
-
 class Source : public android::MediaSource {
 public:
     Source(android::sp<android::MetaData>& metaData) :
@@ -264,8 +257,8 @@ private:
     android::sp<android::MetaData> m_metaData;
     bool m_running;
     bool m_draining;
-    Buffers m_framesReceived;
-    Buffers m_framesBeingProcessed;
+    Buffers<android::MediaBuffer*> m_framesReceived;
+    Buffers<android::MediaBuffer*> m_framesBeingProcessed;
 };
 
 class InputBuffer : public android::MediaBuffer {
