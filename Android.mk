@@ -124,7 +124,14 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minimedia.cpp
 LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice \
                     frameworks/av/media/libmediaplayerservice \
-                    system/media/camera/include
+                    system/media/camera/include \
+		    $(call include-path-for, audio-utils) \
+		    frameworks/av/media/libaaudio/include \
+		    frameworks/av/media/libaaudio/src \
+		    frameworks/av/media/libaaudio/src/binding \
+		    frameworks/av/media/libmedia \
+		    frameworks/av/services/audioflinger
+
 LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libmediaplayerservice \
                           libcamera_client \
@@ -135,7 +142,6 @@ LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libcutils \
                           libui
 
-ifeq ($(MINIMEDIA_AUDIOPOLICYSERVICE_ENABLE),1)
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),5))
 LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy
 else
@@ -146,7 +152,12 @@ LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy \
                     frameworks/av/services/audiopolicy/managerdefault \
                     frameworks/av/services/audiopolicy/service
 endif
-LOCAL_SHARED_LIBRARIES += libaudiopolicyservice
+
+# libmedia was split into libmedia and libaudioclient starting with A7
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 7 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libaudioclient
+else
+LOCAL_SHARED_LIBRARIES += libmedia
 endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),8 9))
@@ -193,9 +204,6 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter
 ifeq ($(MINIMEDIA_SENSORSERVER_DISABLE),1)
     LOCAL_CPPFLAGS += -DSENSORSERVER_DISABLE
-endif
-ifeq ($(MINIMEDIA_AUDIOPOLICYSERVICE_ENABLE),1)
-    LOCAL_CPPFLAGS += -DAUDIOPOLICYSERVICE_ENABLE
 endif
 LOCAL_MODULE := minimediaservice
 ifeq ($(strip $(DROIDMEDIA_32)), true)

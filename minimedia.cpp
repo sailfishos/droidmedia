@@ -20,9 +20,6 @@
 #include <binder/ProcessState.h>
 #include <binder/IServiceManager.h>
 #include <CameraService.h>
-#ifdef AUDIOPOLICYSERVICE_ENABLE
-#include <AudioPolicyService.h>
-#endif
 #include <binder/MemoryHeapBase.h>
 #include <MediaPlayerService.h>
 #if ANDROID_MAJOR >= 6
@@ -39,6 +36,7 @@
 #include "allocator.h"
 #endif
 #include "services/services.h"
+#include "services/audiopolicy/audiopolicy.h"
 
 #include <cutils/properties.h>
 
@@ -64,9 +62,7 @@ main(int, char**)
     FakeActivityManager::instantiate();
 #endif
     MediaPlayerService::instantiate();
-#ifdef AUDIOPOLICYSERVICE_ENABLE
-    AudioPolicyService::instantiate();
-#endif
+    FakeAudioPolicyService::instantiate();
 
 // PermissionController and AppOps are needed on Android 4, but aren't allowed to be run here.
 #if ANDROID_MAJOR >= 5
