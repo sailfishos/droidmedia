@@ -1,0 +1,4 @@
+service minisf /usr/libexec/droid-hybris/system/bin/minisfservice
+    class main
+    user system
+    group graphics
