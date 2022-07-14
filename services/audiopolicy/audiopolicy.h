@@ -15,6 +15,9 @@
  *
  */
 
+#if ANDROID_MAJOR == 5 && ANDROID_MINOR == 1
+#include "audiopolicy_5_1_0.h"
+#endif
 
 #if ANDROID_MAJOR == 6 && ANDROID_MINOR == 0
 #include "audiopolicy_6_0_0.h"
