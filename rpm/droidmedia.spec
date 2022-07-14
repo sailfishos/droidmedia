@@ -90,9 +90,6 @@ cp out/target/product/*/system/bin/minisfservice \
 cp external/droidmedia/init/*.rc \
    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/etc/init/
 
-cp out/target/product/*/system/bin/miniaudiopolicyservice \
-   $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
-
 
 cp external/droidmedia/init/*.rc \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/etc/init/
