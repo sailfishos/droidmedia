@@ -23,8 +23,8 @@
 #include "audiopolicy_6_0_0.h"
 #endif
 
-#if ANDROID_MAJOR == 7 && ANDROID_MINOR == 0
-#include "audiopolicy_7_0_0.h"
+#if ANDROID_MAJOR == 7
+#include "audiopolicy_7_x_x.h"
 #endif
 
 #if ANDROID_MAJOR == 8 && ANDROID_MINOR == 1
