@@ -153,8 +153,8 @@ LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy \
                     frameworks/av/services/audiopolicy/service
 endif
 
-# libmedia was split into libmedia and libaudioclient starting with A7
-ifeq ($(shell test $(ANDROID_MAJOR) -ge 7 && echo true),true)
+# libmedia was split into libmedia and libaudioclient starting with A8
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
 LOCAL_SHARED_LIBRARIES += libaudioclient
 else
 LOCAL_SHARED_LIBRARIES += libmedia
