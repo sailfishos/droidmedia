@@ -84,7 +84,9 @@ main(int, char**)
     CameraService::instantiate();
 #if ANDROID_MAJOR >= 6
     FakeResourceManagerService::instantiate();
+#if ANDROID_MAJOR >= 5
     FakeProcessInfoService::instantiate();
+#endif
 #if ANDROID_MAJOR < 8
     FakeCameraServiceProxy::instantiate();
 #endif
