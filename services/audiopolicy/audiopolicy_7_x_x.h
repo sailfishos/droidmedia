@@ -129,7 +129,7 @@ public:
     }
     virtual void releaseInput(audio_io_handle_t input,
                               audio_session_t session) {
-        return NO_ERROR;
+        return;
     }
     virtual status_t initStreamVolume(audio_stream_type_t stream,
                                       int indexMin,
@@ -138,7 +138,7 @@ public:
     }
     virtual status_t setStreamVolumeIndex(audio_stream_type_t stream,
                                           int index,
-                                          audio_devices_t device); {
+                                          audio_devices_t device) {
         return NO_ERROR;
     }
     virtual status_t getStreamVolumeIndex(audio_stream_type_t stream,
@@ -297,10 +297,10 @@ public:
     void onAudioPatchListUpdate() { return; }
     void doOnAudioPatchListUpdate() { return; }
     void onDynamicPolicyMixStateUpdate(String8 regId, int32_t state) {
-        return NO_ERROR;
+        return;
     }
     void doOnDynamicPolicyMixStateUpdate(String8 regId, int32_t state) {
-        return NO_ERROR;
+        return;
     }
     void onRecordingConfigurationUpdate(int event, audio_session_t session,
                                         audio_source_t source,
