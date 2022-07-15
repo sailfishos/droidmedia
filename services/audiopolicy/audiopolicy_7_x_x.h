@@ -316,6 +316,44 @@ public:
                                           audio_patch_handle_t patchHandle) {
         return;
     }
+
+#ifdef AUDIOPOLICY_MTK_AUDIO_ADD
+     virtual status_t SetPolicyManagerParameters(int par1, int par2, int par3,
+                                                 int par4) {
+         return NO_ERROR;
+     }
+     virtual status_t StartOutputSamplerate(audio_io_handle_t output,
+                                  audio_stream_type_t stream,
+                                  audio_session_t session, int samplerate) {
+         return NO_ERROR;
+     }
+     virtual status_t StopOutputSamplerate(audio_io_handle_t output,
+                                         audio_stream_type_t stream,
+                                         audio_session_t session,
+                                         int samplerate) {
+         return NO_ERROR;
+     }
+     virtual status_t SampleRateRequestFocus(audio_io_handle_t output,
+                                  audio_stream_type_t stream,
+                                  int *samplerate) {
+         return NO_ERROR;
+     }
+     virtual status_t SampleRateUnrequestFocus(audio_io_handle_t output,
+                                  audio_stream_type_t stream,
+                                  int samplerate) {
+         return NO_ERROR;
+     }
+
+     virtual status_t doStopOutputSamplerate(audio_io_handle_t output,
+                                       audio_stream_type_t stream,
+                                       audio_session_t session,
+                                       int samplerate) {
+         return NO_ERROR;
+     }
+    virtual status_t getCustomAudioVolume(void* pCustomVol) {
+        return NO_ERROR;
+    }
+#endif
 };
 
 }; // namespace android
