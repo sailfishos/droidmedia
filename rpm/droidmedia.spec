@@ -18,6 +18,8 @@
 %endif
 %endif
 
+%bcond_with droidmedia_audiopolicy_mtk_add
+
 %define _target_cpu %{device_rpm_architecture_string}
 
 Name:          droidmedia
@@ -55,6 +57,10 @@ cat /dev/null > external/droidmedia/env.mk
 %if %{?force_hal:1}%{!?force_hal:0}
 echo Forcing Camera HAL connect version %{force_hal}
 echo FORCE_HAL := %{force_hal} >> external/droidmedia/env.mk
+%endif
+
+%if %{with droidmedia_audiopolicy_mtk_add}
+echo "AUDIOPOLICY_MTK_AUDIO_ADD := 1" >> external/droidmedia/env.mk
 %endif
 
 %build
