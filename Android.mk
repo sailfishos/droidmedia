@@ -208,6 +208,9 @@ endif
 ifeq ($(AUDIOPOLICY_MTK_AUDIO_ADD),1)
 LOCAL_CPPFLAGS += -DAUDIOPOLICY_MTK_AUDIO_ADD
 endif
+ifeq ($(shell grep -q listAudioSessions frameworks/av/services/audiopolicy/service/AudioPolicyService.h && echo true),true)
+LOCAL_CPPFLAGS += -DAUDIOPOLICY_LINEAGE_AUDIOSESSIONINFO
+endif
 LOCAL_MODULE := minimediaservice
 ifeq ($(strip $(DROIDMEDIA_32)), true)
 LOCAL_32_BIT_ONLY := true
