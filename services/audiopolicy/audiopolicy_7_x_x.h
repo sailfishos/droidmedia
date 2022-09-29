@@ -317,6 +317,13 @@ public:
         return;
     }
 
+#ifdef AUDIOPOLICY_LINEAGE_AUDIOSESSIONINFO
+    status_t listAudioSessions(audio_stream_type_t streams,
+                               Vector< sp<AudioSessionInfo>> &sessions) {
+        return NO_ERROR;
+    }
+#endif
+
 #ifdef AUDIOPOLICY_MTK_AUDIO_ADD
      virtual status_t SetPolicyManagerParameters(int par1, int par2, int par3,
                                                  int par4) {

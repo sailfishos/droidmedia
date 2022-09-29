@@ -321,6 +321,13 @@ public:
                                           audio_patch_handle_t patchHandle) {
         return;
     }
+
+#ifdef AUDIOPOLICY_LINEAGE_AUDIOSESSIONINFO
+    status_t listAudioSessions(audio_stream_type_t streams,
+                               Vector< sp<AudioSessionInfo>> &sessions) {
+        return NO_ERROR;
+    }
+#endif
 };
 
 } // namespace android

@@ -298,6 +298,14 @@ public:
     void doOnDynamicPolicyMixStateUpdate(String8 regId, int32_t state) {
         return;
     }
+
+#ifdef AUDIOPOLICY_LINEAGE_AUDIOSESSIONINFO
+    status_t listAudioSessions(audio_stream_type_t streams,
+                               Vector< sp<AudioSessionInfo>> &sessions) {
+        return NO_ERROR;
+    }
+#endif
+
 };
 }; // namespace android
 #endif // ANDROID_AUDIOPOLICYSERVICE_H
