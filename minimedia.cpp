@@ -91,7 +91,7 @@ main(int, char**)
 #endif
     CameraService::instantiate();
 #if ANDROID_MAJOR >= 6
-#if ANDROID_MAJOR <= 11
+#if ANDROID_MAJOR <= 12
     FakeResourceManagerService::instantiate();
 #endif
     FakeProcessInfoService::instantiate();
