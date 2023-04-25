@@ -1,13 +1,5 @@
 LOCAL_PATH:= $(call my-dir)
 
-ifneq (,$(wildcard frameworks/av/media/mediaserver/Android.mk))
-DROIDMEDIA_32 := $(shell cat frameworks/av/media/mediaserver/Android.mk |grep "LOCAL_32_BIT_ONLY[[:space:]]*:=[[:space:]]*" |grep -o "true\|1\|false\|0")
-else
-ifneq (,$(wildcard frameworks/av/media/mediaserver/Android.bp))
-DROIDMEDIA_32 := $(shell cat frameworks/av/media/mediaserver/Android.bp | grep compile_multilib | grep -wo "32" | sed "s/32/true/")
-endif
-endif
-
 ANDROID_MAJOR :=
 ANDROID_MINOR :=
 ANDROID_MICRO :=
@@ -16,6 +8,9 @@ FORCE_HAL_PARAM :=
 include $(LOCAL_PATH)/env.mk
 ifdef FORCE_HAL
 FORCE_HAL_PARAM := -DFORCE_HAL=$(FORCE_HAL)
+endif
+ifdef LEGACY_ANDROID_13_REVISION
+LEGACY_ANDROID_13_PARAM := -DLEGACY_ANDROID_13_REVISION=$(LEGACY_ANDROID_13_REVISION)
 endif
 
 ifndef ANDROID_MAJOR
@@ -48,6 +43,23 @@ ifeq ($(strip $(ANDROID_MICRO)),)
 $(warning *** ANDROID_MICRO undefined. Assuming 0)
 ANDROID_MICRO = 0
 endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
+ifneq (,$(wildcard frameworks/av/media/mediaserver/Android.mk))
+DROIDMEDIA_32 := $(shell cat frameworks/av/media/mediaserver/Android.mk |grep "LOCAL_32_BIT_ONLY[[:space:]]*:=[[:space:]]*" |grep -o "true\|1\|false\|0")
+else
+ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
+ifneq (,$(wildcard frameworks/av/media/mediaserver/Android.bp))
+DROIDMEDIA_32 := $(shell cat frameworks/av/media/mediaserver/Android.bp | grep compile_multilib | grep -wo "32" | sed "s/32/true/")
+endif
+else
+ifneq (,$(wildcard frameworks/av/media/mediaserver/Android.bp))
+DROIDMEDIA_32 := $(shell cat frameworks/av/media/mediaserver/Android.bp | grep "^    compile_multilib" | grep -wo "prefer32" | sed "s/prefer32/true/")
+endif
+endif
+endif
+endif
+
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := droidmedia.cpp \
@@ -93,7 +105,14 @@ ifeq ($(shell test $(ANDROID_MAJOR) -ge 11 && echo true),true)
 LOCAL_SHARED_LIBRARIES += libmedia_codeclist
 endif
 
-LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) -Wno-unused-parameter
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libactivitymanager_aidl \
+                          libbatterystats_aidl \
+                          libmediautils \
+                          libpermission
+endif
+
+LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) $(LEGACY_ANDROID_13_PARAM) -Wno-unused-parameter
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
 
@@ -123,7 +142,6 @@ include $(BUILD_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minimedia.cpp
 LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice \
-                    frameworks/av/media/libmediaplayerservice \
                     system/media/camera/include \
 		    $(call include-path-for, audio-utils) \
 		    frameworks/av/media/libaaudio/include \
@@ -133,7 +151,6 @@ LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice \
 		    frameworks/av/services/audioflinger
 
 LOCAL_SHARED_LIBRARIES := libcameraservice \
-                          libmediaplayerservice \
                           libcamera_client \
                           libutils \
                           libmedia \
@@ -141,6 +158,11 @@ LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libgui \
                           libcutils \
                           libui
+
+ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
+LOCAL_C_INCLUDES += frameworks/av/media/libmediaplayerservice
+LOCAL_SHARED_LIBRARIES += libmediaplayerservice
+endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),5))
 LOCAL_C_INCLUDES += frameworks/av/services/audiopolicy
@@ -172,10 +194,41 @@ ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),11))
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.6
 endif
 
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),12 13))
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.7
+LOCAL_C_INCLUDES += frameworks/native/libs/binder/include_activitymanager \
+                    frameworks/native/libs/binder/include_batterystats \
+                    frameworks/native/libs/binder/include_processinfo
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
+LOCAL_C_INCLUDES += frameworks/av/media/libaudiohal/include \
+                    frameworks/av/media/libheadtracking/include \
+                    external/eigen
+LOCAL_SHARED_LIBRARIES += libactivitymanager_aidl \
+                          libbatterystats_aidl \
+                          libmediautils \
+                          libpermission \
+                          audiopolicy-aidl-cpp
+endif
+
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),13))
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider-V1-ndk
+endif
+
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 10 && echo true),true)
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.device@3.4 \
                           libsensorprivacy
 LOCAL_AIDL_INCLUDES := frameworks/native/libs/sensorprivacy/aidl
+endif
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.device@3.7
+endif
+
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),13))
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.device-V1-ndk
+LOCAL_AIDL_INCLUDES += hardware/interfaces/camera/device/aidl \
+                       hardware/interfaces/camera/provider/aidl
 endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
@@ -183,11 +236,14 @@ LOCAL_C_INCLUDES += frameworks/native/libs/sensor/include \
                     frameworks/av/media/libstagefright/omx/include
 LOCAL_SHARED_LIBRARIES += liblog \
                           libhidlbase \
-                          libhidltransport \
-                          libhwbinder \
                           libsensor \
                           android.frameworks.sensorservice@1.0 \
                           android.hardware.camera.common@1.0
+
+ifeq ($(shell test $(ANDROID_MAJOR) -le 9 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libhidltransport \
+                          libhwbinder
+endif
 endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 9 && echo true),true)
@@ -196,8 +252,10 @@ endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 11 && echo true),true)
 LOCAL_SHARED_LIBRARIES += libmedia_codeclist \
-                          libresourcemanagerservice \
                           libbinder_ndk
+ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libresourcemanagerservice
+endif
 endif
 
 LOCAL_MODULE_TAGS := optional
@@ -212,11 +270,12 @@ ifeq ($(shell grep -q listAudioSessions frameworks/av/services/audiopolicy/servi
 LOCAL_CPPFLAGS += -DAUDIOPOLICY_LINEAGE_AUDIOSESSIONINFO
 endif
 LOCAL_MODULE := minimediaservice
+ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
 ifeq ($(strip $(DROIDMEDIA_32)), true)
 LOCAL_32_BIT_ONLY := true
 endif
+endif
 include $(BUILD_EXECUTABLE)
-
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minisf.cpp allocator.cpp
@@ -232,12 +291,15 @@ LOCAL_C_INCLUDES := frameworks/native/libs/sensor/include \
                     frameworks/native/include
 LOCAL_SHARED_LIBRARIES += liblog \
                           libhidlbase \
-                          libhidltransport \
-                          libhwbinder \
                           libsensor \
                           android.frameworks.sensorservice@1.0 \
                           android.hardware.camera.common@1.0 \
                           android.hardware.camera.provider@2.4
+
+ifeq ($(shell test $(ANDROID_MAJOR) -le 9 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libhidltransport \
+                          libhwbinder
+endif
 endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9))
@@ -249,6 +311,12 @@ LOCAL_SHARED_LIBRARIES += libsensorprivacy
 LOCAL_AIDL_INCLUDES := frameworks/native/libs/sensorprivacy/aidl
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
+LOCAL_C_INCLUDES += frameworks/native/libs/binder/include_activitymanager \
+                    frameworks/native/libs/binder/include_batterystats \
+                    frameworks/native/libs/binder/include_processinfo
+endif
+
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter
 ifneq ($(CM_BUILD),)
@@ -258,8 +326,10 @@ ifneq ($(shell cat frameworks/native/services/surfaceflinger/SurfaceFlinger.h |g
 LOCAL_CPPFLAGS += -DUSE_SERVICES_VENDOR_EXTENSION
 endif
 LOCAL_MODULE := minisfservice
+ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
 ifeq ($(strip $(DROIDMEDIA_32)), true)
 LOCAL_32_BIT_ONLY := true
+endif
 endif
 include $(BUILD_EXECUTABLE)
 
@@ -291,6 +361,17 @@ ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),11))
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.6
 endif
 
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),12 13))
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.7
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libactivitymanager_aidl \
+                          libbatterystats_aidl \
+                          libmediautils \
+                          libpermission
+endif
+
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 10 && echo true),true)
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.device@3.4 \
                           libsensorprivacy
@@ -301,15 +382,24 @@ ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
 LOCAL_SHARED_LIBRARIES += liblog \
                           libcamera_client \
                           libhidlbase \
-                          libhidltransport \
-                          libhwbinder \
                           libsensor \
                           android.frameworks.sensorservice@1.0 \
                           android.hardware.camera.common@1.0
+
+ifeq ($(shell test $(ANDROID_MAJOR) -le 9 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libhidltransport \
+                          libhwbinder
+endif
 endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 9 && echo true),true)
 LOCAL_SHARED_LIBRARIES += android.hidl.memory@1.0
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
+LOCAL_C_INCLUDES += frameworks/native/libs/binder/include_activitymanager \
+                    frameworks/native/libs/binder/include_batterystats \
+                    frameworks/native/libs/binder/include_processinfo
 endif
 
 LOCAL_MODULE := libminisf

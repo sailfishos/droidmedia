@@ -21,7 +21,9 @@
 #include <binder/IServiceManager.h>
 #include <CameraService.h>
 #include <binder/MemoryHeapBase.h>
+#if ANDROID_MAJOR <= 11
 #include <MediaPlayerService.h>
+#endif
 #if ANDROID_MAJOR >= 6
 #include <binder/BinderService.h>
 #if ANDROID_MAJOR < 7
@@ -63,7 +65,9 @@ main(int, char**)
 #if ANDROID_MAJOR >= 9
     FakeActivityManager::instantiate();
 #endif
+#if ANDROID_MAJOR <= 11
     MediaPlayerService::instantiate();
+#endif
 #if ANDROID_MAJOR >= 5
     FakeAudioPolicyService::instantiate();
 #endif
@@ -87,7 +91,9 @@ main(int, char**)
 #endif
     CameraService::instantiate();
 #if ANDROID_MAJOR >= 6
+#if ANDROID_MAJOR <= 11
     FakeResourceManagerService::instantiate();
+#endif
     FakeProcessInfoService::instantiate();
 #if ANDROID_MAJOR < 8
     FakeCameraServiceProxy::instantiate();
