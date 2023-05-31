@@ -358,7 +358,7 @@ bool AsyncCodecSource::queueInputBuffer(DroidMediaBuffer *buffer, size_t index)
     status_t err = mCodec->getInputBuffer(index, &inbuf);
 
     if (err != OK || inbuf == nullptr || inbuf->data() == nullptr) {
-        ALOGE("[%s] Error: Input buffer #%d invalid.", mComponentName.c_str(), index);
+        ALOGE("[%s] Error: Input buffer #%zu invalid.", mComponentName.c_str(), index);
         mState = ERROR;
         return false;
     }
@@ -384,17 +384,17 @@ bool AsyncCodecSource::queueInputBuffer(DroidMediaBuffer *buffer, size_t index)
             index, 0 /* offset */, buffer->range_length() + (mIsVorbis ? 4 : 0),
             timeUs, 0 /* flags */);
     if (res != OK) {
-        ALOGE("[%s] failed to queue input buffer #%d", mComponentName.c_str(), index);
+        ALOGE("[%s] failed to queue input buffer #%zu", mComponentName.c_str(), index);
         mState = ERROR;
     }
-    ALOGV("[%s] Queued input buffer #%d.", mComponentName.c_str(), index);
+    ALOGV("[%s] Queued input buffer #%zu.", mComponentName.c_str(), index);
     return true;
 }
 
 void AsyncCodecSource::queueEOS(size_t index)
 {
     mCodec->queueInputBuffer(index, 0, 0, 0, MediaCodec::BUFFER_FLAG_EOS);
-    ALOGV("[%s] Queued EOS buffer #%d.", mComponentName.c_str(), index);
+    ALOGV("[%s] Queued EOS buffer #%zu.", mComponentName.c_str(), index);
 }
 
 void AsyncCodecSource::flush()
