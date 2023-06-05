@@ -38,6 +38,8 @@
 #include <media/stagefright/foundation/AMessage.h>
 #endif
 
+#include "mediabuffers.h"
+
 #if ANDROID_MAJOR < 7
 #include <media/stagefright/OMXCodec.h>
 #else
