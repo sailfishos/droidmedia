@@ -47,6 +47,70 @@ typedef ABuffer MediaCodecBuffer;
 #define LOG_TAG "AsyncCodecSource"
 
 
+AsyncCodecSource::SourceReader::SourceReader(AsyncCodecSource *codec,
+                                             const sp<MediaSource> source)
+    : Thread(false)
+    , mRunning(true)
+    , mCodec(codec)
+    , mSource(source)
+{
+}
+
+AsyncCodecSource::SourceReader::~SourceReader()
+{
+    {
+        Mutex::Autolock lock(mInputIndices.lock);
+        mRunning = false;
+        mInputIndices.cond.signal();
+    }
+    requestExitAndWait();
+}
+
+size_t AsyncCodecSource::SourceReader::waitForInputBuffer()
+{
+    mInputIndices.lock.lock();
+
+    while (mInputIndices.buffers.empty()) {
+        mInputIndices.cond.wait(mInputIndices.lock);
+        if (!mRunning) {
+            mInputIndices.lock.unlock();
+            return std::string::npos;
+        }
+    }
+
+    size_t index = *mInputIndices.buffers.begin();
+    mInputIndices.buffers.erase(mInputIndices.buffers.begin());
+    mInputIndices.lock.unlock();
+
+    return index;
+}
+
+bool AsyncCodecSource::SourceReader::threadLoop(void)
+{
+    size_t index = waitForInputBuffer();
+    if (index == std::string::npos) {
+        return false;
+    }
+
+    DroidMediaBuffer *buffer = nullptr;
+    mSource->read(&buffer);
+
+    if (buffer) {
+        mCodec->queueInputBuffer(buffer, index);
+        buffer->release();
+    } else {
+        mCodec->queueEOS(index);
+        mRunning = false;
+    }
+    return mRunning;
+}
+
+void AsyncCodecSource::SourceReader::inputBufferAvailable(size_t index)
+{
+    Mutex::Autolock lock(mInputIndices.lock);
+    mInputIndices.buffers.push_back(index);
+    mInputIndices.cond.signal();
+}
 
 //static
 sp<MediaSource> AsyncCodecSource::Create(
@@ -139,6 +203,7 @@ AsyncCodecSource::AsyncCodecSource(
     mReflector = new AHandlerReflector<AsyncCodecSource>(this);
     mLooper->registerHandler(mReflector);
     mNotify = new AMessage(0, mReflector);
+    mSourceReader = new SourceReader(this, source);
 }
 
 AsyncCodecSource::~AsyncCodecSource() {
@@ -179,6 +244,10 @@ status_t AsyncCodecSource::start(MetaData *params) {
     status_t res = mCodec->start();
     if (res == OK) {
         res = mSource->start();
+    }
+
+    if (res == OK) {
+        res = mSourceReader->run("DroidMediaSourceReader");
     }
 
     if (res == OK) {
@@ -276,6 +345,63 @@ status_t AsyncCodecSource::read(
     return res;
 }
 
+bool AsyncCodecSource::queueInputBuffer(DroidMediaBuffer *buffer, size_t index)
+{
+    int64_t timeUs = 0ll;
+#if ANDROID_MAJOR >= 9
+    CHECK(buffer->meta_data().findInt64(kKeyTime, &timeUs));
+#else
+    CHECK(buffer->meta_data()->findInt64(kKeyTime, &timeUs));
+#endif
+
+    sp<MediaCodecBuffer> inbuf;
+    status_t err = mCodec->getInputBuffer(index, &inbuf);
+
+    if (err != OK || inbuf == nullptr || inbuf->data() == nullptr) {
+        ALOGE("[%s] Error: Input buffer #%zu invalid.", mComponentName.c_str(), index);
+        mState = ERROR;
+        return false;
+    }
+
+    size_t cpLen = min(buffer->range_length(), inbuf->capacity());
+    memcpy(inbuf->base(), (uint8_t *)buffer->data() + buffer->range_offset(), cpLen);
+
+    if (mIsVorbis) {
+        int32_t numPageSamples;
+        if (!
+#if ANDROID_MAJOR >= 9
+                buffer->meta_data().findInt32(kKeyValidSamples, &numPageSamples)
+#else
+                buffer->meta_data()->findInt32(kKeyValidSamples, &numPageSamples)
+#endif
+           ) {
+            numPageSamples = -1;
+        }
+        memcpy(inbuf->base() + cpLen, &numPageSamples, sizeof(numPageSamples));
+    }
+
+    status_t res = mCodec->queueInputBuffer(
+            index, 0 /* offset */, buffer->range_length() + (mIsVorbis ? 4 : 0),
+            timeUs, 0 /* flags */);
+    if (res != OK) {
+        ALOGE("[%s] failed to queue input buffer #%zu", mComponentName.c_str(), index);
+        mState = ERROR;
+    }
+    ALOGV("[%s] Queued input buffer #%zu.", mComponentName.c_str(), index);
+    return true;
+}
+
+void AsyncCodecSource::queueEOS(size_t index)
+{
+    mCodec->queueInputBuffer(index, 0, 0, 0, MediaCodec::BUFFER_FLAG_EOS);
+    ALOGV("[%s] Queued EOS buffer #%zu.", mComponentName.c_str(), index);
+}
+
+void AsyncCodecSource::flush()
+{
+    mCodec->flush();
+}
+
 void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
 
     if (mCodec == nullptr) {
@@ -287,69 +413,8 @@ void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
     if (cbID == MediaCodec::CB_INPUT_AVAILABLE) {
         int32_t index;
         CHECK(msg->findInt32("index", &index));
-        ALOGV("[%s] Got input buffer #%d", mComponentName.c_str(), index);
-        mAvailInputIndices.push_back(index);
-        if (!mFeeding) {
-            while (!mAvailInputIndices.empty()) {
-                DroidMediaBuffer *srcbuf =  nullptr;
-                mFeeding = true;
-                size_t bufferIndex = *mAvailInputIndices.begin();
-                mAvailInputIndices.erase(mAvailInputIndices.begin());
-                mSource->read(&srcbuf);
-                uint32_t flags = 0;
-                int64_t timeUs = 0ll;
-
-                if (srcbuf != nullptr) {
-#if ANDROID_MAJOR >= 9
-                    CHECK(srcbuf->meta_data().findInt64(kKeyTime, &timeUs));
-#else
-                    CHECK(srcbuf->meta_data()->findInt64(kKeyTime, &timeUs));
-#endif
-
-                    sp<MediaCodecBuffer> inbuf;
-                    status_t err = mCodec->getInputBuffer(bufferIndex, &inbuf);
-
-                    if (err != OK || inbuf == nullptr || inbuf->data() == nullptr) {
-                        ALOGE("[%s] Error: Input buffer #%d invalid.", mComponentName.c_str(), index);
-                        srcbuf->release();
-                        mState = ERROR;
-                        return;
-                    }
-
-                    size_t cpLen = min(srcbuf->range_length(), inbuf->capacity());
-                    memcpy(inbuf->base(), (uint8_t *)srcbuf->data() + srcbuf->range_offset(),
-                                    cpLen );
-
-                    if (mIsVorbis) {
-                        int32_t numPageSamples;
-                        if (!
-#if ANDROID_MAJOR >= 9
-                                        srcbuf->meta_data().findInt32(kKeyValidSamples, &numPageSamples)
-#else
-                                        srcbuf->meta_data()->findInt32(kKeyValidSamples, &numPageSamples)
-#endif
-                    ) {
-                            numPageSamples = -1;
-                        }
-                        memcpy(inbuf->base() + cpLen, &numPageSamples, sizeof(numPageSamples));
-                    }
-
-                    status_t res = mCodec->queueInputBuffer(
-                                    bufferIndex, 0 /* offset */, srcbuf->range_length() + (mIsVorbis ? 4 : 0),
-                                    timeUs, 0 /* flags */);
-                    if (res != OK) {
-                        ALOGE("[%s] failed to queue input buffer #%d", mComponentName.c_str(), index);
-                        mState = ERROR;
-                    }
-                    ALOGV("[%s] Queued input buffer #%d.", mComponentName.c_str(), index);
-                    srcbuf->release();
-                } else {
-                    flags = MediaCodec::BUFFER_FLAG_EOS;
-                    mCodec->queueInputBuffer(bufferIndex, 0, 0, timeUs, flags);
-                }
-            }
-        mFeeding = false;
-        }
+        ALOGV("[%s] Got input buffer #%d %d", mComponentName.c_str(), index, MediaCodec::CB_INPUT_AVAILABLE);
+        mSourceReader->inputBufferAvailable(index);
     } else if (cbID == MediaCodec::CB_OUTPUT_FORMAT_CHANGED) {
         ALOGD("[%s] Output format changed! Buffers remaining: %zu", mComponentName.c_str(), mOutput.lock()->mBufferQueue.size());
         sp<AMessage> outputFormat;
@@ -380,8 +445,9 @@ void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
         ALOGV("[%s] Got output buffer #%d", mComponentName.c_str(), index);
         if (flags & MediaCodec::BUFFER_FLAG_EOS) {
             mCodec->releaseOutputBuffer(index);
-            mOutput.lock()->mReachedEOS = true;
-            mOutput.lock()->mAvailable.signal();
+            Mutexed<Output>::Locked me(mOutput);
+            me->mReachedEOS = true;
+            me->mAvailable.signal();
             return;
         }
 
