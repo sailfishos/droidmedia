@@ -32,14 +32,9 @@
 #include <utils/Condition.h>
 #include <utils/StrongPointer.h>
 
-struct ANativeWindow;
+#include "mediabuffers.h"
 
-template<typename T>
-struct Buffers {
-    android::List<T>buffers;
-    android::Condition cond;
-    android::Mutex lock;
-};
+struct ANativeWindow;
 
 namespace android {
 
