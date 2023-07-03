@@ -17,6 +17,7 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
+#include <inttypes.h>
 #include "droidmediabuffer.h"
 #include "private.h"
 
@@ -127,7 +128,12 @@ DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
 
 void droid_media_buffer_destroy(DroidMediaBuffer *buffer)
 {
-  buffer->decStrong(0);
+  if (buffer->m_queue) {
+    buffer->m_queue->releaseBufferResources(buffer);
+  } else {
+    ALOGW("Decrementing buffer refs without a queue %" PRIxPTR, (uintptr_t)buffer);
+    buffer->decStrong(0);
+  }
 }
 
 void droid_media_buffer_set_user_data(DroidMediaBuffer *buffer, void *data)
