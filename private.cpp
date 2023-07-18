@@ -173,6 +173,12 @@ void _DroidMediaBufferQueue::frameAvailable() {
   if (item.mGraphicBuffer != NULL) {
     static_cast<DroidMediaBufferItem &>(slot) = item;
 
+    if (slot.droidBuffer.get()) {
+      // It seems the buffers are not recycled. We're manually releasing this previous slot.
+      slot.droidBuffer->decStrong(0);
+      // clear() is left for seeking/video end from clients like gecko-camera to not crash.
+    }
+
     slot.droidBuffer = new DroidMediaBuffer(slot, this);
 
     // Keep the original reference count for ourselves and give one to the buffer_created
