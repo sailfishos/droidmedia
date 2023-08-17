@@ -133,9 +133,10 @@ void droid_media_buffer_destroy(DroidMediaBuffer *buffer)
     buffer->m_queue->releaseBufferResources(buffer);
     return;
   }
-  ALOGW("Decrementing buffer refs without a queue %" PRIxPTR, (uintptr_t)buffer);
-#endif
+  ALOGW("Destroying buffer refs but no queue %" PRIxPTR, (uintptr_t)buffer);
+#else
   buffer->decStrong(0);
+#endif
 }
 
 void droid_media_buffer_set_user_data(DroidMediaBuffer *buffer, void *data)
