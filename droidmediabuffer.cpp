@@ -128,7 +128,7 @@ DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
 
 void droid_media_buffer_destroy(DroidMediaBuffer *buffer)
 {
-  if (buffer->m_queue) {
+  if (buffer->m_queue != NULL) {
     buffer->m_queue->releaseBufferResources(buffer);
   } else {
     ALOGW("Decrementing buffer refs without a queue %" PRIxPTR, (uintptr_t)buffer);
