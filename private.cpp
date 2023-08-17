@@ -63,7 +63,9 @@ void DroidMediaBufferQueueListener::onBuffersReleased()
 }
 
 _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) :
+#if ANDROID_MAJOR > 5
   m_unslotted({}),
+#endif
   m_listener(new DroidMediaBufferQueueListener(this)),
   m_data(0) {
 
@@ -172,6 +174,7 @@ void _DroidMediaBufferQueue::frameAvailable() {
   DroidMediaBufferSlot &slot = m_slots[slotIndex(item)];
 
   if (item.mGraphicBuffer != NULL) {
+#if ANDROID_MAJOR > 5
     if (slot.droidBuffer.get()) {
       // It seems the buffers are not recycled. We're manually releasing this previous slot.
       ALOGW("Releasing only resources, keeping memory %" PRIxPTR, (uintptr_t)slot.droidBuffer.get());
@@ -181,7 +184,7 @@ void _DroidMediaBufferQueue::frameAvailable() {
       // Add the buffer to the list of unslotted buffers that droid_media_buffer_destroy will check and don't do anything.
       m_unslotted.emplace(slot.droidBuffer.get(), slot.droidBuffer);
     }
-
+#endif
     static_cast<DroidMediaBufferItem &>(slot) = item;
     slot.droidBuffer = new DroidMediaBuffer(slot, this);
 
@@ -228,6 +231,7 @@ void _DroidMediaBufferQueue::frameAvailable() {
   }
 }
 
+#if ANDROID_MAJOR > 5
 void _DroidMediaBufferQueue::releaseBufferResources(DroidMediaBuffer *buffer) {
   if (m_unslotted.find(buffer) != m_unslotted.end()) {
     ALOGI("Unslotted buffer, resources already released %" PRIxPTR, (uintptr_t)buffer);
@@ -236,6 +240,7 @@ void _DroidMediaBufferQueue::releaseBufferResources(DroidMediaBuffer *buffer) {
     buffer->m_buffer.clear();
   }
 }
+#endif
 
 void _DroidMediaBufferQueue::buffersReleased() {
   android::AutoMutex locker(&m_lock);
@@ -250,11 +255,13 @@ void _DroidMediaBufferQueue::buffersReleased() {
     slot.droidBuffer.clear();
     slot.mGraphicBuffer = 0;
   }
+#if ANDROID_MAJOR > 5
   // Releasing DroidMediaBuffer memory for unslotted buffers
   for (auto& droidBufferPair : m_unslotted) {
     droidBufferPair.second.clear();
   }
   m_unslotted.clear();
+#endif
 }
 
 int _DroidMediaBufferQueue::releaseMediaBuffer(int index, EGLDisplay dpy, EGLSyncKHR fence) {

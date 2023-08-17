@@ -118,12 +118,6 @@ ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9))
 LOCAL_C_INCLUDES += frameworks/av/media/libmediaextractor/include
 endif
 
-ifeq ($(shell test $(ANDROID_MAJOR) -le 5 && echo true),true)
-LOCAL_CPPFLAGS += -std=c++11
-LOCAL_SHARED_LIBRARIES += libc++
-LOCAL_C_INCLUDES += external/libcxx/include
-endif
-
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)

@@ -128,12 +128,14 @@ DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h,
 
 void droid_media_buffer_destroy(DroidMediaBuffer *buffer)
 {
+#if ANDROID_MAJOR > 5
   if (buffer->m_queue != NULL) {
     buffer->m_queue->releaseBufferResources(buffer);
-  } else {
-    ALOGW("Decrementing buffer refs without a queue %" PRIxPTR, (uintptr_t)buffer);
-    buffer->decStrong(0);
+    return;
   }
+  ALOGW("Decrementing buffer refs without a queue %" PRIxPTR, (uintptr_t)buffer);
+#endif
+  buffer->decStrong(0);
 }
 
 void droid_media_buffer_set_user_data(DroidMediaBuffer *buffer, void *data)
