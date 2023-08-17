@@ -33,6 +33,7 @@
 #if ANDROID_MAJOR >=5
 #include <media/stagefright/foundation/ALooper.h>
 #endif
+#include <unordered_map>
 
 struct _DroidMediaBufferQueue;
 

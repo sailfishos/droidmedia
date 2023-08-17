@@ -246,9 +246,9 @@ void _DroidMediaBufferQueue::buffersReleased() {
 
   // Releasing DroidMediaBuffer memory for slots
   for (int i = 0; i < android::BufferQueue::NUM_BUFFER_SLOTS; ++i) {
-      DroidMediaBufferSlot &slot = m_slots[i];
-      slot.droidBuffer.clear();
-      slot.mGraphicBuffer = 0;
+    DroidMediaBufferSlot &slot = m_slots[i];
+    slot.droidBuffer.clear();
+    slot.mGraphicBuffer = 0;
   }
   // Releasing DroidMediaBuffer memory for unslotted buffers
   for (auto& droidBufferPair : m_unslotted) {
