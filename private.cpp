@@ -179,6 +179,7 @@ void _DroidMediaBufferQueue::frameAvailable() {
       // It seems the buffers are not recycled. We're manually releasing this previous slot.
       ALOGW("Releasing only resources, keeping memory %" PRIxPTR, (uintptr_t)slot.droidBuffer.get());
       slot.mGraphicBuffer = 0;
+      slot.droidBuffer->m_buffer.clear();
       // instead of clear-ing the entire memory which leads to droid_media_buffer_destroy crashing.
       releaseBufferResources(slot.droidBuffer.get());
       // Add the buffer to the list of unslotted buffers that droid_media_buffer_destroy will check and don't do anything.
@@ -237,7 +238,6 @@ void _DroidMediaBufferQueue::releaseBufferResources(DroidMediaBuffer *buffer) {
     ALOGI("Unslotted buffer, resources already released %" PRIxPTR, (uintptr_t)buffer);
   } else {
     buffer->decStrong(0);
-    buffer->m_buffer.clear();
   }
 }
 #endif
