@@ -134,6 +134,11 @@ void _DroidMediaBufferQueue::attachToCameraVideo(android::sp<android::Camera>& c
 #endif
 }
 
+bool _DroidMediaBufferQueue::setBufferSize(uint32_t width, uint32_t height)
+{
+    return m_queue->setDefaultBufferSize(width, height) == android::OK;
+}
+
 ANativeWindow *_DroidMediaBufferQueue::window() {
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR < 4
   android::sp<android::ISurfaceTexture> texture = m_queue;

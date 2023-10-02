@@ -51,9 +51,7 @@ endif
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := droidmedia.cpp \
-                   droidmediacamera.cpp \
                    droidmediaconstants.cpp \
-                   droidmediacodec.cpp \
                    droidmediaconvert.cpp \
                    droidmediarecorder.cpp \
                    allocator.cpp \
@@ -75,6 +73,18 @@ LOCAL_SHARED_LIBRARIES := libc \
                           libstagefright \
                           libstagefright_foundation \
                           libmedia
+
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 7 && echo true),true)
+LOCAL_SRC_FILES += droidmediacamera2.cpp \
+                   droidmediacodec.cpp
+LOCAL_SHARED_LIBRARIES += libcamera2ndk \
+                          libmediandk \
+                          libnativewindow
+else
+LOCAL_SRC_FILES += droidmediacamera.cpp \
+                   droidmediacodec.cpp
+endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
 LOCAL_SHARED_LIBRARIES += liblog
@@ -99,7 +109,8 @@ LOCAL_MODULE := libdroidmedia
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 7 && echo true),true)
 LOCAL_C_INCLUDES := frameworks/native/include/media/openmax \
-                    frameworks/native/include/media/hardware
+                    frameworks/native/include/media/hardware \
+                    frameworks/av/camera/ndk/include
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
 LOCAL_C_INCLUDES += frameworks/native/libs/nativewindow/include \
                     frameworks/av/media/libstagefright/omx/include \
@@ -125,12 +136,12 @@ LOCAL_SRC_FILES := minimedia.cpp
 LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice \
                     frameworks/av/media/libmediaplayerservice \
                     system/media/camera/include \
-		    $(call include-path-for, audio-utils) \
-		    frameworks/av/media/libaaudio/include \
-		    frameworks/av/media/libaaudio/src \
-		    frameworks/av/media/libaaudio/src/binding \
-		    frameworks/av/media/libmedia \
-		    frameworks/av/services/audioflinger
+                    $(call include-path-for, audio-utils) \
+                    frameworks/av/media/libaaudio/include \
+                    frameworks/av/media/libaaudio/src \
+                    frameworks/av/media/libaaudio/src/binding \
+                    frameworks/av/media/libmedia \
+                    frameworks/av/services/audioflinger
 
 LOCAL_SHARED_LIBRARIES := libcameraservice \
                           libmediaplayerservice \
