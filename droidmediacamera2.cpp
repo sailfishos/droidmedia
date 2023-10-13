@@ -1770,8 +1770,8 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
             break;
         case ACAMERA_CONTROL_MAX_REGIONS:
             if (entry.count > 0) {
-                 params += "max-num-focus-areas"+std::to_string(entry.data.u8[2])+";";
-                 params += "max-num-metering-areas"+std::to_string(entry.data.u8[0])+";";
+                 params += "max-num-focus-areas="+std::to_string(entry.data.u8[2])+";";
+                 params += "max-num-metering-areas="+std::to_string(entry.data.u8[0])+";";
                  camera->max_ae_regions = entry.data.u8[0];
                  camera->max_awb_regions = entry.data.u8[1];
                  camera->max_focus_regions = entry.data.u8[2];
