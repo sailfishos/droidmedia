@@ -53,7 +53,6 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := droidmedia.cpp \
                    droidmediaconstants.cpp \
                    droidmediaconvert.cpp \
-                   droidmediarecorder.cpp \
                    allocator.cpp \
                    droidmediabuffer.cpp \
                    private.cpp
@@ -77,12 +76,14 @@ LOCAL_SHARED_LIBRARIES := libc \
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 7 && echo true),true)
 LOCAL_SRC_FILES += droidmediacamera2.cpp \
+                   droidmediarecorder2.cpp \
                    droidmediacodec.cpp
 LOCAL_SHARED_LIBRARIES += libcamera2ndk \
                           libmediandk \
                           libnativewindow
 else
 LOCAL_SRC_FILES += droidmediacamera.cpp \
+                   droidmediarecorder.cpp \
                    droidmediacodec.cpp
 endif
 
