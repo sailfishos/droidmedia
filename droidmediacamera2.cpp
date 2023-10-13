@@ -1688,9 +1688,14 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
             params += "min-exposure-compensation="+std::to_string(entry.data.i32[0])+";";
             params += "max-exposure-compensation="+std::to_string(entry.data.i32[1])+";";
             break;
-        case ACAMERA_CONTROL_AE_COMPENSATION_STEP:
-            params += "exposure-compensation-step="+std::to_string((float)entry.data.r[0].numerator / (float)entry.data.r[0].denominator)+";";
+        case ACAMERA_CONTROL_AE_COMPENSATION_STEP: {
+            // convert to string using no locale
+            std::ostringstream oss;
+            oss.imbue(std::locale::classic());
+            oss << "exposure-compensation-step=" << ((float)entry.data.r[0].numerator / (float)entry.data.r[0].denominator) << ";";
+            params += oss.str();
             break;
+        }
         case ACAMERA_CONTROL_AE_LOCK_AVAILABLE:
             if (entry.count > 0 || entry.data.u8[0] == ACAMERA_CONTROL_AE_LOCK_AVAILABLE_TRUE) {
                 params += "auto-exposure-lock-supported=true;";
