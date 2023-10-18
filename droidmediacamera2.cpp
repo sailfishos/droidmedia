@@ -19,19 +19,25 @@
 #include "droidmediacamera.h"
 
 #include <camera/CameraParameters.h>
+// This needs to be first because of broken includes in Android < 10
+#include <camera/NdkCaptureRequest.h>
 #include <camera/NdkCameraCaptureSession.h>
 #include <camera/NdkCameraDevice.h>
 #include <camera/NdkCameraError.h>
 #include <camera/NdkCameraManager.h>
 #include <camera/NdkCameraMetadata.h>
 #include <camera/NdkCameraMetadataTags.h>
-#include <camera/NdkCaptureRequest.h>
 #include <media/hardware/MetadataBufferType.h>
 #include <media/NdkImage.h>
 #include <media/NdkImageReader.h>
 #include <media/NdkMediaCodec.h>
 #include <media/openmax/OMX_IVCommon.h>
 #include <media/stagefright/CameraSource.h>
+
+#if ANDROID_MAJOR <= 9
+#include <android/native_window.h>
+typedef ANativeWindow ACameraWindowType;
+#endif
 
 #include <string>
 #include <unordered_map>
@@ -421,11 +427,13 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
         goto fail;
     }
 
+#if ANDROID_MAJOR >= 10
     if (ACameraMetadata_isLogicalMultiCamera(camera_metadata,
                                              &num_physical_cameras,
                                              &physical_camera_ids)) {
         ALOGI("Multicamera with physical camera count %zu", num_physical_cameras);
     }
+#endif
 
     status = ACameraMetadata_getConstEntry(camera_metadata,
                                            ACAMERA_LENS_FACING,
@@ -585,6 +593,8 @@ bool setup_capture_session(DroidMediaCamera *camera)
 
     camera->m_queue->setBufferSize(camera->preview_width, camera->preview_height);
 
+    ALOGI("preview window format %i", ANativeWindow_getFormat(camera->m_queue->window()));
+
     status = ACaptureSessionOutputContainer_create(&camera->m_capture_session_output_container);
     if (status != ACAMERA_OK) {
         goto fail;
@@ -618,6 +628,8 @@ bool setup_capture_session(DroidMediaCamera *camera)
     if (status != ACAMERA_OK) {
         goto fail;
     }
+    ALOGI("preview window format %i", ANativeWindow_getFormat(camera->m_queue->window()));
+
     ALOGI("setup_capture_session preview done");
 
     // Video
@@ -739,6 +751,7 @@ bool setup_capture_session(DroidMediaCamera *camera)
 */
 //    } else {
         // Image mode
+    if (camera->image_height != -1 && camera->image_width != -1) {
         ALOGI("setup_capture_session image start");
         status = ACameraDevice_createCaptureRequest(camera->m_device,
             TEMPLATE_STILL_CAPTURE, &camera->m_image_request);
@@ -767,6 +780,7 @@ bool setup_capture_session(DroidMediaCamera *camera)
             goto fail;
         }
         ALOGI("setup_capture_session image done");
+    }
 //    }
 
     status = ACameraDevice_createCaptureSession(
@@ -1473,8 +1487,12 @@ int param_key_string_to_enum(const char *key)
             ACAMERA_CONTROL_AWB_LOCK :
         !strcmp(key, android::CameraParameters::KEY_METERING_AREAS) ?
             ACAMERA_CONTROL_AE_REGIONS :
+#if ANDROID_MAJOR >= 11
         !strcmp(key, android::CameraParameters::KEY_ZOOM) ?
             ACAMERA_CONTROL_ZOOM_RATIO :
+#else
+//TODO
+#endif
         !strcmp(key, android::CameraParameters::KEY_VIDEO_STABILIZATION) ?
             ACAMERA_CONTROL_VIDEO_STABILIZATION_MODE :
         -1;
@@ -1637,11 +1655,15 @@ void update_request(DroidMediaCamera *camera, ACaptureRequest *request, std::uno
                  ACaptureRequest_setEntry_u8(request, key, 1, &value);
                  break;
              }
+#if ANDROID_MAJOR >= 11
              case ACAMERA_CONTROL_ZOOM_RATIO:
                  if (float value = std::stof(value_s)) {
                      ACaptureRequest_setEntry_float(request, key, 1, &value);
                  }
                  break;
+#else
+//TODO
+#endif
              case ACAMERA_FLASH_MODE: {
                  uint8_t mode;
                  if (!strcmp(value_s.c_str(), android::CameraParameters::FLASH_MODE_TORCH)) {
@@ -1778,7 +1800,11 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
 
     if (camera->video_height != -1 && camera->video_width != -1) {
         params += "video-size="+std::to_string(camera->video_width)+"x"+std::to_string(camera->video_height)+";";
+    } else {
+        params += "video-size=-1x-1;";
     }
+
+    params += "video-frame-format=android-opaque;";
 
     for (int32_t i = 0; i < numEntries; i++) {
         ACameraMetadata_const_entry entry;
@@ -1915,9 +1941,13 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
                  params += "video-stabilization-supported = true;";
             }
             break;
+#if ANDROID_MAJOR >= 11
         case ACAMERA_CONTROL_ZOOM_RATIO_RANGE:
             params += "max-zoom="+std::to_string(entry.data.f[1])+";";
             break;
+#else
+//TODO
+#endif
         case ACAMERA_FLASH_INFO_AVAILABLE:
             if (entry.data.u8[0] == ACAMERA_FLASH_INFO_AVAILABLE_FALSE) {
                 params += "flash-mode-values=off;";
@@ -2056,7 +2086,8 @@ int32_t droid_media_camera_get_video_color_format(DroidMediaCamera *camera)
     // TODO get video color format
     ALOGI("get_video_color_format");
     //return AIMAGE_FORMAT_YUV_420_888;
-    return AIMAGE_FORMAT_PRIVATE;
+    //return AIMAGE_FORMAT_PRIVATE;
+    return OMX_COLOR_FormatAndroidOpaque;
 }
 
 };
