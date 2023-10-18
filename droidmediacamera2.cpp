@@ -175,6 +175,7 @@ struct _DroidMediaCamera
     int32_t max_ae_regions = 0;
     int32_t max_awb_regions = 0;
     int32_t max_focus_regions = 0;
+    bool m_pending_viewfinder_restart = false;
 
     DroidMediaCameraCallbacks m_cb;
     void *m_cb_data;
@@ -248,6 +249,15 @@ static void capture_session_on_closed(void *context, ACameraCaptureSession *sess
 static void capture_session_on_ready(void *context, ACameraCaptureSession *session)
 {
     ALOGI("Session is ready. %p", session);
+    DroidMediaCamera *camera = (DroidMediaCamera *)context;
+    if (camera->m_pending_viewfinder_restart) {
+        ALOGI("Restarting preview");
+        camera_status_t status = ACameraCaptureSession_setRepeatingRequest(camera->m_session,
+            &camera->m_capture_callbacks, 1, &camera->m_preview_request, NULL);
+        if (status != ACAMERA_OK) {
+            ALOGE("Restarting preview failed");
+        }
+    }
 }
 
 static void capture_session_on_capture_started(
@@ -283,7 +293,7 @@ static void capture_session_on_capture_completed(
     ACameraMetadata_const_entry entry;
 
     camera_status_t status = ACameraMetadata_getConstEntry(result, ACAMERA_CONTROL_AF_TRIGGER, &entry);
-                DroidMediaCamera *camera = (DroidMediaCamera *)context;
+    DroidMediaCamera *camera = (DroidMediaCamera *)context;
     if (status == ACAMERA_OK) {
         uint8_t value = entry.data.u8[0];
         ALOGI("AF trigger state: %i", value);
@@ -1013,6 +1023,7 @@ void droid_media_camera_stop_preview(DroidMediaCamera *camera)
     ALOGI("stop_preview");
     if (camera->m_session) {
         ALOGE("Stopping preview");
+        camera->m_pending_viewfinder_restart = false;
         camera->m_preview_enabled = false;
         ACameraCaptureSession_stopRepeating(camera->m_session);
     }
@@ -1030,7 +1041,7 @@ bool droid_media_camera_start_recording(DroidMediaCamera *camera)
 {
     // TODO start recording
     ALOGI("start_recording");
-    if (camera->m_video_request == NULL) {
+    if (!camera->m_video_request) {
         ALOGE("start_recording failed, no request");
         return false;
     }
@@ -1038,9 +1049,10 @@ bool droid_media_camera_start_recording(DroidMediaCamera *camera)
     camera_status_t status = ACameraCaptureSession_setRepeatingRequest(camera->m_session, &camera->m_capture_callbacks, 1,
         &camera->m_video_request, NULL);
     if (status != ACAMERA_OK) {
-        ALOGE("Starting external recording failed");
+        ALOGE("Starting recording failed");
         return false;
     }
+    camera->m_video_recording_enabled = true;
 
     return true;
 }
@@ -1049,13 +1061,15 @@ void droid_media_camera_stop_recording(DroidMediaCamera *camera)
 {
     // TODO stop recording
     ALOGI("stop_recording");
+
+    if (!camera->m_video_request) {
+        ALOGE("stop_recording failed, no request");
+        return;
+    }
     ACameraCaptureSession_stopRepeating(camera->m_session);
 
-    camera_status_t status = ACameraCaptureSession_setRepeatingRequest(camera->m_session, &camera->m_capture_callbacks, 1,
-        &camera->m_preview_request, NULL);
-    if (status != ACAMERA_OK) {
-        ALOGI("Restarting preview failed");
-    }
+    camera->m_pending_viewfinder_restart = true;
+    camera->m_video_recording_enabled = false;
 }
 
 bool droid_media_camera_is_recording_enabled(DroidMediaCamera *camera)
