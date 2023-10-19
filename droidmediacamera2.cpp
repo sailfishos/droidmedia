@@ -143,6 +143,7 @@ struct _DroidMediaCamera
     // Preview
     ACameraOutputTarget *m_preview_output_target = NULL;
     ACaptureSessionOutput *m_preview_output = NULL;
+    ANativeWindow *m_preview_anw = NULL;
     bool m_preview_enabled = false;
 
     // Image capture
@@ -535,6 +536,11 @@ fail:
 
 void destroy_capture_session(DroidMediaCamera *camera)
 {
+    if (camera->m_session) {
+        ACameraCaptureSession_close(camera->m_session);
+        camera->m_session = NULL;
+    }
+
     if (camera->m_image_reader_output_target) {
         ACameraOutputTarget_free(camera->m_image_reader_output_target);
         camera->m_image_reader_output_target = NULL;
@@ -584,11 +590,15 @@ void destroy_capture_session(DroidMediaCamera *camera)
         ACaptureRequest_free(camera->m_video_request);
         camera->m_video_request = NULL;
     }
-
-    if (camera->m_session) {
-        ACameraCaptureSession_close(camera->m_session);
-        camera->m_session = NULL;
+/*
+    if (camera->m_preview_anw) {
+        ANativeWindow_release(camera->m_preview_anw);
     }
+
+    if (camera->m_video_anw) {
+        ANativeWindow_release(camera->m_video_anw);
+    }
+*/
 }
 
 bool setup_capture_session(DroidMediaCamera *camera)
@@ -601,9 +611,12 @@ bool setup_capture_session(DroidMediaCamera *camera)
 */
     ALOGI("setup_capture_session start");
 
-    camera->m_queue->setBufferSize(camera->preview_width, camera->preview_height);
+    camera->m_queue->setBufferSize(camera->preview_width, camera->preview_height, HAL_PIXEL_FORMAT_YCbCr_420_888);
 
-    ALOGI("preview window format %i", ANativeWindow_getFormat(camera->m_queue->window()));
+    camera->m_preview_anw = camera->m_queue->window();
+    ANativeWindow_acquire(camera->m_preview_anw);
+
+    ALOGI("preview window format %i", ANativeWindow_getFormat(camera->m_preview_anw));
 
     status = ACaptureSessionOutputContainer_create(&camera->m_capture_session_output_container);
     if (status != ACAMERA_OK) {
@@ -618,7 +631,7 @@ bool setup_capture_session(DroidMediaCamera *camera)
         goto fail;
     }
 
-    status = ACameraOutputTarget_create(camera->m_queue->window(), &camera->m_preview_output_target);
+    status = ACameraOutputTarget_create(camera->m_preview_anw, &camera->m_preview_output_target);
     if (status != ACAMERA_OK) {
         goto fail;
     }
@@ -628,7 +641,7 @@ bool setup_capture_session(DroidMediaCamera *camera)
         goto fail;
     }
 
-    status = ACaptureSessionOutput_create(camera->m_queue->window(), &camera->m_preview_output);
+    status = ACaptureSessionOutput_create(camera->m_preview_anw, &camera->m_preview_output);
     if (status != ACAMERA_OK) {
         goto fail;
     }
@@ -638,14 +651,23 @@ bool setup_capture_session(DroidMediaCamera *camera)
     if (status != ACAMERA_OK) {
         goto fail;
     }
-    ALOGI("preview window format %i", ANativeWindow_getFormat(camera->m_queue->window()));
+    ALOGI("preview window format %i", ANativeWindow_getFormat(camera->m_preview_anw));
 
     ALOGI("setup_capture_session preview done");
 
     // Video
-    camera->m_recording_queue->setBufferSize(camera->video_width, camera->video_height);
+    camera->m_recording_queue->setBufferSize(camera->video_width, camera->video_height, HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED);
 
-    ALOGI("video window format %i", ANativeWindow_getFormat(camera->m_recording_queue->window()));
+    camera->m_video_anw = camera->m_recording_queue->window();
+    ANativeWindow_acquire(camera->m_video_anw);
+/*
+    ALOGI("video window data space %i", ANativeWindow_getBuffersDataSpace(camera->m_video_anw));
+
+    ALOGI("video window set data space %i", ANativeWindow_setBuffersDataSpace(camera->m_video_anw, 0x10C60000));
+
+    ALOGI("video window data space %i", ANativeWindow_getBuffersDataSpace(camera->m_video_anw));
+*/
+    ALOGI("video window format %i", ANativeWindow_getFormat(camera->m_video_anw));
 
     ALOGI("setup_capture_session video");
     status = ACameraDevice_createCaptureRequest(camera->m_device,
@@ -654,7 +676,7 @@ bool setup_capture_session(DroidMediaCamera *camera)
         goto fail;
     }
 
-    status = ACameraOutputTarget_create(camera->m_recording_queue->window(), &camera->m_video_output_target);
+    status = ACameraOutputTarget_create(camera->m_video_anw, &camera->m_video_output_target);
     if (status != ACAMERA_OK) {
         goto fail;
     }
@@ -664,8 +686,11 @@ bool setup_capture_session(DroidMediaCamera *camera)
         goto fail;
     }
 
-    status = ACaptureSessionOutput_create(camera->m_recording_queue->window(), &camera->m_video_output);
+    ALOGI("camera->m_video_anw %p", camera->m_video_anw);
+    status = ACaptureSessionSharedOutput_create(camera->m_video_anw, &camera->m_video_output);
+//    status = ACaptureSessionOutput_create(camera->m_video_anw, &camera->m_video_output);
     if (status != ACAMERA_OK) {
+        ALOGE("ACaptureSessionSharedOutput_create failed %i", status);
         goto fail;
     }
 
@@ -675,7 +700,7 @@ bool setup_capture_session(DroidMediaCamera *camera)
         goto fail;
     }
 
-    ALOGI("video window format %i", ANativeWindow_getFormat(camera->m_recording_queue->window()));
+    ALOGI("video window format %i", ANativeWindow_getFormat(camera->m_video_anw));
 
 
 /*
@@ -2143,7 +2168,86 @@ ANativeWindow *droid_media_camera_get_external_video_window(DroidMediaCamera *ca
     ALOGI("get_external_video_window");
 //    camera->m_video_mode = true;
     return camera->m_video_anw;
+//    return camera->m_video_anw;
 }
 
+bool droid_media_camera_set_external_video_window(DroidMediaCamera *camera, ANativeWindow *window)
+{
+    ALOGI("set_external_video_window start");
+
+//    ALOGI("removing %p", camera->m_video_anw);
+    camera_status_t status;
+
+    ALOGI("ACameraCaptureSession_stopRepeating");
+    ACameraCaptureSession_stopRepeating(camera->m_session);
+
+    sleep(1);
+
+    ALOGI("ACaptureSessionSharedOutput_add %p", window);
+    status = ACaptureSessionSharedOutput_add(camera->m_video_output, window);
+    if (status != ACAMERA_OK) {
+        ALOGE("Setting external video window failed %i", status);
+        return false;
+    }
+
+    sleep(1);
+
+    ALOGI("video window data space %i", ANativeWindow_getBuffersDataSpace(camera->m_video_anw));
+
+    ALOGI("video window set data space %i", ANativeWindow_setBuffersDataSpace(camera->m_video_anw, 0x10C60000));
+
+    ALOGI("video window data space %i", ANativeWindow_getBuffersDataSpace(camera->m_video_anw));
+
+
+/*
+    status = ACaptureSessionSharedOutput_remove(camera->m_video_output, camera->m_video_anw);
+    if (status != ACAMERA_OK) {
+        ALOGE("Removing external video window failed %i", status);
+        return false;
+    }
+*/
+    ALOGI("ACameraCaptureSession_updateSharedOutput");
+    status = ACameraCaptureSession_updateSharedOutput(camera->m_session, camera->m_video_output);
+    if (status != ACAMERA_OK) {
+        ALOGE("Updating shared output failed %i", status);
+        return false;
+    }
+
+    ALOGI("ACameraCaptureSession_setRepeatingRequest");
+    status = ACameraCaptureSession_setRepeatingRequest(camera->m_session, &camera->m_capture_callbacks, 1,
+        &camera->m_preview_request, NULL);
+    if (status != ACAMERA_OK) {
+        ALOGE("Failed to start preview");
+        return false;
+    }
+
+
+    ALOGI("set_external_video_window done");
+    return true;
+}
+
+bool droid_media_camera_remove_external_video_window(DroidMediaCamera *camera, ANativeWindow *window)
+{
+    camera_status_t status;
+/*
+    status = ACaptureSessionSharedOutput_add(camera->m_video_output, camera->m_video_anw);
+    if (status != ACAMERA_OK) {
+        ALOGE("Setting external video window failed %i", status);
+        return false;
+    }
+*/
+    status = ACaptureSessionSharedOutput_remove(camera->m_video_output, window);
+    if (status != ACAMERA_OK) {
+        ALOGE("Removing external video window failed %i", status);
+        return false;
+    }
+
+    status = ACameraCaptureSession_updateSharedOutput(camera->m_session, camera->m_video_output);
+    if (status != ACAMERA_OK) {
+        ALOGE("Updating shared output failed %i", status);
+        return false;
+    }
+    return true;
+}
 
 #endif

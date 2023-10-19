@@ -177,17 +177,20 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera,
 
     recorder->m_cam = camera;
 
+/*
     recorder->m_input_window = droid_media_camera_get_external_video_window(camera);
     if (!recorder->m_input_window) {
+        ALOGE("Failed to get native window");
         goto fail;
     }
-
+*/
     recorder->m_codec = AMediaCodec_createEncoderByType(meta->parent.type);
     if (!recorder->m_codec) {
-        ALOGE("Cannot create codec");
+        ALOGE("Failed to create codec");
         goto fail;
     }
 
+    ALOGI("color format %i", meta->color_format);
     format = AMediaFormat_new();
     AMediaFormat_setString(format, AMEDIAFORMAT_KEY_MIME, meta->parent.type);
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_BIT_RATE, meta->bitrate);
@@ -196,22 +199,46 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera,
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_FRAME_RATE, meta->parent.fps);
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_SLICE_HEIGHT, meta->slice_height);
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_STRIDE, meta->stride);
-    AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_COLOR_FORMAT, meta->color_format);
+    //return AIMAGE_FORMAT_YUV_420_888;
+    //return AIMAGE_FORMAT_PRIVATE;
+//    AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_COLOR_FORMAT, 0x7F420888);
+    AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_COLOR_FORMAT, 0x7f000789);
+//    AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_COLOR_FORMAT, meta->color_format);
 //    AMediaFormat_setInt32(format, TBD_AMEDIACODEC_PARAMETER_KEY_MAX_B_FRAMES,
 //                          mMaxBFrames);
-//    AMediaFormat_setFloat(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 1.0F);
+    AMediaFormat_setFloat(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 1.0F);
 
     status = AMediaCodec_configure(recorder->m_codec, format,
         recorder->m_input_window, NULL, AMEDIACODEC_CONFIGURE_FLAG_ENCODE);
     if (status != AMEDIA_OK) {
+        ALOGE("Failed to configure codec");
         goto fail;
     }
 
+    ALOGE("recorder_create create input surface");
+
+    status = AMediaCodec_createInputSurface(recorder->m_codec, &recorder->m_input_window);
+    if (status != AMEDIA_OK) {
+        ALOGE("Failed to create input surface");
+        goto fail;
+    }
+    ALOGE("recorder_create set external window %p", recorder->m_input_window);
+
+    ANativeWindow_acquire(recorder->m_input_window);
+
+    if (!droid_media_camera_set_external_video_window(camera, recorder->m_input_window)) {
+        ALOGE("Failed to set external video window");
+        goto fail;
+    }
+
+/*
     status = AMediaCodec_setInputSurface(recorder->m_codec, recorder->m_input_window);
     if (status != AMEDIA_OK) {
+        ALOGE("Failed to set input surface");
         goto fail;
     }
-
+*/
+    ALOGE("recorder_create set callback");
     // Set callbacks
     recorder->m_codec_on_async_notify_callbacks.onAsyncError = droid_media_recorder_on_async_error;
     recorder->m_codec_on_async_notify_callbacks.onAsyncFormatChanged = droid_media_recorder_on_async_format_changed;
@@ -223,10 +250,12 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera,
     if (status != AMEDIA_OK) {
         goto fail;
     }
+    ALOGE("recorder_create end");
 
     return recorder;
 
 fail:
+    ALOGE("recorder_create failed");
     if (format) {
         AMediaFormat_delete(format);
     }
@@ -256,7 +285,7 @@ bool droid_media_recorder_start(DroidMediaRecorder *recorder)
 {
     ALOGE("recorder_start");
     recorder->m_running = true;
-/*
+
     media_status_t status;
 
     status = AMediaCodec_start(recorder->m_codec);
@@ -264,8 +293,8 @@ bool droid_media_recorder_start(DroidMediaRecorder *recorder)
         return false;
     }
 
-    droid_media_camera_start_external_recording(recorder->m_cam);
-*/
+    droid_media_camera_start_recording(recorder->m_cam);
+
 
 /*
     pthread_attr_t attr;
