@@ -1048,6 +1048,42 @@ const char *wb_mode_enum_to_string(uint8_t wb_mode, bool &found)
     }
 }
 
+int edge_mode_string_to_enum(const char *edge_mode)
+{
+    return
+        !edge_mode ?
+            ACAMERA_EDGE_MODE_OFF :
+        !strcmp(edge_mode, "off") ?
+            ACAMERA_EDGE_MODE_OFF :
+        !strcmp(edge_mode, "fast") ?
+            ACAMERA_EDGE_MODE_FAST :
+        !strcmp(edge_mode, "high-quality") ?
+            ACAMERA_EDGE_MODE_HIGH_QUALITY :
+        !strcmp(edge_mode, "zsl") ?
+            ACAMERA_EDGE_MODE_ZERO_SHUTTER_LAG :
+        -1;
+}
+
+const char *edge_mode_enum_to_string(uint8_t edge_mode, bool &found)
+{
+    found = true;
+    switch (edge_mode) {
+        case ACAMERA_EDGE_MODE_OFF:
+            return "off";
+        case ACAMERA_EDGE_MODE_FAST:
+            return "fast";
+        case ACAMERA_EDGE_MODE_HIGH_QUALITY:
+            return "high-quality";
+        case ACAMERA_EDGE_MODE_ZERO_SHUTTER_LAG:
+            return "zsl";
+        default:
+            found = false;
+            ALOGE("%s: Unknown edge mode enum: %d",
+                    __FUNCTION__, edge_mode);
+            return "";
+    }
+}
+
 int effect_mode_string_to_enum(const char *effect_mode)
 {
     return
@@ -1355,6 +1391,8 @@ int param_key_string_to_enum(const char *key)
             ACAMERA_CONTROL_ZOOM_RATIO :
         !strcmp(key, android::CameraParameters::KEY_VIDEO_STABILIZATION) ?
             ACAMERA_CONTROL_VIDEO_STABILIZATION_MODE :
+        !strcmp(key, "edge-mode") ?
+            ACAMERA_EDGE_MODE :
         -1;
 }
 
@@ -1488,6 +1526,14 @@ void update_request(DroidMediaCamera *camera, ACaptureRequest *request, std::uno
                      ACaptureRequest_setEntry_u8(request, key, 1, &mode);
                  }
                  break;
+             }
+             case ACAMERA_EDGE_MODE: {
+                uint8_t mode;
+                if ((mode = edge_mode_string_to_enum(value_s.c_str())) != -1) {
+                    ALOGE("ACAMERA_EDGE_MODE %d", mode);
+                    ACaptureRequest_setEntry_u8(request, key, 1, &mode);
+                }
+                break;
              }
              case ACAMERA_CONTROL_EFFECT_MODE: {
                  uint8_t mode;
@@ -1753,6 +1799,18 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
                     wb += wb_mode_enum_to_string(entry.data.u8[j], found);
                 }
                 params += wb + ";";
+            }
+            break;
+        case ACAMERA_EDGE_AVAILABLE_EDGE_MODES:
+            if (entry.count > 0) {
+                bool found = false;
+                std::string em = "edgemode-values=";
+                for (int32_t j = 0; j < entry.count; j++) {
+                    if (found)
+                        em += ",";
+                    em += edge_mode_enum_to_string(entry.data.u8[j], found);
+                }
+                params += em + ";";
             }
             break;
         case ACAMERA_CONTROL_AWB_LOCK_AVAILABLE:
