@@ -88,7 +88,8 @@ _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) :
 #if (ANDROID_MAJOR < 8)
   m_queue->setDefaultBufferFormat(HAL_PIXEL_FORMAT_YCbCr_420_888);
 #else
-  m_queue->setDefaultBufferFormat(HAL_PIXEL_FORMAT_YCBCR_420_888);
+  m_queue->setDefaultBufferFormat(0x22);
+//  m_queue->setDefaultBufferFormat(HAL_PIXEL_FORMAT_YCBCR_420_888);
 #endif
 }
 
@@ -134,10 +135,8 @@ void _DroidMediaBufferQueue::attachToCameraVideo(android::sp<android::Camera>& c
 #endif
 }
 
-bool _DroidMediaBufferQueue::setBufferSize(uint32_t width, uint32_t height, uint32_t format)
+bool _DroidMediaBufferQueue::setBufferSize(uint32_t width, uint32_t height)
 {
-
-    m_queue->setDefaultBufferFormat(format);
     return m_queue->setDefaultBufferSize(width, height) == android::OK;
 }
 

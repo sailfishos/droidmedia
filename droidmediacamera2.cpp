@@ -139,6 +139,7 @@ struct _DroidMediaCamera
     ACaptureRequest *m_preview_request = NULL;
     ACaptureRequest *m_image_request = NULL;
     ACaptureRequest *m_video_request = NULL;
+    ACaptureRequest *m_ext_video_request = NULL;
 
     // Preview
     ACameraOutputTarget *m_preview_output_target = NULL;
@@ -157,6 +158,10 @@ struct _DroidMediaCamera
     ACameraOutputTarget *m_video_output_target = NULL;
     ACaptureSessionOutput *m_video_output = NULL;
     ANativeWindow *m_video_anw = NULL;
+    // External video recorder
+    ACameraOutputTarget *m_ext_video_output_target = NULL;
+    ACaptureSessionOutput *m_ext_video_output = NULL;
+    ANativeWindow *m_ext_video_anw = NULL;
     bool m_video_recording_enabled = false;
 
     // Queues
@@ -611,7 +616,7 @@ bool setup_capture_session(DroidMediaCamera *camera)
 */
     ALOGI("setup_capture_session start");
 
-    camera->m_queue->setBufferSize(camera->preview_width, camera->preview_height, HAL_PIXEL_FORMAT_YCbCr_420_888);
+    camera->m_queue->setBufferSize(camera->preview_width, camera->preview_height);
 
     camera->m_preview_anw = camera->m_queue->window();
     ANativeWindow_acquire(camera->m_preview_anw);
@@ -656,7 +661,7 @@ bool setup_capture_session(DroidMediaCamera *camera)
     ALOGI("setup_capture_session preview done");
 
     // Video
-    camera->m_recording_queue->setBufferSize(camera->video_width, camera->video_height, HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED);
+    camera->m_recording_queue->setBufferSize(camera->video_width, camera->video_height);
 
     camera->m_video_anw = camera->m_recording_queue->window();
     ANativeWindow_acquire(camera->m_video_anw);
@@ -687,10 +692,10 @@ bool setup_capture_session(DroidMediaCamera *camera)
     }
 
     ALOGI("camera->m_video_anw %p", camera->m_video_anw);
-    status = ACaptureSessionSharedOutput_create(camera->m_video_anw, &camera->m_video_output);
-//    status = ACaptureSessionOutput_create(camera->m_video_anw, &camera->m_video_output);
+//    status = ACaptureSessionSharedOutput_create(camera->m_video_anw, &camera->m_video_output);
+    status = ACaptureSessionOutput_create(camera->m_video_anw, &camera->m_video_output);
     if (status != ACAMERA_OK) {
-        ALOGE("ACaptureSessionSharedOutput_create failed %i", status);
+        ALOGE("ACaptureSessionOutput_create failed %i", status);
         goto fail;
     }
 
@@ -702,6 +707,41 @@ bool setup_capture_session(DroidMediaCamera *camera)
 
     ALOGI("video window format %i", ANativeWindow_getFormat(camera->m_video_anw));
 
+    // External video recorder
+    ALOGI("setup_capture_session external video recorder");
+    status = ACameraDevice_createCaptureRequest(camera->m_device,
+        TEMPLATE_PREVIEW, &camera->m_ext_video_request);
+    if (status != ACAMERA_OK) {
+        goto fail;
+    }
+    ALOGI("setup_capture_session external video recorder 1");
+
+    status = ACameraOutputTarget_create(camera->m_preview_anw, &camera->m_ext_video_output_target);
+    if (status != ACAMERA_OK) {
+        goto fail;
+    }
+    ALOGI("setup_capture_session external video recorder 2");
+
+    status = ACaptureRequest_addTarget(camera->m_ext_video_request, camera->m_ext_video_output_target);
+    if (status != ACAMERA_OK) {
+        goto fail;
+    }
+    ALOGI("setup_capture_session external video recorder 3");
+
+    status = ACaptureSessionSharedOutput_create(camera->m_preview_anw, &camera->m_ext_video_output);
+//    status = ACaptureSessionOutput_create(camera->m_ext_video_anw, &camera->m_ext_video_output);
+    if (status != ACAMERA_OK) {
+        ALOGE("ACaptureSessionSharedOutput_create failed %i", status);
+        goto fail;
+    }
+    ALOGI("setup_capture_session external video recorder 4");
+
+    status = ACaptureSessionOutputContainer_add(camera->m_capture_session_output_container,
+        camera->m_ext_video_output);
+    if (status != ACAMERA_OK) {
+        goto fail;
+    }
+    ALOGI("setup_capture_session external video recorder done");
 
 /*
 //    if (camera->m_video_mode) {
@@ -1872,9 +1912,9 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
                 for (int32_t j = 0; j < entry.count; j = j + 2) {
                     if (j > 0)
                         fps += ",";
-                    fps += "(" + std::to_string(entry.data.i32[j]);
+                    fps += "(" + std::to_string(entry.data.i32[j] * 1000);
                     fps += ",";
-                    fps += std::to_string(entry.data.i32[j+1]) + ")";
+                    fps += std::to_string(entry.data.i32[j+1] * 1000) + ")";
                 }
                 params += fps + ";";
                 params += "preview-frame-rate=30;";
@@ -2184,7 +2224,7 @@ bool droid_media_camera_set_external_video_window(DroidMediaCamera *camera, ANat
     sleep(1);
 
     ALOGI("ACaptureSessionSharedOutput_add %p", window);
-    status = ACaptureSessionSharedOutput_add(camera->m_video_output, window);
+    status = ACaptureSessionSharedOutput_add(camera->m_ext_video_output, window);
     if (status != ACAMERA_OK) {
         ALOGE("Setting external video window failed %i", status);
         return false;
@@ -2192,12 +2232,13 @@ bool droid_media_camera_set_external_video_window(DroidMediaCamera *camera, ANat
 
     sleep(1);
 
+/*
     ALOGI("video window data space %i", ANativeWindow_getBuffersDataSpace(camera->m_video_anw));
 
     ALOGI("video window set data space %i", ANativeWindow_setBuffersDataSpace(camera->m_video_anw, 0x10C60000));
 
     ALOGI("video window data space %i", ANativeWindow_getBuffersDataSpace(camera->m_video_anw));
-
+*/
 
 /*
     status = ACaptureSessionSharedOutput_remove(camera->m_video_output, camera->m_video_anw);
@@ -2207,20 +2248,20 @@ bool droid_media_camera_set_external_video_window(DroidMediaCamera *camera, ANat
     }
 */
     ALOGI("ACameraCaptureSession_updateSharedOutput");
-    status = ACameraCaptureSession_updateSharedOutput(camera->m_session, camera->m_video_output);
+    status = ACameraCaptureSession_updateSharedOutput(camera->m_session, camera->m_ext_video_output);
     if (status != ACAMERA_OK) {
         ALOGE("Updating shared output failed %i", status);
         return false;
     }
+    sleep(1);
 
     ALOGI("ACameraCaptureSession_setRepeatingRequest");
     status = ACameraCaptureSession_setRepeatingRequest(camera->m_session, &camera->m_capture_callbacks, 1,
-        &camera->m_preview_request, NULL);
+        &camera->m_ext_video_request, NULL);
     if (status != ACAMERA_OK) {
         ALOGE("Failed to start preview");
         return false;
     }
-
 
     ALOGI("set_external_video_window done");
     return true;
@@ -2236,13 +2277,13 @@ bool droid_media_camera_remove_external_video_window(DroidMediaCamera *camera, A
         return false;
     }
 */
-    status = ACaptureSessionSharedOutput_remove(camera->m_video_output, window);
+    status = ACaptureSessionSharedOutput_remove(camera->m_ext_video_output, window);
     if (status != ACAMERA_OK) {
         ALOGE("Removing external video window failed %i", status);
         return false;
     }
 
-    status = ACameraCaptureSession_updateSharedOutput(camera->m_session, camera->m_video_output);
+    status = ACameraCaptureSession_updateSharedOutput(camera->m_session, camera->m_ext_video_output);
     if (status != ACAMERA_OK) {
         ALOGE("Updating shared output failed %i", status);
         return false;

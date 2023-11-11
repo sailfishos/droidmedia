@@ -208,36 +208,6 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera,
 //                          mMaxBFrames);
     AMediaFormat_setFloat(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 1.0F);
 
-    status = AMediaCodec_configure(recorder->m_codec, format,
-        recorder->m_input_window, NULL, AMEDIACODEC_CONFIGURE_FLAG_ENCODE);
-    if (status != AMEDIA_OK) {
-        ALOGE("Failed to configure codec");
-        goto fail;
-    }
-
-    ALOGE("recorder_create create input surface");
-
-    status = AMediaCodec_createInputSurface(recorder->m_codec, &recorder->m_input_window);
-    if (status != AMEDIA_OK) {
-        ALOGE("Failed to create input surface");
-        goto fail;
-    }
-    ALOGE("recorder_create set external window %p", recorder->m_input_window);
-
-    ANativeWindow_acquire(recorder->m_input_window);
-
-    if (!droid_media_camera_set_external_video_window(camera, recorder->m_input_window)) {
-        ALOGE("Failed to set external video window");
-        goto fail;
-    }
-
-/*
-    status = AMediaCodec_setInputSurface(recorder->m_codec, recorder->m_input_window);
-    if (status != AMEDIA_OK) {
-        ALOGE("Failed to set input surface");
-        goto fail;
-    }
-*/
     ALOGE("recorder_create set callback");
     // Set callbacks
     recorder->m_codec_on_async_notify_callbacks.onAsyncError = droid_media_recorder_on_async_error;
@@ -250,6 +220,44 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera,
     if (status != AMEDIA_OK) {
         goto fail;
     }
+
+    status = AMediaCodec_configure(recorder->m_codec, format,
+        recorder->m_input_window, NULL, AMEDIACODEC_CONFIGURE_FLAG_ENCODE);
+    if (status != AMEDIA_OK) {
+        ALOGE("Failed to configure codec");
+        goto fail;
+    }
+
+    ALOGE("recorder_create create input surface");
+
+    status = AMediaCodec_createPersistentInputSurface(&recorder->m_input_window);
+    if (status != AMEDIA_OK) {
+        ALOGE("Failed to create input surface");
+        goto fail;
+    }
+
+/*
+    status = AMediaCodec_createInputSurface(recorder->m_codec, &recorder->m_input_window);
+    if (status != AMEDIA_OK) {
+        ALOGE("Failed to create input surface");
+        goto fail;
+    }
+*/
+    ALOGE("recorder_create set external window %p", recorder->m_input_window);
+
+    ANativeWindow_acquire(recorder->m_input_window);
+
+    status = AMediaCodec_setInputSurface(recorder->m_codec, recorder->m_input_window);
+    if (status != AMEDIA_OK) {
+        ALOGE("Failed to set input surface");
+        goto fail;
+    }
+
+    if (!droid_media_camera_set_external_video_window(camera, recorder->m_input_window)) {
+        ALOGE("Failed to set external video window");
+        goto fail;
+    }
+
     ALOGE("recorder_create end");
 
     return recorder;
