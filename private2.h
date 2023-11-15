@@ -25,8 +25,6 @@ bool droid_media_camera_start_external_recording(DroidMediaCamera *camera);
 
 void droid_media_camera_stop_external_recording(DroidMediaCamera *camera);
 
-ANativeWindow *droid_media_camera_get_external_video_window(DroidMediaCamera *camera);
-
 bool droid_media_camera_set_external_video_window(DroidMediaCamera *camera, ANativeWindow *window);
 
 bool droid_media_camera_remove_external_video_window(DroidMediaCamera *camera, ANativeWindow *window);

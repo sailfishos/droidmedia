@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Jolla Ltd.
+ * Copyright (C) 2016-2023 Jolla Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,8 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
 #include <utils/Condition.h>
@@ -86,7 +84,7 @@ struct _DroidMediaRecorder {
         data.codec_config = false;
         data.sync = false;
 
-        ALOGI("tick() start");
+//        ALOGI("tick() start");
         element = get_output();
 
         if (element.buffer_index < 0) {
@@ -126,7 +124,7 @@ struct _DroidMediaRecorder {
             ALOGI("AMediaCodec_releaseOutputBuffer failed idnex %i", element.buffer_index);
         }
 
-        ALOGI("tick() done index %i", element.buffer_index);
+//        ALOGI("tick() done index %i", element.buffer_index);
         return status;
     }
 
@@ -142,7 +140,7 @@ struct _DroidMediaRecorder {
         return static_cast<DroidMediaRecorder *>(that)->run();
     }
 
-    DroidMediaCamera *m_cam;
+    DroidMediaCamera *m_camera;
     DroidMediaCodecDataCallbacks m_cb;
     void *m_cb_data;
 
@@ -171,15 +169,15 @@ static void droid_media_recorder_on_async_output_available(AMediaCodec* codec, v
     DroidMediaRecorder *recorder = (DroidMediaRecorder *)userdata;
 
     assert(index >= 0);
-    ALOGI("on_async_output_available index %i flags: %i offset %i presentation time %" PRId64 " size %i",
-        index, buffer_info->flags, buffer_info->offset, buffer_info->presentationTimeUs, buffer_info->size);
+//    ALOGI("on_async_output_available index %i flags: %i offset %i presentation time %" PRId64 " size %i",
+//        index, buffer_info->flags, buffer_info->offset, buffer_info->presentationTimeUs, buffer_info->size);
 
     std::unique_lock<std::mutex> lock{recorder->m_mutex};
     callback_object element{index, buffer_info};
     recorder->m_output_queue.push_back(element);
     recorder->m_condition.notify_all();
 
-    ALOGI("on_async_output_available index %i done", index);
+//    ALOGI("on_async_output_available index %i done", index);
 }
 
 static void droid_media_recorder_on_async_format_changed(AMediaCodec* codec, void* userdata, AMediaFormat* format)
@@ -204,7 +202,7 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera,
     DroidMediaRecorder *recorder = new DroidMediaRecorder;
     AMediaFormat *format = NULL;
 
-    recorder->m_cam = camera;
+    recorder->m_camera = camera;
 
     recorder->m_codec = AMediaCodec_createEncoderByType(meta->parent.type);
     if (!recorder->m_codec) {
@@ -212,21 +210,20 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera,
         goto fail;
     }
 
-    ALOGI("color format %i meta->parent.type (mime) %s", meta->color_format, meta->parent.type);
+    ALOGI("recorder_create meta->parent.fps %i", meta->parent.fps);
+
     format = AMediaFormat_new();
     AMediaFormat_setString(format, AMEDIAFORMAT_KEY_MIME, meta->parent.type);
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_BIT_RATE, meta->bitrate);
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_WIDTH, meta->parent.width);
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_HEIGHT, meta->parent.height);
+    //TODO Handle framerate
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_FRAME_RATE, 30 /*meta->parent.fps*/);
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_SLICE_HEIGHT, meta->slice_height);
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_STRIDE, meta->stride);
-
     AMediaFormat_setInt32(format, AMEDIAFORMAT_KEY_COLOR_FORMAT, COLOR_FormatSurface);
-
     AMediaFormat_setFloat(format, AMEDIAFORMAT_KEY_I_FRAME_INTERVAL, 1.0F);
 
-    ALOGI("recorder_create set callback");
     // Set callbacks
     recorder->m_codec_on_async_notify_callbacks.onAsyncError = droid_media_recorder_on_async_error;
     recorder->m_codec_on_async_notify_callbacks.onAsyncFormatChanged = droid_media_recorder_on_async_format_changed;
@@ -246,21 +243,21 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera,
         goto fail;
     }
 
-    ALOGI("recorder_create create input surface");
-
     status = AMediaCodec_createInputSurface(recorder->m_codec, &recorder->m_input_window);
     if (status != AMEDIA_OK) {
         ALOGE("Failed to create input surface");
         goto fail;
     }
 
-    ALOGI("recorder_create set external window %p", recorder->m_input_window);
-
     ANativeWindow_acquire(recorder->m_input_window);
 
     if (!droid_media_camera_set_external_video_window(camera, recorder->m_input_window)) {
         ALOGE("Failed to set external video window");
         goto fail;
+    }
+
+    if (format) {
+        AMediaFormat_delete(format);
     }
 
     ALOGI("recorder_create end");
@@ -287,6 +284,8 @@ void droid_media_recorder_destroy(DroidMediaRecorder *recorder)
 {
     ALOGI("recorder_destroy");
 
+    droid_media_camera_remove_external_video_window(recorder->m_camera, recorder->m_input_window);
+
     if (recorder->m_codec) {
         AMediaCodec_delete(recorder->m_codec);
         recorder->m_codec = NULL;
@@ -307,7 +306,7 @@ bool droid_media_recorder_start(DroidMediaRecorder *recorder)
         return false;
     }
 
-    droid_media_camera_start_external_recording(recorder->m_cam);
+    droid_media_camera_start_external_recording(recorder->m_camera);
 
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -329,7 +328,7 @@ void droid_media_recorder_stop(DroidMediaRecorder *recorder)
     void *dummy;
     pthread_join(recorder->m_thread, &dummy);
 
-    droid_media_camera_stop_external_recording(recorder->m_cam);
+    droid_media_camera_stop_external_recording(recorder->m_camera);
 
     media_status_t status = AMediaCodec_stop(recorder->m_codec);
     if (status != AMEDIA_OK) {
