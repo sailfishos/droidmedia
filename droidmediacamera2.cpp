@@ -1359,7 +1359,7 @@ int param_key_string_to_enum(const char *key)
         !strcmp(key, android::CameraParameters::KEY_METERING_AREAS) ?
             ACAMERA_CONTROL_AE_REGIONS :
         !strcmp(key, android::CameraParameters::KEY_ZOOM) ?
-#if ANDORID_MAJOR >= 9
+#if ANDROID_MAJOR >= 9
        	ACAMERA_CONTROL_ZOOM_RATIO :
 #else  
         ACAMERA_SCALER_CROP_REGION :
