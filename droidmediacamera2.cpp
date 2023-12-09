@@ -42,6 +42,10 @@
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaCamera"
 
+#if ANDROID_MAJOR <= 9 
+typedef ANativeWindow ACameraWindowType; 
+#endif
+
 namespace android {
     int32_t getColorFormat(const char* colorFormat) {
         if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_YUV420P)) {
@@ -167,8 +171,6 @@ struct _DroidMediaCamera
     int32_t max_awb_regions = 0;
     int32_t max_focus_regions = 0;
 
-    int32_t zoom = 1;
-
     DroidMediaCameraCallbacks m_cb;
     void *m_cb_data;
 };
@@ -281,7 +283,7 @@ static void capture_session_on_capture_completed(
         uint8_t value = entry.data.u8[0];
         ALOGI("AF trigger state: %i", value);
         if (value == ACAMERA_CONTROL_AF_TRIGGER_START) {
-           ALOGI("AF trigger start found");
+            ALOGI("AF trigger start found");
             uint8_t afTrigger = ACAMERA_CONTROL_AF_TRIGGER_IDLE;
             status = ACaptureRequest_setEntry_u8(camera->m_preview_request,
                 ACAMERA_CONTROL_AF_TRIGGER, 1, &afTrigger);
@@ -347,7 +349,7 @@ static void capture_session_on_capture_sequence_abort(
 
 static void capture_session_on_capture_buffer_lost(
     void* context, ACameraCaptureSession* session,
-    ACaptureRequest* request, ANativeWindow* window, int64_t frameNumber)
+    ACaptureRequest* request, ACameraWindowType* window, int64_t frameNumber)
 {
     ALOGI("Capture buffer lost: %p", context);
 }
@@ -1425,13 +1427,13 @@ void update_request(DroidMediaCamera *camera, ACaptureRequest *request, std::uno
          int32_t key;
          if ((key = param_key_string_to_enum(key_s.c_str())) >= 0) {
              switch (key) {
-		case ACAMERA_SCALER_CROP_REGION: {
+             case ACAMERA_SCALER_CROP_REGION: {
 			if (int32_t zoom_level = std::stoi(value_s)) {
                         	int32_t *area = new int32_t[4];
-				area[0] = camera->image_width/(2*10)*(zoom_level);
-				area[1] = camera->image_height/(2*10)*(zoom_level);
-				area[2] = camera->image_width - (2*area[0]);
-				area[3] = camera->image_height - (2*area[1]);
+				area[0] = camera->image_width/(2 * 10) * (zoom_level);
+				area[1] = camera->image_height/(2 * 10) * (zoom_level);
+				area[2] = camera->image_width - (2 * area[0]);
+				area[3] = camera->image_height - (2 * area[1]);
 				ALOGI("setting crop for zoom level %d to %d,%d,%d,%d from w%dh%d", zoom_level, area[0], area[1], area[2], area[3], camera->image_width, camera->image_height);
 				ACaptureRequest_setEntry_i32(request, key, 4, area);
 				delete[] area;
@@ -1609,9 +1611,6 @@ bool droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *par
                 parse_pair_int32(value_s, 'x', camera->preview_width, camera->preview_height);
             } else if (!strcmp(key_s.c_str(), "video-size")) {
                 parse_pair_int32(value_s, 'x', camera->video_width, camera->video_height);
-            } else if (!strcmp(key_s.c_str(), "zoom")) {
-	        camera->zoom = stoi(value_s);
- 	        ALOGI("set_parameters zoom=%d", camera->zoom);
 	    }
         }
     }
@@ -1710,12 +1709,10 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
             }
             break;
         }
-#if ANDROID_MAJOR >= 9
         case ACAMERA_CONTROL_AE_COMPENSATION_RANGE:
             params += "min-exposure-compensation="+std::to_string(entry.data.i32[0])+";";
             params += "max-exposure-compensation="+std::to_string(entry.data.i32[1])+";";
             break;
-#endif
         case ACAMERA_CONTROL_AE_COMPENSATION_STEP: {
             // convert to string using no locale
             std::ostringstream oss;
@@ -1811,11 +1808,11 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
                  params += "video-stabilization-supported = true;";
             }
             break;
-#if ANDROID_MAJOR >= 9 
+#if ANDROID_MAJOR >= 9	
 	case ACAMERA_CONTROL_ZOOM_RATIO_RANGE:
            params += "max-zoom="+std::to_string(entry.data.f[1])+";";
            break;
-#endif
+#endif	   
         case ACAMERA_FLASH_INFO_AVAILABLE:
             if (entry.data.u8[0] == ACAMERA_FLASH_INFO_AVAILABLE_FALSE) {
                 params += "flash-mode-values=off;";
