@@ -19,13 +19,13 @@
 #include "droidmediacamera.h"
 
 #include <camera/CameraParameters.h>
+#include <camera/NdkCaptureRequest.h>
 #include <camera/NdkCameraCaptureSession.h>
 #include <camera/NdkCameraDevice.h>
 #include <camera/NdkCameraError.h>
 #include <camera/NdkCameraManager.h>
 #include <camera/NdkCameraMetadata.h>
 #include <camera/NdkCameraMetadataTags.h>
-#include <camera/NdkCaptureRequest.h>
 #include <media/hardware/MetadataBufferType.h>
 #include <media/NdkImage.h>
 #include <media/NdkImageReader.h>
@@ -41,6 +41,10 @@
 
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaCamera"
+
+#if ANDROID_MAJOR <= 9 
+typedef ANativeWindow ACameraWindowType; 
+#endif
 
 namespace android {
     int32_t getColorFormat(const char* colorFormat) {
@@ -418,11 +422,13 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
         goto fail;
     }
 
+#if ANDROID_MAJOR >= 9
     if (ACameraMetadata_isLogicalMultiCamera(camera_metadata,
                                              &num_physical_cameras,
                                              &physical_camera_ids)) {
         ALOGI("Multicamera with physical camera count %zu", num_physical_cameras);
     }
+#endif
 
     status = ACameraMetadata_getConstEntry(camera_metadata,
                                            ACAMERA_LENS_FACING,
@@ -1322,6 +1328,7 @@ const char *focus_mode_enum_to_string(uint8_t focus_mode, bool fixed_lens, bool 
     }
 }
 
+/* translates QCamera2 paramerter namings into android camera api2 parameter namings */
 int param_key_string_to_enum(const char *key)
 {
     return
@@ -1352,7 +1359,11 @@ int param_key_string_to_enum(const char *key)
         !strcmp(key, android::CameraParameters::KEY_METERING_AREAS) ?
             ACAMERA_CONTROL_AE_REGIONS :
         !strcmp(key, android::CameraParameters::KEY_ZOOM) ?
-            ACAMERA_CONTROL_ZOOM_RATIO :
+#if ANDROID_MAJOR >= 9
+       	ACAMERA_CONTROL_ZOOM_RATIO :
+#else  
+        ACAMERA_SCALER_CROP_REGION :
+#endif
         !strcmp(key, android::CameraParameters::KEY_VIDEO_STABILIZATION) ?
             ACAMERA_CONTROL_VIDEO_STABILIZATION_MODE :
         -1;
@@ -1416,7 +1427,19 @@ void update_request(DroidMediaCamera *camera, ACaptureRequest *request, std::uno
          int32_t key;
          if ((key = param_key_string_to_enum(key_s.c_str())) >= 0) {
              switch (key) {
-             case ACAMERA_CONTROL_AE_ANTIBANDING_MODE: {
+             case ACAMERA_SCALER_CROP_REGION: {
+			if (int32_t zoom_level = std::stoi(value_s)) {
+                        	int32_t *area = new int32_t[4];
+				area[0] = camera->image_width/(2 * 10) * (zoom_level);
+				area[1] = camera->image_height/(2 * 10) * (zoom_level);
+				area[2] = camera->image_width - (2 * area[0]);
+				area[3] = camera->image_height - (2 * area[1]);
+				ALOGI("setting crop for zoom level %d to %d,%d,%d,%d from w%dh%d", zoom_level, area[0], area[1], area[2], area[3], camera->image_width, camera->image_height);
+				ACaptureRequest_setEntry_i32(request, key, 4, area);
+				delete[] area;
+			}
+		}
+	     case ACAMERA_CONTROL_AE_ANTIBANDING_MODE: {
                  uint8_t mode;
                  if ((mode = ab_mode_string_to_enum(value_s.c_str())) != -1) {
                      ACaptureRequest_setEntry_u8(request, key, 1, &mode);
@@ -1515,12 +1538,14 @@ void update_request(DroidMediaCamera *camera, ACaptureRequest *request, std::uno
                  ACaptureRequest_setEntry_u8(request, key, 1, &value);
                  break;
              }
+#if ANDROID_MAJOR >= 9
              case ACAMERA_CONTROL_ZOOM_RATIO:
                  if (float value = std::stof(value_s)) {
                      ACaptureRequest_setEntry_float(request, key, 1, &value);
                  }
                  break;
-             case ACAMERA_FLASH_MODE: {
+#endif         
+	     case ACAMERA_FLASH_MODE: {
                  uint8_t mode;
                  if (!strcmp(value_s.c_str(), android::CameraParameters::FLASH_MODE_TORCH)) {
                      mode = ACAMERA_CONTROL_AE_MODE_ON;
@@ -1586,7 +1611,7 @@ bool droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *par
                 parse_pair_int32(value_s, 'x', camera->preview_width, camera->preview_height);
             } else if (!strcmp(key_s.c_str(), "video-size")) {
                 parse_pair_int32(value_s, 'x', camera->video_width, camera->video_height);
-            }
+	    }
         }
     }
 
@@ -1783,9 +1808,11 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
                  params += "video-stabilization-supported = true;";
             }
             break;
-        case ACAMERA_CONTROL_ZOOM_RATIO_RANGE:
-            params += "max-zoom="+std::to_string(entry.data.f[1])+";";
-            break;
+#if ANDROID_MAJOR >= 9	
+	case ACAMERA_CONTROL_ZOOM_RATIO_RANGE:
+           params += "max-zoom="+std::to_string(entry.data.f[1])+";";
+           break;
+#endif	   
         case ACAMERA_FLASH_INFO_AVAILABLE:
             if (entry.data.u8[0] == ACAMERA_FLASH_INFO_AVAILABLE_FALSE) {
                 params += "flash-mode-values=off;";
