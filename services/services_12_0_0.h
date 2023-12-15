@@ -512,6 +512,10 @@ public:
     bool shouldCollectNotes(int32_t) {
         return false;
     }
+
+    void startWatchingModeWithFlags(int32_t, const String16&, int32_t, const sp<IAppOpsCallback>&) {
+        // Nothing
+    }
 };
 
 #include <processinfo/IProcessInfoService.h>
