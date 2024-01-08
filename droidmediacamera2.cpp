@@ -1565,7 +1565,6 @@ void update_request(DroidMediaCamera *camera, ACaptureRequest *request, std::uno
              case ACAMERA_NOISE_REDUCTION: {
                 uint8_t mode;
                 if ((mode = noise_reduction_string_to_enum(value_s.c_str())) != -1) {
-                    ALOGE("ACAMERA_NOISE_REDUCTION %d", mode);
                     ACaptureRequest_setEntry_u8(request, key, 1, &mode);
                 }
                 break;
@@ -1580,7 +1579,6 @@ void update_request(DroidMediaCamera *camera, ACaptureRequest *request, std::uno
              case ACAMERA_EDGE_MODE: {
                 uint8_t mode;
                 if ((mode = edge_mode_string_to_enum(value_s.c_str())) != -1) {
-                    ALOGE("ACAMERA_EDGE_MODE %d", mode);
                     ACaptureRequest_setEntry_u8(request, key, 1, &mode);
                 }
                 break;
@@ -2050,37 +2048,5 @@ android::sp<android::Camera> droid_media_camera_get_camera(DroidMediaCamera *cam
     return NULL;
 }
 
-bool droid_media_camera_start_external_recording(DroidMediaCamera *camera)
-{
-    ALOGI("start_external_recording");
-    camera_status_t status = ACameraCaptureSession_setRepeatingRequest(camera->m_session, &camera->m_capture_callbacks, 1,
-        &camera->m_video_request, NULL);
-    if (status != ACAMERA_OK) {
-        ALOGE("Starting external recording failed");
-        return false;
-    }
-
-    return true;
-}
-
-
-void droid_media_camera_stop_external_recording(DroidMediaCamera *camera)
-{
-    ALOGI("stop_external_recording");
-    ACameraCaptureSession_stopRepeating(camera->m_session);
-
-    camera_status_t status = ACameraCaptureSession_setRepeatingRequest(camera->m_session, &camera->m_capture_callbacks, 1,
-        &camera->m_preview_request, NULL);
-    if (status != ACAMERA_OK) {
-        ALOGE("Restarting preview failed");
-    }
-}
-
-ANativeWindow *droid_media_camera_get_external_video_window(DroidMediaCamera *camera)
-{
-    ALOGI("get_external_video_window");
-//    camera->m_video_mode = true;
-    return camera->m_video_anw;
-}
 
 #endif
