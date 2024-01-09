@@ -1431,6 +1431,8 @@ int param_key_string_to_enum(const char *key)
             ACAMERA_CONTROL_AE_REGIONS :
         !strcmp(key, android::CameraParameters::KEY_ZOOM) ?
             ACAMERA_CONTROL_ZOOM_RATIO :
+        !strcmp(key, "noise-reduction") ?
+            ACAMERA_NOISE_REDUCTION :
         !strcmp(key, android::CameraParameters::KEY_VIDEO_STABILIZATION) ?
             ACAMERA_CONTROL_VIDEO_STABILIZATION_MODE :
         !strcmp(key, "edge-mode") ?
