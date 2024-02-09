@@ -129,6 +129,7 @@ struct _DroidMediaCamera
 
     // Requests
     ACaptureRequest *m_preview_request = NULL;
+    // Holding a list of parameters that come too early to apply so that they can be applied when the requests exists.
     std::unordered_map<std::string, std::string> m_param_map;
 
     ACaptureRequest *m_image_request = NULL;
@@ -1624,8 +1625,17 @@ bool droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *par
 
     ALOGI("update_request preview");
     if (!camera->m_preview_request) {
-        ALOGE("Not even preview, copy to try again later");
+        ALOGI("Not even preview, copy to try again later");
+        // In addition to holding the first sent params until preview and other requests are available
+        // it seems exposure compensation is only sent the first time, and there are more than one calls before
+        // the preview and other requests are available, but only the first has this parameter from gstreamer.
+        // Solution: propagate the initial exposure compensation to all subsequent retries before the preview and other requests are 'on'.
+        std::string exposure_compensation = camera->m_param_map["exposure-compensation"];
         camera->m_param_map = param_map;
+        if (exposure_compensation.size()) {
+            ALOGI("Found existing exposure compensation");
+            camera->m_param_map["exposure-compensation"] = exposure_compensation;
+        }
     }
     if (camera->m_preview_request) {
         update_request(camera, camera->m_preview_request, param_map);
