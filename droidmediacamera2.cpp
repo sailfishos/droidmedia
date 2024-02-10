@@ -1515,11 +1515,17 @@ void update_request(DroidMediaCamera *camera, ACaptureRequest *request, std::uno
                  ACaptureRequest_setEntry_u8(request, key, 1, &value);
                  break;
              }
-             case ACAMERA_CONTROL_ZOOM_RATIO:
-                 if (float value = std::stof(value_s)) {
+             case ACAMERA_CONTROL_ZOOM_RATIO: {
+                 // convert from string using no locale
+                 std::istringstream iss(value_s);
+                 iss.imbue(std::locale::classic());
+                 float value = 0;
+                 iss >> value;
+                 if (value != 0) {
                      ACaptureRequest_setEntry_float(request, key, 1, &value);
                  }
                  break;
+             }
              case ACAMERA_FLASH_MODE: {
                  uint8_t mode;
                  if (!strcmp(value_s.c_str(), android::CameraParameters::FLASH_MODE_TORCH)) {
