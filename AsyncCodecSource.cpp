@@ -46,13 +46,8 @@ typedef ABuffer MediaCodecBuffer;
 
 #define LOG_TAG "AsyncCodecSource"
 
-
-AsyncCodecSource::SourceReader::SourceReader(AsyncCodecSource *codec,
-                                             const sp<MediaSource> source)
-    : Thread(false)
-    , mRunning(true)
-    , mCodec(codec)
-    , mSource(source)
+AsyncCodecSource::SourceReader::SourceReader(AsyncCodecSource *codec, const sp<MediaSource> source)
+    : Thread(false), mRunning(true), mCodec(codec), mSource(source)
 {
 }
 
@@ -112,12 +107,13 @@ void AsyncCodecSource::SourceReader::inputBufferAvailable(size_t index)
     mInputIndices.cond.signal();
 }
 
-//static
-sp<MediaSource> AsyncCodecSource::Create(
-        const sp<MediaSource> &source, const sp<AMessage> &srcFormat,
-        bool isEncoder, uint32_t flags, const sp<ANativeWindow> &nativeWindow,
-        const sp<ALooper> &looper, const char *desiredCodec, OMX_COLOR_FORMATTYPE colorFormat) {
-    sp<Surface> surface = static_cast<Surface*>(nativeWindow.get());
+// static
+sp<MediaSource> AsyncCodecSource::Create(const sp<MediaSource> &source,
+    const sp<AMessage> &srcFormat, bool isEncoder, uint32_t flags,
+    const sp<ANativeWindow> &nativeWindow, const sp<ALooper> &looper, const char *desiredCodec,
+    OMX_COLOR_FORMATTYPE colorFormat)
+{
+    sp<Surface> surface = static_cast<Surface *>(nativeWindow.get());
     const char *mime = nullptr;
     sp<MetaData> meta = source->getFormat();
     CHECK(meta->findCString(kKeyMIMEType, &mime));
@@ -144,12 +140,11 @@ sp<MediaSource> AsyncCodecSource::Create(
     }
 
     if (colorFormat != OMX_COLOR_FormatUnused) {
-      format->setInt32("color-format", colorFormat);
+        format->setInt32("color-format", colorFormat);
     }
 
     Vector<AString> matchingCodecs;
-    MediaCodecList::findMatchingCodecs(
-            mime, isEncoder, flags, &matchingCodecs);
+    MediaCodecList::findMatchingCodecs(mime, isEncoder, flags, &matchingCodecs);
 
     for (const AString &componentName : matchingCodecs) {
         if (desiredCodec != nullptr && componentName.compare(desiredCodec)) {
@@ -157,26 +152,25 @@ sp<MediaSource> AsyncCodecSource::Create(
         }
 
         ALOGV("Attempting to allocate codec '%s'", componentName.c_str());
-        sp<AsyncCodecSource> res = new AsyncCodecSource(componentName, source, looper,
-                        strcmp(mime, MEDIA_MIMETYPE_AUDIO_VORBIS) == 0);
+        sp<AsyncCodecSource> res = new AsyncCodecSource(
+            componentName, source, looper, strcmp(mime, MEDIA_MIMETYPE_AUDIO_VORBIS) == 0);
 
         if (res->mCodec != NULL) {
             ALOGI("Successfully allocated codec '%s'", componentName.c_str());
-            if (res->configure(format, surface, isEncoder ? MediaCodec::CONFIGURE_FLAG_ENCODE : 0)) {
+            if (res->configure(
+                    format, surface, isEncoder ? MediaCodec::CONFIGURE_FLAG_ENCODE : 0)) {
                 if (surface != nullptr) {
 #if ANDROID_MAJOR > 7
                     nativeWindowConnect(nativeWindow.get(), "AsyncCodecSource");
 #else
-                    native_window_api_connect(nativeWindow.get(),
-                                                NATIVE_WINDOW_API_MEDIA);
+                    native_window_api_connect(nativeWindow.get(), NATIVE_WINDOW_API_MEDIA);
 #endif
                 }
                 return res;
             } else {
                 ALOGE("Failed to configure codec '%s'", componentName.c_str());
             }
-        }
-        else {
+        } else {
             ALOGE("Failed to allocate codec '%s'", componentName.c_str());
         }
     }
@@ -185,16 +179,16 @@ sp<MediaSource> AsyncCodecSource::Create(
     return nullptr;
 }
 
-AsyncCodecSource::AsyncCodecSource(
-        const AString &codecName, const sp<MediaSource> &source, const sp<ALooper> &looper,
-        bool isVorbis)
-    : mComponentName(codecName),
-      mSource(source),
-      mLooper(looper),
-      mCodecLooper(new ALooper),
-      mMeta(new MetaData),
-      mUsingSurface(false),
-      mIsVorbis(isVorbis) {
+AsyncCodecSource::AsyncCodecSource(const AString &codecName, const sp<MediaSource> &source,
+    const sp<ALooper> &looper, bool isVorbis)
+    : mComponentName(codecName)
+    , mSource(source)
+    , mLooper(looper)
+    , mCodecLooper(new ALooper)
+    , mMeta(new MetaData)
+    , mUsingSurface(false)
+    , mIsVorbis(isVorbis)
+{
     mCodecLooper->setName("codec_looper");
     mCodecLooper->start(false, false, ANDROID_PRIORITY_AUDIO);
 
@@ -206,13 +200,16 @@ AsyncCodecSource::AsyncCodecSource(
     mSourceReader = new SourceReader(this, source);
 }
 
-AsyncCodecSource::~AsyncCodecSource() {
+AsyncCodecSource::~AsyncCodecSource()
+{
     mCodec->release();
     mCodecLooper->stop();
     mLooper->unregisterHandler(mReflector->id());
 }
 
-bool AsyncCodecSource::configure(const sp<AMessage> format, const sp<Surface> surface, uint32_t flags) {
+bool AsyncCodecSource::configure(
+    const sp<AMessage> format, const sp<Surface> surface, uint32_t flags)
+{
     mCodec->setCallback(mNotify);
     status_t err = mCodec->configure(format, surface, nullptr /* crypto */, flags);
     if (err != OK) {
@@ -233,7 +230,8 @@ bool AsyncCodecSource::configure(const sp<AMessage> format, const sp<Surface> su
     return true;
 }
 
-status_t AsyncCodecSource::start(MetaData *params) {
+status_t AsyncCodecSource::start(MetaData *params)
+{
     (void)params;
     Mutexed<Output>::Locked me(mOutput);
 
@@ -259,7 +257,8 @@ status_t AsyncCodecSource::start(MetaData *params) {
     return res;
 }
 
-status_t AsyncCodecSource::stop() {
+status_t AsyncCodecSource::stop()
+{
     Mutexed<Output>::Locked me(mOutput);
     if (mState != STARTED && mState != ERROR) {
         return -EINVAL;
@@ -285,19 +284,16 @@ status_t AsyncCodecSource::stop() {
     return res1 != OK ? res1 : res2;
 }
 
-sp<MetaData> AsyncCodecSource::getFormat() {
+sp<MetaData> AsyncCodecSource::getFormat()
+{
     Mutexed<sp<MetaData>>::Locked meta(mMeta);
     return *meta;
 }
 
-AsyncCodecSource::Output::Output()
-    : mReachedEOS(false),
-      mReading(false) {
-}
+AsyncCodecSource::Output::Output() : mReachedEOS(false), mReading(false) { }
 
-status_t AsyncCodecSource::read(
-                    DroidMediaBuffer **buffer,
-                    const ReadOptions *options) {
+status_t AsyncCodecSource::read(DroidMediaBuffer **buffer, const ReadOptions *options)
+{
     *buffer = nullptr;
     Mutexed<Output>::Locked me(mOutput);
     me->mReading = true;
@@ -316,24 +312,21 @@ status_t AsyncCodecSource::read(
     }
 
     *buffer = nullptr;
-    while (me->mBufferQueue.size() == 0 && !me->mReachedEOS
-           && mState == STARTED) {
+    while (me->mBufferQueue.size() == 0 && !me->mReachedEOS && mState == STARTED) {
         ALOGV("[%s] Waiting for output.", mComponentName.c_str());
         me.waitForCondition(me->mAvailable);
     }
 
     if (mState == ERROR) {
         res = ERROR;
-    }
-    else if (!me->mBufferQueue.empty()) {
+    } else if (!me->mBufferQueue.empty()) {
         *buffer = *me->mBufferQueue.begin();
         me->mBufferQueue.erase(me->mBufferQueue.begin());
         if (mOutputChanged && (*buffer)->size() == 0) {
             mOutputChanged = false;
             res = INFO_FORMAT_CHANGED;
         }
-    }
-    else if (me->mReachedEOS || mState != STARTED) {
+    } else if (me->mReachedEOS || mState != STARTED) {
         res = ERROR_END_OF_STREAM;
     }
 
@@ -370,19 +363,18 @@ bool AsyncCodecSource::queueInputBuffer(DroidMediaBuffer *buffer, size_t index)
         int32_t numPageSamples;
         if (!
 #if ANDROID_MAJOR >= 9
-                buffer->meta_data().findInt32(kKeyValidSamples, &numPageSamples)
+            buffer->meta_data().findInt32(kKeyValidSamples, &numPageSamples)
 #else
-                buffer->meta_data()->findInt32(kKeyValidSamples, &numPageSamples)
+            buffer->meta_data()->findInt32(kKeyValidSamples, &numPageSamples)
 #endif
-           ) {
+        ) {
             numPageSamples = -1;
         }
         memcpy(inbuf->base() + cpLen, &numPageSamples, sizeof(numPageSamples));
     }
 
     status_t res = mCodec->queueInputBuffer(
-            index, 0 /* offset */, buffer->range_length() + (mIsVorbis ? 4 : 0),
-            timeUs, 0 /* flags */);
+        index, 0 /* offset */, buffer->range_length() + (mIsVorbis ? 4 : 0), timeUs, 0 /* flags */);
     if (res != OK) {
         ALOGE("[%s] failed to queue input buffer #%zu", mComponentName.c_str(), index);
         mState = ERROR;
@@ -397,12 +389,10 @@ void AsyncCodecSource::queueEOS(size_t index)
     ALOGV("[%s] Queued EOS buffer #%zu.", mComponentName.c_str(), index);
 }
 
-void AsyncCodecSource::flush()
-{
-    mCodec->flush();
-}
+void AsyncCodecSource::flush() { mCodec->flush(); }
 
-void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
+void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg)
+{
 
     if (mCodec == nullptr) {
         return;
@@ -413,10 +403,12 @@ void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
     if (cbID == MediaCodec::CB_INPUT_AVAILABLE) {
         int32_t index;
         CHECK(msg->findInt32("index", &index));
-        ALOGV("[%s] Got input buffer #%d %d", mComponentName.c_str(), index, MediaCodec::CB_INPUT_AVAILABLE);
+        ALOGV("[%s] Got input buffer #%d %d", mComponentName.c_str(), index,
+            MediaCodec::CB_INPUT_AVAILABLE);
         mSourceReader->inputBufferAvailable(index);
     } else if (cbID == MediaCodec::CB_OUTPUT_FORMAT_CHANGED) {
-        ALOGD("[%s] Output format changed! Buffers remaining: %zu", mComponentName.c_str(), mOutput.lock()->mBufferQueue.size());
+        ALOGD("[%s] Output format changed! Buffers remaining: %zu", mComponentName.c_str(),
+            mOutput.lock()->mBufferQueue.size());
         sp<AMessage> outputFormat;
         status_t err = mCodec->getOutputFormat(&outputFormat);
         if (err != OK) {
@@ -427,7 +419,7 @@ void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
         sp<MetaData> meta = new MetaData;
         convertMessageToMetaData(outputFormat, meta);
         mMeta.lock().set(meta);
-        MediaBuffer     *buffer = new MediaBuffer(0);
+        MediaBuffer *buffer = new MediaBuffer(0);
         Mutexed<Output>::Locked me(mOutput);
         me->mBufferQueue.push_back(buffer);
         mOutputChanged = true;
@@ -454,21 +446,20 @@ void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
         sp<MediaCodecBuffer> out_buffer;
         status_t res = mCodec->getOutputBuffer(index, &out_buffer);
         if (res != OK) {
-            ALOGE("[%s] could not get output buffer #%d",
-                    mComponentName.c_str(), index);
+            ALOGE("[%s] could not get output buffer #%d", mComponentName.c_str(), index);
             mState = ERROR;
             mCodec->releaseOutputBuffer(index);
             return;
         }
 
         if (mUsingSurface && size > 0) {
-            MediaBuffer     *buffer = new MediaBuffer(0);
+            MediaBuffer *buffer = new MediaBuffer(0);
             Mutexed<Output>::Locked me(mOutput);
             me->mBufferQueue.push_back(buffer);
             mCodec->renderOutputBufferAndRelease(index);
             me->mAvailable.signal();
         } else {
-            MediaBuffer     *buffer = new MediaBuffer(size);
+            MediaBuffer *buffer = new MediaBuffer(size);
             CHECK_LE(out_buffer->size(), buffer->size());
             memcpy(buffer->data(), out_buffer->data(), out_buffer->size());
 #if ANDROID_MAJOR >= 9
@@ -484,11 +475,10 @@ void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
     } else if (cbID == MediaCodec::CB_ERROR) {
         status_t err;
         CHECK(msg->findInt32("err", &err));
-        ALOGE("Codec (%s) reported error : 0x%d",
-                        mComponentName.c_str(), err);
+        ALOGE("Codec (%s) reported error : 0x%d", mComponentName.c_str(), err);
         mState = ERROR;
     } else {
-        ALOGE("Codec (%s) unhandled callback id : 0x%d",  mComponentName.c_str(), cbID);
+        ALOGE("Codec (%s) unhandled callback id : 0x%d", mComponentName.c_str(), cbID);
     }
 }
 

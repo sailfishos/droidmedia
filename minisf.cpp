@@ -28,15 +28,15 @@
 
 using namespace android;
 
-int
-main(int, char**)
+int main(int, char **)
 {
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();
 
     MiniSurfaceFlinger::instantiate();
 
-// Android 4 will not allow system services to be run from minimediaservice. So keep them here instead.
+    // Android 4 will not allow system services to be run from minimediaservice.
+    // So keep them here instead.
 
 #if (ANDROID_MAJOR == 4)
     FakePermissionController::instantiate();
@@ -44,7 +44,6 @@ main(int, char**)
     FakeAppOps::instantiate();
 #endif
 #endif
-
 
     ProcessState::self()->startThreadPool();
     IPCThreadState::self()->joinThreadPool();

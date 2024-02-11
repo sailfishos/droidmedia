@@ -52,15 +52,12 @@ class Surface;
 
 class AsyncCodecSource : public MediaSource {
 public:
-    static sp<MediaSource> Create(const sp<MediaSource> &source,
-                    const sp<AMessage> &format, bool isEncoder, uint32_t flags,
-                    const sp<ANativeWindow> &nativeWindow, const sp<ALooper> &looper,
-                    const char *desiredCodec = NULL,
-                    OMX_COLOR_FORMATTYPE colorFormat = OMX_COLOR_FormatUnused);
+    static sp<MediaSource> Create(const sp<MediaSource> &source, const sp<AMessage> &format,
+        bool isEncoder, uint32_t flags, const sp<ANativeWindow> &nativeWindow,
+        const sp<ALooper> &looper, const char *desiredCodec = NULL,
+        OMX_COLOR_FORMATTYPE colorFormat = OMX_COLOR_FormatUnused);
 
-    bool configure(const sp<AMessage> format,
-                   const sp<Surface> surface,
-                   uint32_t flags = 0);
+    bool configure(const sp<AMessage> format, const sp<Surface> surface, uint32_t flags = 0);
 
     virtual ~AsyncCodecSource();
 
@@ -74,9 +71,7 @@ public:
     virtual sp<MetaData> getFormat();
 
     // reads from the source. This call always blocks.
-    virtual status_t read(
-                    android::DroidMediaBuffer **buffer,
-                    const ReadOptions *options);
+    virtual status_t read(android::DroidMediaBuffer **buffer, const ReadOptions *options);
 
     // for AHandlerReflector
     void onMessageReceived(const sp<AMessage> &msg);
@@ -106,9 +101,8 @@ private:
     };
 
     // Construct this using a codec, source and looper.
-    AsyncCodecSource(
-            const AString &codecName, const sp<MediaSource> &source, const sp<ALooper> &looper,
-            bool isVorbis);
+    AsyncCodecSource(const AString &codecName, const sp<MediaSource> &source,
+        const sp<ALooper> &looper, bool isVorbis);
 
     bool queueInputBuffer(DroidMediaBuffer *buffer, size_t inputBufferIndex);
     void queueEOS(size_t index);
@@ -119,7 +113,7 @@ private:
     sp<ALooper> mLooper;
     sp<ALooper> mCodecLooper;
     sp<AMessage> mNotify = 0;
-    sp<AHandlerReflector<AsyncCodecSource> > mReflector;
+    sp<AHandlerReflector<AsyncCodecSource>> mReflector;
 
     Mutexed<sp<MetaData>> mMeta;
     bool mUsingSurface;
@@ -137,7 +131,7 @@ private:
     struct Output {
         Output();
 
-        List<DroidMediaBuffer*> mBufferQueue;
+        List<DroidMediaBuffer *> mBufferQueue;
         bool mReachedEOS;
         bool mReading = false;
         Condition mAvailable;
@@ -149,4 +143,4 @@ private:
 
 } // namespace android
 
-#endif //ASYNC_DECODING_SOURCE_H_
+#endif // ASYNC_DECODING_SOURCE_H_

@@ -51,8 +51,7 @@ using namespace android;
 
 #define BINDER_SERVICE_CHECK_INTERVAL 500000
 
-int
-main(int, char**)
+int main(int, char **)
 {
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();
@@ -72,7 +71,8 @@ main(int, char**)
     FakeAudioPolicyService::instantiate();
 #endif
 
-// PermissionController and AppOps are needed on Android 4, but aren't allowed to be run here.
+// PermissionController and AppOps are needed on Android 4, but aren't allowed
+// to be run here.
 #if ANDROID_MAJOR >= 5
     FakePermissionController::instantiate();
     FakeAppOps::instantiate();
@@ -85,7 +85,8 @@ main(int, char**)
 #endif
 #endif
 #if ANDROID_MAJOR >= 8
-    sp<android::frameworks::sensorservice::V1_0::ISensorManager> sensorManager = new FakeSensorManager;
+    sp<android::frameworks::sensorservice::V1_0::ISensorManager> sensorManager
+        = new FakeSensorManager;
     status_t status = sensorManager->registerAsService();
     (void)status;
 #endif
@@ -111,12 +112,13 @@ main(int, char**)
     ALOGD("Allowing use of the camera for users root and bin");
 #if ANDROID_MAJOR >= 7
     sp<hardware::ICameraService> gCameraService = interface_cast<hardware::ICameraService>(binder);
-    std::vector<int32_t> users = {0, 1};
+    std::vector<int32_t> users = { 0, 1 };
     gCameraService->notifySystemEvent(1, users);
 #else
     sp<ICameraService> gCameraService = interface_cast<ICameraService>(binder);
     int32_t users[2];
-    users[0] = 0; users[1] = 1;
+    users[0] = 0;
+    users[1] = 1;
     gCameraService->notifySystemEvent(1, users, 2);
 #endif
 #endif
