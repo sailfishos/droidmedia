@@ -1,4 +1,30 @@
 ---
 Language:        Cpp
-BasedOnStyle:  Google
+BasedOnStyle:  WebKit
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterObjCDeclaration: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+BreakBeforeBraces: Custom
+ColumnLimit: 100
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+IndentExternBlock: NoIndent
+IndentWidth: 4
+PointerAlignment: Right
+SortIncludes: false
 ...
