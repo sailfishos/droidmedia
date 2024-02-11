@@ -2,7 +2,9 @@
 
 droidmedia provides a device specific library that can be used by
 gst-droid (https://github.com/sailfishos/gst-droid) to expose android
-controlled hardware and codecs to gstreamer and the host linux system.
+controlled hardware and codecs to GStreamer and the host linux system.
+
+Please see also https://docs.sailfishos.org/Reference/Core_Areas_and_APIs/Multimedia/ for an overview of the Sailfish Multimedia system.
 
 ## Building and Hacking
 
