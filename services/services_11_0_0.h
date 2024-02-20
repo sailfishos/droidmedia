@@ -25,26 +25,49 @@ class FakeSensorEventConnection : public android::BnSensorEventConnection {
     android::sp<android::BitTube> mChannel;
 
 public:
-    FakeSensorEventConnection() { mChannel = new android::BitTube(0); }
+    FakeSensorEventConnection()
+    {
+        mChannel = new android::BitTube(0);
+    }
 
-    android::sp<android::BitTube> getSensorChannel() const { return mChannel; }
+    android::sp<android::BitTube> getSensorChannel() const
+    {
+        return mChannel;
+    }
 
-    android::status_t enableDisable(int, bool, nsecs_t, nsecs_t, int) { return 0; }
+    android::status_t enableDisable(int, bool, nsecs_t, nsecs_t, int)
+    {
+        return 0;
+    }
 
-    android::status_t setEventRate(int, nsecs_t) { return 0; }
+    android::status_t setEventRate(int, nsecs_t)
+    {
+        return 0;
+    }
 
-    android::status_t flush() { return 0; }
+    android::status_t flush()
+    {
+        return 0;
+    }
 
-    virtual int32_t configureChannel(int32_t, int32_t) { return 0; }
+    virtual int32_t configureChannel(int32_t, int32_t)
+    {
+        return 0;
+    }
 
 protected:
-    void destroy() { }
+    void destroy()
+    {
+    }
 };
 
 class FakeSensorServer : public android::BinderService<FakeSensorServer>,
                          public android::BnSensorServer {
 public:
-    static char const *getServiceName() { return "sensorservice"; }
+    static char const *getServiceName()
+    {
+        return "sensorservice";
+    }
 
     android::Vector<android::Sensor> getSensorList(const android::String16 &)
     {
@@ -74,7 +97,10 @@ public:
         return 0;
     }
 
-    int32_t isDataInjectionEnabled() { return 0; }
+    int32_t isDataInjectionEnabled()
+    {
+        return 0;
+    }
 
     android::status_t shellCommand(int, int, int, android::Vector<android::String16> &)
     {
@@ -89,7 +115,9 @@ public:
 
 class FakeEventQueue : public android::frameworks::sensorservice::V1_0::IEventQueue {
 public:
-    FakeEventQueue() { }
+    FakeEventQueue()
+    {
+    }
 
     android::hardware::Return<android::frameworks::sensorservice::V1_0::Result> enableSensor(
         int32_t sensorHandle, int32_t samplingPeriodUs, int64_t maxBatchReportLatencyUs)
@@ -167,14 +195,20 @@ class MiniSurfaceFlinger : public BinderService<MiniSurfaceFlinger>,
                            public BnSurfaceComposer,
                            public IBinder::DeathRecipient {
 public:
-    static char const *getServiceName() { return "SurfaceFlinger"; }
+    static char const *getServiceName()
+    {
+        return "SurfaceFlinger";
+    }
 
     void binderDied(const wp<IBinder> &)
     {
         // Nothing
     }
 
-    sp<ISurfaceComposerClient> createConnection() { return sp<ISurfaceComposerClient>(); }
+    sp<ISurfaceComposerClient> createConnection()
+    {
+        return sp<ISurfaceComposerClient>();
+    }
 
     sp<ISurfaceComposerClient> createScopedConnection(const sp<IGraphicBufferProducer> &)
     {
@@ -186,23 +220,35 @@ public:
         return sp<IDisplayEventConnection>();
     }
 
-    sp<IBinder> createDisplay(const String8 &, bool) { return NULL; }
+    sp<IBinder> createDisplay(const String8 &, bool)
+    {
+        return NULL;
+    }
 
     void destroyDisplay(const sp<IBinder> &)
     {
         // Nothing
     }
 
-    virtual sp<IBinder> getBuiltInDisplay(int32_t) { return NULL; }
+    virtual sp<IBinder> getBuiltInDisplay(int32_t)
+    {
+        return NULL;
+    }
 
-    sp<IBinder> getPhysicalDisplayToken(PhysicalDisplayId displayId) const { return NULL; }
+    sp<IBinder> getPhysicalDisplayToken(PhysicalDisplayId displayId) const
+    {
+        return NULL;
+    }
 
     status_t getDisplayNativePrimaries(const sp<IBinder> &display, ui::DisplayPrimaries &)
     {
         return BAD_VALUE;
     }
 
-    status_t getColorManagement(bool *outGetColorManagement) const { return BAD_VALUE; }
+    status_t getColorManagement(bool *outGetColorManagement) const
+    {
+        return BAD_VALUE;
+    }
 
     void setTransactionState(const Vector<ComposerState> &, const Vector<DisplayState> &, uint32_t,
         const sp<IBinder> &, const InputWindowCommands &, int64_t, const client_cache_t &, bool,
@@ -216,35 +262,77 @@ public:
         // Nothing
     }
 
-    bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer> &) const { return true; }
+    bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer> &) const
+    {
+        return true;
+    }
 
-    void setPowerMode(const sp<IBinder> &, int) { }
+    void setPowerMode(const sp<IBinder> &, int)
+    {
+    }
 
-    status_t getDisplayState(const sp<IBinder> &, ui::DisplayState *) { return BAD_VALUE; }
+    status_t getDisplayState(const sp<IBinder> &, ui::DisplayState *)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t getDisplayInfo(const sp<IBinder> &, DisplayInfo *) { return BAD_VALUE; }
+    status_t getDisplayInfo(const sp<IBinder> &, DisplayInfo *)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t getDisplayConfigs(const sp<IBinder> &, Vector<DisplayConfig> *) { return BAD_VALUE; }
+    status_t getDisplayConfigs(const sp<IBinder> &, Vector<DisplayConfig> *)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t getDisplayStats(const sp<IBinder> &, DisplayStatInfo *) { return BAD_VALUE; }
+    status_t getDisplayStats(const sp<IBinder> &, DisplayStatInfo *)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t getDisplayViewport(const sp<IBinder> &, Rect *) { return 0; }
+    status_t getDisplayViewport(const sp<IBinder> &, Rect *)
+    {
+        return 0;
+    }
 
-    int getActiveConfig(const sp<IBinder> &) { return 0; }
+    int getActiveConfig(const sp<IBinder> &)
+    {
+        return 0;
+    }
 
-    status_t setActiveConfig(const sp<IBinder> &, int) { return BAD_VALUE; }
+    status_t setActiveConfig(const sp<IBinder> &, int)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t getAutoLowLatencyModeSupport(const sp<IBinder> &, bool *) const { return BAD_VALUE; }
+    status_t getAutoLowLatencyModeSupport(const sp<IBinder> &, bool *) const
+    {
+        return BAD_VALUE;
+    }
 
-    void setAutoLowLatencyMode(const sp<IBinder> &, bool) { }
+    void setAutoLowLatencyMode(const sp<IBinder> &, bool)
+    {
+    }
 
-    status_t getGameContentTypeSupport(const sp<IBinder> &, bool *) const { return BAD_VALUE; }
+    status_t getGameContentTypeSupport(const sp<IBinder> &, bool *) const
+    {
+        return BAD_VALUE;
+    }
 
-    void setGameContentType(const sp<IBinder> &, bool) { }
+    void setGameContentType(const sp<IBinder> &, bool)
+    {
+    }
 
-    status_t clearAnimationFrameStats() { return BAD_VALUE; }
+    status_t clearAnimationFrameStats()
+    {
+        return BAD_VALUE;
+    }
 
-    status_t getAnimationFrameStats(FrameStats *) const { return BAD_VALUE; }
+    status_t getAnimationFrameStats(FrameStats *) const
+    {
+        return BAD_VALUE;
+    }
 
     status_t getDisplayColorModes(const sp<IBinder> &, Vector<ui::ColorMode> *)
     {
@@ -256,9 +344,15 @@ public:
         return static_cast<ui::ColorMode>(HAL_COLOR_MODE_NATIVE);
     }
 
-    status_t setActiveColorMode(const sp<IBinder> &, ui::ColorMode) { return BAD_VALUE; }
+    status_t setActiveColorMode(const sp<IBinder> &, ui::ColorMode)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t getHdrCapabilities(const sp<IBinder> &, HdrCapabilities *) const { return BAD_VALUE; }
+    status_t getHdrCapabilities(const sp<IBinder> &, HdrCapabilities *) const
+    {
+        return BAD_VALUE;
+    }
 
     status_t captureScreen(const sp<IBinder> &, sp<GraphicBuffer> *, bool &, ui::Dataspace,
         ui::PixelFormat, const Rect &, uint32_t, uint32_t, bool, ui::Rotation, bool)
@@ -272,7 +366,10 @@ public:
         return BAD_VALUE;
     }
 
-    status_t captureScreen(uint64_t, ui::Dataspace *, sp<GraphicBuffer> *) { return BAD_VALUE; }
+    status_t captureScreen(uint64_t, ui::Dataspace *, sp<GraphicBuffer> *)
+    {
+        return BAD_VALUE;
+    }
 
     status_t captureLayers(const sp<IBinder> &, sp<GraphicBuffer> *, const ui::Dataspace,
         const ui::PixelFormat, const Rect &,
@@ -281,15 +378,30 @@ public:
         return 0;
     }
 
-    status_t getSupportedFrameTimestamps(std::vector<FrameEvent> *) const { return BAD_VALUE; }
+    status_t getSupportedFrameTimestamps(std::vector<FrameEvent> *) const
+    {
+        return BAD_VALUE;
+    }
 
-    status_t enableVSyncInjections(bool) { return BAD_VALUE; }
+    status_t enableVSyncInjections(bool)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t injectVSync(nsecs_t) { return BAD_VALUE; }
+    status_t injectVSync(nsecs_t)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t getLayerDebugInfo(std::vector<LayerDebugInfo> *) { return 0; }
+    status_t getLayerDebugInfo(std::vector<LayerDebugInfo> *)
+    {
+        return 0;
+    }
 
-    status_t getLayerDebugInfo(std::vector<LayerDebugInfo> *) const { return 0; }
+    status_t getLayerDebugInfo(std::vector<LayerDebugInfo> *) const
+    {
+        return 0;
+    }
 
     std::vector<PhysicalDisplayId> getPhysicalDisplayIds() const
     {
@@ -319,9 +431,15 @@ public:
         return BAD_VALUE;
     }
 
-    status_t getProtectedContentSupport(bool *outSupported) const { return BAD_VALUE; }
+    status_t getProtectedContentSupport(bool *outSupported) const
+    {
+        return BAD_VALUE;
+    }
 
-    status_t isWideColorDisplay(const sp<IBinder> &, bool *) const { return BAD_VALUE; }
+    status_t isWideColorDisplay(const sp<IBinder> &, bool *) const
+    {
+        return BAD_VALUE;
+    }
 
     status_t addRegionSamplingListener(
         const Rect &, const sp<IBinder> &, const sp<IRegionSamplingListener> &)
@@ -329,7 +447,10 @@ public:
         return BAD_VALUE;
     }
 
-    status_t removeRegionSamplingListener(const sp<IRegionSamplingListener> &) { return BAD_VALUE; }
+    status_t removeRegionSamplingListener(const sp<IRegionSamplingListener> &)
+    {
+        return BAD_VALUE;
+    }
 
     status_t setAllowedDisplayConfigs(const sp<IBinder> &, const std::vector<int32_t> &)
     {
@@ -352,20 +473,35 @@ public:
         return BAD_VALUE;
     }
 
-    status_t getDisplayBrightnessSupport(const sp<IBinder> &, bool *) const { return BAD_VALUE; }
+    status_t getDisplayBrightnessSupport(const sp<IBinder> &, bool *) const
+    {
+        return BAD_VALUE;
+    }
 
-    status_t setDisplayBrightness(const sp<IBinder> &, float) { return BAD_VALUE; }
+    status_t setDisplayBrightness(const sp<IBinder> &, float)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t notifyPowerHint(int32_t) { return BAD_VALUE; }
+    status_t notifyPowerHint(int32_t)
+    {
+        return BAD_VALUE;
+    }
 
     status_t setGlobalShadowSettings(const half4 &, const half4 &, float, float, float)
     {
         return BAD_VALUE;
     }
 
-    status_t setFrameRate(const sp<IGraphicBufferProducer> &, float, int8_t) { return BAD_VALUE; }
+    status_t setFrameRate(const sp<IGraphicBufferProducer> &, float, int8_t)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t acquireFrameRateFlexibilityToken(sp<IBinder> *) { return BAD_VALUE; }
+    status_t acquireFrameRateFlexibilityToken(sp<IBinder> *)
+    {
+        return BAD_VALUE;
+    }
 };
 
 #include <binder/IPermissionController.h>
@@ -373,7 +509,10 @@ public:
 class FakePermissionController : public BinderService<FakePermissionController>,
                                  public BnPermissionController {
 public:
-    static char const *getServiceName() { return "permission"; }
+    static char const *getServiceName()
+    {
+        return "permission";
+    }
 
     bool checkPermission(const String16 &permission, int32_t, int32_t)
     {
@@ -384,20 +523,34 @@ public:
         return false;
     }
 
-    int32_t noteOp(const String16 &, int32_t, const String16 &) { return 0; }
+    int32_t noteOp(const String16 &, int32_t, const String16 &)
+    {
+        return 0;
+    }
 
-    void getPackagesForUid(const uid_t, Vector<String16> &) { }
+    void getPackagesForUid(const uid_t, Vector<String16> &)
+    {
+    }
 
-    bool isRuntimePermission(const String16 &) { return false; }
+    bool isRuntimePermission(const String16 &)
+    {
+        return false;
+    }
 
-    int getPackageUid(const String16 &, int) { return 0; }
+    int getPackageUid(const String16 &, int)
+    {
+        return 0;
+    }
 };
 
 #include <binder/AppOpsManager.h>
 #include <binder/IAppOpsService.h>
 class FakeAppOps : public BinderService<FakeAppOps>, public BnAppOpsService {
 public:
-    static char const *getServiceName() { return "appops"; }
+    static char const *getServiceName()
+    {
+        return "appops";
+    }
 
     int32_t checkOperation(int32_t, int32_t, const String16 &)
     {
@@ -432,18 +585,30 @@ public:
         // Nothing
     }
 
-    sp<IBinder> getToken(const sp<IBinder> &) { return NULL; }
+    sp<IBinder> getToken(const sp<IBinder> &)
+    {
+        return NULL;
+    }
 
-    int32_t permissionToOpCode(const String16 &) { return 0; }
+    int32_t permissionToOpCode(const String16 &)
+    {
+        return 0;
+    }
 
-    int32_t checkAudioOperation(int32_t, int32_t, int32_t, const String16 &) { return 0; }
+    int32_t checkAudioOperation(int32_t, int32_t, int32_t, const String16 &)
+    {
+        return 0;
+    }
 
     void setCameraAudioRestriction(int32_t)
     {
         // Nothing
     }
 
-    bool shouldCollectNotes(int32_t) { return false; }
+    bool shouldCollectNotes(int32_t)
+    {
+        return false;
+    }
 };
 
 #include <binder/IProcessInfoService.h>
@@ -525,7 +690,10 @@ status_t BnProcessInfoService::onTransact(
 class FakeProcessInfoService : public BinderService<FakeProcessInfoService>,
                                public BnProcessInfoService {
 public:
-    static char const *getServiceName() { return "processinfo"; }
+    static char const *getServiceName()
+    {
+        return "processinfo";
+    }
 
     status_t getProcessStatesFromPids(size_t length, int32_t *pids, int32_t *states)
     {
@@ -549,21 +717,52 @@ public:
 
 class FakeBatteryStats : public BinderService<FakeBatteryStats>, public BnBatteryStats {
 public:
-    static char const *getServiceName() { return "batterystats"; }
-    void noteStartSensor(int uid, int sensor) { }
-    void noteStopSensor(int uid, int sensor) { }
-    void noteStartVideo(int uid) { }
-    void noteStopVideo(int uid) { }
-    void noteStartAudio(int uid) { }
-    void noteStopAudio(int uid) { }
-    void noteResetVideo() { }
-    void noteResetAudio() { }
-    void noteFlashlightOn(int uid) { }
-    void noteFlashlightOff(int uid) { }
-    void noteStartCamera(int uid) { }
-    void noteStopCamera(int uid) { }
-    void noteResetCamera() { }
-    void noteResetFlashlight() { }
+    static char const *getServiceName()
+    {
+        return "batterystats";
+    }
+    void noteStartSensor(int uid, int sensor)
+    {
+    }
+    void noteStopSensor(int uid, int sensor)
+    {
+    }
+    void noteStartVideo(int uid)
+    {
+    }
+    void noteStopVideo(int uid)
+    {
+    }
+    void noteStartAudio(int uid)
+    {
+    }
+    void noteStopAudio(int uid)
+    {
+    }
+    void noteResetVideo()
+    {
+    }
+    void noteResetAudio()
+    {
+    }
+    void noteFlashlightOn(int uid)
+    {
+    }
+    void noteFlashlightOff(int uid)
+    {
+    }
+    void noteStartCamera(int uid)
+    {
+    }
+    void noteStopCamera(int uid)
+    {
+    }
+    void noteResetCamera()
+    {
+    }
+    void noteResetFlashlight()
+    {
+    }
 };
 
 #include <aidl/android/media/IResourceManagerService.h>
@@ -578,7 +777,10 @@ public:
 class FakeResourceManagerService : public BinderService<FakeResourceManagerService>,
                                    public aidl::android::media::BnResourceManagerService {
 public:
-    static char const *getServiceName() { return "media.resource_manager"; }
+    static char const *getServiceName()
+    {
+        return "media.resource_manager";
+    }
 
     static void instantiate()
     {
@@ -614,7 +816,10 @@ public:
         return ::ndk::ScopedAStatus::ok();
     }
 
-    ::ndk::ScopedAStatus removeClient(int32_t, int64_t) { return ::ndk::ScopedAStatus::ok(); }
+    ::ndk::ScopedAStatus removeClient(int32_t, int64_t)
+    {
+        return ::ndk::ScopedAStatus::ok();
+    }
 
     ::ndk::ScopedAStatus reclaimResource(
         int32_t, const std::vector<::aidl::android::media::MediaResourceParcel> &, bool *)
@@ -622,7 +827,10 @@ public:
         return ::ndk::ScopedAStatus::ok();
     }
 
-    ::ndk::ScopedAStatus overridePid(int32_t, int32_t) { return ::ndk::ScopedAStatus::ok(); }
+    ::ndk::ScopedAStatus overridePid(int32_t, int32_t)
+    {
+        return ::ndk::ScopedAStatus::ok();
+    }
 
     ::ndk::ScopedAStatus markClientForPendingRemoval(int32_t, int64_t)
     {
@@ -649,18 +857,30 @@ public:
 class FakeActivityManager : public BinderService<FakeActivityManager>,
                             public BnFakeActivityManager {
 public:
-    static char const *getServiceName() { return "activity"; }
+    static char const *getServiceName()
+    {
+        return "activity";
+    }
 
-    virtual int openContentUri(const String16 &) { return 0; };
+    virtual int openContentUri(const String16 &)
+    {
+        return 0;
+    };
 
     virtual void registerUidObserver(
         const sp<IUidObserver> &, const int32_t, const int32_t, const String16 &) {};
 
     virtual void unregisterUidObserver(const sp<IUidObserver> &) {};
 
-    virtual bool isUidActive(const uid_t, const String16 &) { return false; };
+    virtual bool isUidActive(const uid_t, const String16 &)
+    {
+        return false;
+    };
 
-    virtual int32_t getUidProcessState(const uid_t, const String16 &) { return 0; }
+    virtual int32_t getUidProcessState(const uid_t, const String16 &)
+    {
+        return 0;
+    }
 };
 
 #include <android/hardware/BnSensorPrivacyManager.h>
@@ -668,7 +888,10 @@ public:
 class FakeSensorPrivacyManager : public BinderService<FakeSensorPrivacyManager>,
                                  public hardware::BnSensorPrivacyManager {
 public:
-    static char const *getServiceName() { return "sensor_privacy"; }
+    static char const *getServiceName()
+    {
+        return "sensor_privacy";
+    }
 
     ::android::binder::Status addSensorPrivacyListener(const sp<hardware::ISensorPrivacyListener> &)
     {
@@ -687,5 +910,8 @@ public:
         return ::android::binder::Status::ok();
     }
 
-    ::android::binder::Status setSensorPrivacy(bool) { return ::android::binder::Status::ok(); }
+    ::android::binder::Status setSensorPrivacy(bool)
+    {
+        return ::android::binder::Status::ok();
+    }
 };

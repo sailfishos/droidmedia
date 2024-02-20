@@ -292,7 +292,10 @@ DroidMediaBufferQueue *droid_media_camera_get_recording_buffer_queue(DroidMediaC
     return camera->m_recording_queue.get();
 }
 
-int droid_media_camera_get_number_of_cameras() { return android::Camera::getNumberOfCameras(); }
+int droid_media_camera_get_number_of_cameras()
+{
+    return android::Camera::getNumberOfCameras();
+}
 
 bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 {
@@ -430,7 +433,10 @@ bool droid_media_camera_start_preview(DroidMediaCamera *camera)
     return camera->m_camera->startPreview() == android::NO_ERROR;
 }
 
-void droid_media_camera_stop_preview(DroidMediaCamera *camera) { camera->m_camera->stopPreview(); }
+void droid_media_camera_stop_preview(DroidMediaCamera *camera)
+{
+    camera->m_camera->stopPreview();
+}
 
 bool droid_media_camera_is_preview_enabled(DroidMediaCamera *camera)
 {

@@ -287,7 +287,9 @@ public:
     {
     }
 
-    ~InputBuffer() { }
+    ~InputBuffer()
+    {
+    }
 
     void *m_cb_data;
     DroidMediaCallback m_unref;
@@ -553,7 +555,10 @@ public:
 #endif
     }
 
-    bool isEncoder() { return m_enc != NULL; }
+    bool isEncoder()
+    {
+        return m_enc != NULL;
+    }
 
     DroidMediaCodecMetaData *meta()
     {
@@ -951,7 +956,10 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
     }
 }
 
-void droid_media_codec_destroy(DroidMediaCodec *codec) { delete codec; }
+void droid_media_codec_destroy(DroidMediaCodec *codec)
+{
+    delete codec;
+}
 
 void droid_media_codec_queue(
     DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb)
@@ -1168,9 +1176,15 @@ void droid_media_codec_set_data_callbacks(
     codec->m_data_cb_data = data;
 }
 
-void droid_media_codec_flush(DroidMediaCodec *codec) { codec->m_src->flush(); }
+void droid_media_codec_flush(DroidMediaCodec *codec)
+{
+    codec->m_src->flush();
+}
 
-void droid_media_codec_drain(DroidMediaCodec *codec) { codec->m_src->drain(); }
+void droid_media_codec_drain(DroidMediaCodec *codec)
+{
+    codec->m_src->drain();
+}
 
 void droid_media_codec_get_output_info(
     DroidMediaCodec *codec, DroidMediaCodecMetaData *info, DroidMediaRect *crop)

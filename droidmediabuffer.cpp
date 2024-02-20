@@ -77,7 +77,9 @@ _DroidMediaBuffer::_DroidMediaBuffer(android::sp<android::GraphicBuffer> &buffer
     common.decRef = decRef;
 }
 
-_DroidMediaBuffer::~_DroidMediaBuffer() { }
+_DroidMediaBuffer::~_DroidMediaBuffer()
+{
+}
 
 void _DroidMediaBuffer::incRef(struct android_native_base_t *base)
 {
@@ -124,14 +126,20 @@ DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h, uint32_t for
     return droidBuffer;
 }
 
-void droid_media_buffer_destroy(DroidMediaBuffer *buffer) { buffer->decStrong(0); }
+void droid_media_buffer_destroy(DroidMediaBuffer *buffer)
+{
+    buffer->decStrong(0);
+}
 
 void droid_media_buffer_set_user_data(DroidMediaBuffer *buffer, void *data)
 {
     buffer->m_userData = data;
 }
 
-void *droid_media_buffer_get_user_data(DroidMediaBuffer *buffer) { return buffer->m_userData; }
+void *droid_media_buffer_get_user_data(DroidMediaBuffer *buffer)
+{
+    return buffer->m_userData;
+}
 
 void droid_media_buffer_release(DroidMediaBuffer *buffer, EGLDisplay display, EGLSyncKHR fence)
 {
@@ -209,14 +217,20 @@ void droid_media_buffer_unlock(DroidMediaBuffer *buffer)
     }
 }
 
-uint32_t droid_media_buffer_get_transform(DroidMediaBuffer *buffer) { return buffer->m_transform; }
+uint32_t droid_media_buffer_get_transform(DroidMediaBuffer *buffer)
+{
+    return buffer->m_transform;
+}
 
 uint32_t droid_media_buffer_get_scaling_mode(DroidMediaBuffer *buffer)
 {
     return buffer->m_scalingMode;
 }
 
-int64_t droid_media_buffer_get_timestamp(DroidMediaBuffer *buffer) { return buffer->m_timestamp; }
+int64_t droid_media_buffer_get_timestamp(DroidMediaBuffer *buffer)
+{
+    return buffer->m_timestamp;
+}
 
 uint64_t droid_media_buffer_get_frame_number(DroidMediaBuffer *buffer)
 {
@@ -234,11 +248,20 @@ DroidMediaRect droid_media_buffer_get_crop_rect(DroidMediaBuffer *buffer)
     return rect;
 }
 
-uint32_t droid_media_buffer_get_width(DroidMediaBuffer *buffer) { return buffer->width; }
+uint32_t droid_media_buffer_get_width(DroidMediaBuffer *buffer)
+{
+    return buffer->width;
+}
 
-uint32_t droid_media_buffer_get_height(DroidMediaBuffer *buffer) { return buffer->height; }
+uint32_t droid_media_buffer_get_height(DroidMediaBuffer *buffer)
+{
+    return buffer->height;
+}
 
-const void *droid_media_buffer_get_handle(DroidMediaBuffer *buffer) { return buffer->handle; }
+const void *droid_media_buffer_get_handle(DroidMediaBuffer *buffer)
+{
+    return buffer->handle;
+}
 
 void droid_media_buffer_get_info(DroidMediaBuffer *buffer, DroidMediaBufferInfo *info)
 {

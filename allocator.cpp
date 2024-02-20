@@ -27,7 +27,9 @@ DroidMediaAllocator::DroidMediaAllocator()
 {
 }
 
-DroidMediaAllocator::~DroidMediaAllocator() { }
+DroidMediaAllocator::~DroidMediaAllocator()
+{
+}
 
 android::sp<android::GraphicBuffer> DroidMediaAllocator::createGraphicBuffer(uint32_t w, uint32_t h,
     android::PixelFormat format, uint32_t usage,
@@ -59,5 +61,8 @@ android::sp<android::GraphicBuffer> DroidMediaAllocator::createGraphicBuffer(uin
     return graphicBuffer;
 }
 
-void DroidMediaAllocator::setGraphicBufferSize(int size) { m_size = size; }
+void DroidMediaAllocator::setGraphicBufferSize(int size)
+{
+    m_size = size;
+}
 #endif

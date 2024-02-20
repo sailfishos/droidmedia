@@ -77,7 +77,10 @@ public:
     void onMessageReceived(const sp<AMessage> &msg);
 
     // unsupported methods
-    virtual status_t pause() { return INVALID_OPERATION; }
+    virtual status_t pause()
+    {
+        return INVALID_OPERATION;
+    }
 
     status_t setParameters(const sp<AMessage> &params);
 

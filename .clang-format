@@ -1,6 +1,7 @@
 ---
 Language:        Cpp
 BasedOnStyle:  WebKit
+AllowShortFunctionsOnASingleLine: false
 BraceWrapping:
   AfterCaseLabel: false
   AfterClass: false

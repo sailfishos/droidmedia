@@ -41,9 +41,15 @@ class FakeAudioPolicyService : public BinderService<FakeAudioPolicyService>,
 
 public:
     // for BinderService
-    static const char *getServiceName() ANDROID_API { return "media.audio_policy"; }
+    static const char *getServiceName() ANDROID_API
+    {
+        return "media.audio_policy";
+    }
 
-    virtual status_t dump(int fd, const Vector<String16> &args) { return NO_ERROR; }
+    virtual status_t dump(int fd, const Vector<String16> &args)
+    {
+        return NO_ERROR;
+    }
 
     //
     // BnAudioPolicyService (see AudioPolicyInterface for method descriptions)
@@ -59,7 +65,10 @@ public:
     {
         return AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE;
     }
-    virtual status_t setPhoneState(audio_mode_t state) { return NO_ERROR; }
+    virtual status_t setPhoneState(audio_mode_t state)
+    {
+        return NO_ERROR;
+    }
     virtual status_t setForceUse(audio_policy_force_use_t usage, audio_policy_forced_cfg_t config)
     {
         return NO_ERROR;
@@ -112,7 +121,10 @@ public:
     {
         return NO_ERROR;
     }
-    virtual void releaseInput(audio_io_handle_t input, audio_session_t session) { return; }
+    virtual void releaseInput(audio_io_handle_t input, audio_session_t session)
+    {
+        return;
+    }
     virtual status_t initStreamVolume(audio_stream_type_t stream, int indexMin, int indexMax)
     {
         return NO_ERROR;
@@ -127,19 +139,31 @@ public:
     {
         return NO_ERROR;
     }
-    virtual uint32_t getStrategyForStream(audio_stream_type_t stream) { return 0; }
+    virtual uint32_t getStrategyForStream(audio_stream_type_t stream)
+    {
+        return 0;
+    }
     virtual audio_devices_t getDevicesForStream(audio_stream_type_t stream)
     {
         return AUDIO_DEVICE_NONE;
     }
-    virtual audio_io_handle_t getOutputForEffect(const effect_descriptor_t *desc) { return 0; }
+    virtual audio_io_handle_t getOutputForEffect(const effect_descriptor_t *desc)
+    {
+        return 0;
+    }
     virtual status_t registerEffect(const effect_descriptor_t *desc, audio_io_handle_t io,
         uint32_t strategy, int session, int id)
     {
         return NO_ERROR;
     }
-    virtual status_t unregisterEffect(int id) { return NO_ERROR; }
-    virtual status_t setEffectEnabled(int id, bool enabled) { return NO_ERROR; }
+    virtual status_t unregisterEffect(int id)
+    {
+        return NO_ERROR;
+    }
+    virtual status_t setEffectEnabled(int id, bool enabled)
+    {
+        return NO_ERROR;
+    }
     virtual bool isStreamActive(audio_stream_type_t stream, uint32_t inPastMs = 0) const
     {
         return false;
@@ -148,7 +172,10 @@ public:
     {
         return false;
     }
-    virtual bool isSourceActive(audio_source_t source) const { return false; }
+    virtual bool isSourceActive(audio_source_t source) const
+    {
+        return false;
+    }
     virtual status_t queryDefaultPreProcessing(
         int audioSession, effect_descriptor_t *descriptors, uint32_t *count)
     {
@@ -159,10 +186,16 @@ public:
         return NO_ERROR;
     }
     // IBinder::DeathRecipient
-    virtual void binderDied(const wp<IBinder> &who) { return; }
+    virtual void binderDied(const wp<IBinder> &who)
+    {
+        return;
+    }
 
     // RefBase
-    virtual void onFirstRef() { return; }
+    virtual void onFirstRef()
+    {
+        return;
+    }
 
     //
     // Helpers for the struct audio_policy_service_ops implementation.
@@ -182,35 +215,65 @@ public:
     {
         return NO_ERROR;
     }
-    virtual status_t stopTone() { return NO_ERROR; }
-    virtual status_t setVoiceVolume(float volume, int delayMs = 0) { return NO_ERROR; }
-    virtual bool isOffloadSupported(const audio_offload_info_t &config) { return false; }
+    virtual status_t stopTone()
+    {
+        return NO_ERROR;
+    }
+    virtual status_t setVoiceVolume(float volume, int delayMs = 0)
+    {
+        return NO_ERROR;
+    }
+    virtual bool isOffloadSupported(const audio_offload_info_t &config)
+    {
+        return false;
+    }
     virtual status_t listAudioPorts(audio_port_role_t role, audio_port_type_t type,
         unsigned int *num_ports, struct audio_port *ports, unsigned int *generation)
     {
         return NO_ERROR;
     }
-    virtual status_t getAudioPort(struct audio_port *port) { return NO_ERROR; }
+    virtual status_t getAudioPort(struct audio_port *port)
+    {
+        return NO_ERROR;
+    }
     virtual status_t createAudioPatch(const struct audio_patch *patch, audio_patch_handle_t *handle)
     {
         return NO_ERROR;
     }
-    virtual status_t releaseAudioPatch(audio_patch_handle_t handle) { return NO_ERROR; }
+    virtual status_t releaseAudioPatch(audio_patch_handle_t handle)
+    {
+        return NO_ERROR;
+    }
     virtual status_t listAudioPatches(
         unsigned int *num_patches, struct audio_patch *patches, unsigned int *generation)
     {
         return NO_ERROR;
     }
-    virtual status_t setAudioPortConfig(const struct audio_port_config *config) { return NO_ERROR; }
-    virtual void registerClient(const sp<IAudioPolicyServiceClient> &client) { return; }
-    virtual void setAudioPortCallbacksEnabled(bool enabled) { return; }
+    virtual status_t setAudioPortConfig(const struct audio_port_config *config)
+    {
+        return NO_ERROR;
+    }
+    virtual void registerClient(const sp<IAudioPolicyServiceClient> &client)
+    {
+        return;
+    }
+    virtual void setAudioPortCallbacksEnabled(bool enabled)
+    {
+        return;
+    }
     virtual status_t acquireSoundTriggerSession(
         audio_session_t *session, audio_io_handle_t *ioHandle, audio_devices_t *device)
     {
         return NO_ERROR;
     }
-    virtual status_t releaseSoundTriggerSession(audio_session_t session) { return NO_ERROR; }
-    virtual audio_mode_t getPhoneState() { return AUDIO_MODE_CURRENT; }
+    virtual status_t releaseSoundTriggerSession(audio_session_t session)
+    {
+        return NO_ERROR;
+    }
+    virtual audio_mode_t getPhoneState()
+    {
+        return AUDIO_MODE_CURRENT;
+    }
     virtual status_t registerPolicyMixes(Vector<AudioMix> mixes, bool registration)
     {
         return NO_ERROR;
@@ -221,7 +284,10 @@ public:
     {
         return NO_ERROR;
     }
-    virtual status_t stopAudioSource(audio_io_handle_t handle) { return NO_ERROR; }
+    virtual status_t stopAudioSource(audio_io_handle_t handle)
+    {
+        return NO_ERROR;
+    }
     status_t doStopOutput(
         audio_io_handle_t output, audio_stream_type_t stream, audio_session_t session)
     {
@@ -237,18 +303,42 @@ public:
     {
         return NO_ERROR;
     }
-    status_t clientReleaseAudioPatch(audio_patch_handle_t handle, int delayMs) { return NO_ERROR; }
+    status_t clientReleaseAudioPatch(audio_patch_handle_t handle, int delayMs)
+    {
+        return NO_ERROR;
+    }
     virtual status_t clientSetAudioPortConfig(const struct audio_port_config *config, int delayMs)
     {
         return NO_ERROR;
     }
-    void removeNotificationClient(uid_t uid) { return; }
-    void onAudioPortListUpdate() { return; }
-    void doOnAudioPortListUpdate() { return; }
-    void onAudioPatchListUpdate() { return; }
-    void doOnAudioPatchListUpdate() { return; }
-    void onDynamicPolicyMixStateUpdate(String8 regId, int32_t state) { return; }
-    void doOnDynamicPolicyMixStateUpdate(String8 regId, int32_t state) { return; }
+    void removeNotificationClient(uid_t uid)
+    {
+        return;
+    }
+    void onAudioPortListUpdate()
+    {
+        return;
+    }
+    void doOnAudioPortListUpdate()
+    {
+        return;
+    }
+    void onAudioPatchListUpdate()
+    {
+        return;
+    }
+    void doOnAudioPatchListUpdate()
+    {
+        return;
+    }
+    void onDynamicPolicyMixStateUpdate(String8 regId, int32_t state)
+    {
+        return;
+    }
+    void doOnDynamicPolicyMixStateUpdate(String8 regId, int32_t state)
+    {
+        return;
+    }
 };
 }; // namespace android
 #endif // ANDROID_AUDIOPOLICYSERVICE_H

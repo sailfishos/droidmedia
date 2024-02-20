@@ -50,8 +50,13 @@ public:
     void onBuffersReleased();
 
 #if ANDROID_MAJOR >= 5
-    void onFrameAvailable(const android::BufferItem &) { onFrameAvailable(); }
-    void onSidebandStreamChanged() { }
+    void onFrameAvailable(const android::BufferItem &)
+    {
+        onFrameAvailable();
+    }
+    void onSidebandStreamChanged()
+    {
+    }
 #endif
 
 private:

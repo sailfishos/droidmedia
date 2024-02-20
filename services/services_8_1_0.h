@@ -28,14 +28,20 @@ class MiniSurfaceFlinger : public BinderService<MiniSurfaceFlinger>,
                            public BnSurfaceComposer,
                            public IBinder::DeathRecipient {
 public:
-    static char const *getServiceName() { return "SurfaceFlinger"; }
+    static char const *getServiceName()
+    {
+        return "SurfaceFlinger";
+    }
 
     void binderDied(const wp<IBinder> &)
     {
         // Nothing
     }
 
-    sp<ISurfaceComposerClient> createConnection() { return sp<ISurfaceComposerClient>(); }
+    sp<ISurfaceComposerClient> createConnection()
+    {
+        return sp<ISurfaceComposerClient>();
+    }
 
     sp<ISurfaceComposerClient> createScopedConnection(const sp<IGraphicBufferProducer> &parent)
     {
@@ -48,14 +54,20 @@ public:
         return sp<IDisplayEventConnection>();
     }
 
-    sp<IBinder> createDisplay(const String8 &, bool) { return NULL; }
+    sp<IBinder> createDisplay(const String8 &, bool)
+    {
+        return NULL;
+    }
 
     void destroyDisplay(const sp<IBinder> &)
     {
         // Nothing
     }
 
-    virtual sp<IBinder> getBuiltInDisplay(int32_t) { return NULL; }
+    virtual sp<IBinder> getBuiltInDisplay(int32_t)
+    {
+        return NULL;
+    }
 
     void setTransactionState(const Vector<ComposerState> &, const Vector<DisplayState> &, uint32_t)
     {
@@ -67,17 +79,34 @@ public:
         // Nothing
     }
 
-    bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer> &) const { return true; }
+    bool authenticateSurfaceTexture(const sp<IGraphicBufferProducer> &) const
+    {
+        return true;
+    }
 
-    void setPowerMode(const sp<IBinder> &, int) { }
+    void setPowerMode(const sp<IBinder> &, int)
+    {
+    }
 
-    status_t getDisplayConfigs(const sp<IBinder> &, Vector<DisplayInfo> *) { return BAD_VALUE; }
+    status_t getDisplayConfigs(const sp<IBinder> &, Vector<DisplayInfo> *)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t getDisplayStats(const sp<IBinder> &, DisplayStatInfo *) { return BAD_VALUE; }
+    status_t getDisplayStats(const sp<IBinder> &, DisplayStatInfo *)
+    {
+        return BAD_VALUE;
+    }
 
-    int getActiveConfig(const sp<IBinder> &) { return 0; }
+    int getActiveConfig(const sp<IBinder> &)
+    {
+        return 0;
+    }
 
-    status_t setActiveConfig(const sp<IBinder> &, int) { return BAD_VALUE; }
+    status_t setActiveConfig(const sp<IBinder> &, int)
+    {
+        return BAD_VALUE;
+    }
 
     status_t captureScreen(const sp<IBinder> &, const sp<IGraphicBufferProducer> &, Rect, uint32_t,
         uint32_t, uint32_t, uint32_t, bool, Rotation
@@ -90,9 +119,15 @@ public:
         return BAD_VALUE;
     }
 
-    status_t clearAnimationFrameStats() { return BAD_VALUE; }
+    status_t clearAnimationFrameStats()
+    {
+        return BAD_VALUE;
+    }
 
-    status_t getAnimationFrameStats(FrameStats *) const { return BAD_VALUE; }
+    status_t getAnimationFrameStats(FrameStats *) const
+    {
+        return BAD_VALUE;
+    }
 
     status_t getDisplayColorModes(const sp<IBinder> &display, Vector<android_color_mode_t> *configs)
     {
@@ -126,9 +161,15 @@ public:
         return BAD_VALUE;
     }
 
-    status_t enableVSyncInjections(bool enable) { return BAD_VALUE; }
+    status_t enableVSyncInjections(bool enable)
+    {
+        return BAD_VALUE;
+    }
 
-    status_t injectVSync(nsecs_t when) { return BAD_VALUE; }
+    status_t injectVSync(nsecs_t when)
+    {
+        return BAD_VALUE;
+    }
 };
 
 #include <binder/IPermissionController.h>
@@ -136,7 +177,10 @@ public:
 class FakePermissionController : public BinderService<FakePermissionController>,
                                  public BnPermissionController {
 public:
-    static char const *getServiceName() { return "permission"; }
+    static char const *getServiceName()
+    {
+        return "permission";
+    }
 
     bool checkPermission(const String16 &permission, int32_t, int32_t)
     {
@@ -147,16 +191,24 @@ public:
         return false;
     }
 
-    void getPackagesForUid(const uid_t uid, Vector<String16> &packages) { }
+    void getPackagesForUid(const uid_t uid, Vector<String16> &packages)
+    {
+    }
 
-    bool isRuntimePermission(const String16 &permission) { return false; }
+    bool isRuntimePermission(const String16 &permission)
+    {
+        return false;
+    }
 };
 
 #include <binder/AppOpsManager.h>
 #include <binder/IAppOpsService.h>
 class FakeAppOps : public BinderService<FakeAppOps>, public BnAppOpsService {
 public:
-    static char const *getServiceName() { return "appops"; }
+    static char const *getServiceName()
+    {
+        return "appops";
+    }
 
     virtual int32_t checkOperation(int32_t, int32_t, const String16 &)
     {
@@ -188,9 +240,15 @@ public:
         // Nothing
     }
 
-    virtual sp<IBinder> getToken(const sp<IBinder> &) { return NULL; }
+    virtual sp<IBinder> getToken(const sp<IBinder> &)
+    {
+        return NULL;
+    }
 
-    virtual int32_t permissionToOpCode(const String16 &permission) { return 0; }
+    virtual int32_t permissionToOpCode(const String16 &permission)
+    {
+        return 0;
+    }
 };
 
 #include <binder/IProcessInfoService.h>
@@ -272,7 +330,10 @@ status_t BnProcessInfoService::onTransact(
 class FakeProcessInfoService : public BinderService<FakeProcessInfoService>,
                                public BnProcessInfoService {
 public:
-    static char const *getServiceName() { return "processinfo"; }
+    static char const *getServiceName()
+    {
+        return "processinfo";
+    }
 
     status_t getProcessStatesFromPids(size_t length, int32_t *pids, int32_t *states)
     {
@@ -295,21 +356,52 @@ public:
 
 class FakeBatteryStats : public BinderService<FakeBatteryStats>, public BnBatteryStats {
 public:
-    static char const *getServiceName() { return "batterystats"; }
-    void noteStartSensor(int uid, int sensor) { }
-    void noteStopSensor(int uid, int sensor) { }
-    void noteStartVideo(int uid) { }
-    void noteStopVideo(int uid) { }
-    void noteStartAudio(int uid) { }
-    void noteStopAudio(int uid) { }
-    void noteResetVideo() { }
-    void noteResetAudio() { }
-    void noteFlashlightOn(int uid) { }
-    void noteFlashlightOff(int uid) { }
-    void noteStartCamera(int uid) { }
-    void noteStopCamera(int uid) { }
-    void noteResetCamera() { }
-    void noteResetFlashlight() { }
+    static char const *getServiceName()
+    {
+        return "batterystats";
+    }
+    void noteStartSensor(int uid, int sensor)
+    {
+    }
+    void noteStopSensor(int uid, int sensor)
+    {
+    }
+    void noteStartVideo(int uid)
+    {
+    }
+    void noteStopVideo(int uid)
+    {
+    }
+    void noteStartAudio(int uid)
+    {
+    }
+    void noteStopAudio(int uid)
+    {
+    }
+    void noteResetVideo()
+    {
+    }
+    void noteResetAudio()
+    {
+    }
+    void noteFlashlightOn(int uid)
+    {
+    }
+    void noteFlashlightOff(int uid)
+    {
+    }
+    void noteStartCamera(int uid)
+    {
+    }
+    void noteStopCamera(int uid)
+    {
+    }
+    void noteResetCamera()
+    {
+    }
+    void noteResetFlashlight()
+    {
+    }
 };
 
 #include <sensor/ISensorServer.h>
@@ -321,28 +413,54 @@ class FakeSensorEventConnection : public BnSensorEventConnection {
     sp<BitTube> mChannel;
 
 public:
-    FakeSensorEventConnection() { mChannel = new BitTube(0); }
-    sp<BitTube> getSensorChannel() const { return mChannel; }
+    FakeSensorEventConnection()
+    {
+        mChannel = new BitTube(0);
+    }
+    sp<BitTube> getSensorChannel() const
+    {
+        return mChannel;
+    }
     status_t enableDisable(int handle, bool enabled, nsecs_t samplingPeriodNs,
         nsecs_t maxBatchReportLatencyNs, int reservedFlags)
     {
         return 0;
     }
-    status_t setEventRate(int handle, nsecs_t ns) { return 0; }
-    status_t flush() { return 0; }
+    status_t setEventRate(int handle, nsecs_t ns)
+    {
+        return 0;
+    }
+    status_t flush()
+    {
+        return 0;
+    }
 
-    virtual int32_t configureChannel(int32_t handle, int32_t rateLevel) { return 0; }
+    virtual int32_t configureChannel(int32_t handle, int32_t rateLevel)
+    {
+        return 0;
+    }
 
 protected:
-    void destroy() { }
+    void destroy()
+    {
+    }
 };
 class FakeSensorServer : public BinderService<FakeSensorServer>, public BnSensorServer {
 public:
-    static char const *getServiceName() { return "sensorservice"; }
+    static char const *getServiceName()
+    {
+        return "sensorservice";
+    }
 
-    Vector<Sensor> getSensorList(const String16 &opPackageName) { return Vector<Sensor>(); }
+    Vector<Sensor> getSensorList(const String16 &opPackageName)
+    {
+        return Vector<Sensor>();
+    }
 
-    Vector<Sensor> getDynamicSensorList(const String16 &opPackageName) { return Vector<Sensor>(); }
+    Vector<Sensor> getDynamicSensorList(const String16 &opPackageName)
+    {
+        return Vector<Sensor>();
+    }
     sp<ISensorEventConnection> createSensorEventConnection(
         const String8 &packageName, int mode, const String16 &opPackageName)
     {
@@ -363,7 +481,10 @@ public:
     }
 #endif
 
-    int32_t isDataInjectionEnabled() { return 0; }
+    int32_t isDataInjectionEnabled()
+    {
+        return 0;
+    }
 };
 
 #include <media/IResourceManagerService.h>
@@ -374,17 +495,27 @@ public:
 class FakeResourceManagerService : public BinderService<FakeResourceManagerService>,
                                    public BnResourceManagerService {
 public:
-    static char const *getServiceName() { return "media.resource_manager"; }
-    void config(const Vector<MediaResourcePolicy> &policies) { }
+    static char const *getServiceName()
+    {
+        return "media.resource_manager";
+    }
+    void config(const Vector<MediaResourcePolicy> &policies)
+    {
+    }
 
     void addResource(int pid, int64_t clientId, const sp<IResourceManagerClient> client,
         const Vector<MediaResource> &resources)
     {
     }
 
-    void removeResource(int pid, int64_t clientId) { }
+    void removeResource(int pid, int64_t clientId)
+    {
+    }
 
-    bool reclaimResource(int callingPid, const Vector<MediaResource> &resources) { return true; }
+    bool reclaimResource(int callingPid, const Vector<MediaResource> &resources)
+    {
+        return true;
+    }
 };
 
 #include <android/frameworks/sensorservice/1.0/IEventQueue.h>
@@ -394,7 +525,9 @@ public:
 
 class FakeEventQueue : public android::frameworks::sensorservice::V1_0::IEventQueue {
 public:
-    FakeEventQueue() { }
+    FakeEventQueue()
+    {
+    }
 
     android::hardware::Return<android::frameworks::sensorservice::V1_0::Result> enableSensor(
         int32_t sensorHandle, int32_t samplingPeriodUs, int64_t maxBatchReportLatencyUs)

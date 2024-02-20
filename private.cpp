@@ -29,9 +29,15 @@
 #define LOG_TAG "DroidMediaBufferQueue"
 
 #if ANDROID_MAJOR >= 6
-static int slotIndex(const android::BufferItem &item) { return item.mSlot; }
+static int slotIndex(const android::BufferItem &item)
+{
+    return item.mSlot;
+}
 #else
-static int slotIndex(const android::BufferQueue::BufferItem &item) { return item.mBuf; }
+static int slotIndex(const android::BufferQueue::BufferItem &item)
+{
+    return item.mBuf;
+}
 #endif
 
 DroidMediaBufferQueueListener::DroidMediaBufferQueueListener(_DroidMediaBufferQueue *queue)
@@ -44,7 +50,9 @@ DroidMediaBufferQueueListener::DroidMediaBufferQueueListener(_DroidMediaBufferQu
 {
 }
 
-DroidMediaBufferQueueListener::~DroidMediaBufferQueueListener() { }
+DroidMediaBufferQueueListener::~DroidMediaBufferQueueListener()
+{
+}
 
 void DroidMediaBufferQueueListener::onFrameAvailable()
 {
@@ -114,7 +122,10 @@ bool _DroidMediaBufferQueue::connectListener()
     return true;
 }
 
-void _DroidMediaBufferQueue::disconnectListener() { m_queue->consumerDisconnect(); }
+void _DroidMediaBufferQueue::disconnectListener()
+{
+    m_queue->consumerDisconnect();
+}
 
 void _DroidMediaBufferQueue::attachToCameraPreview(android::sp<android::Camera> &camera)
 {
@@ -310,5 +321,8 @@ void droid_media_buffer_queue_set_callbacks(
     }
 }
 
-int droid_media_buffer_queue_length() { return android::BufferQueue::NUM_BUFFER_SLOTS; }
+int droid_media_buffer_queue_length()
+{
+    return android::BufferQueue::NUM_BUFFER_SLOTS;
+}
 };

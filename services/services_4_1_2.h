@@ -25,14 +25,20 @@ class MiniSurfaceFlinger : public BinderService<MiniSurfaceFlinger>,
                            public BnSurfaceComposer,
                            public IBinder::DeathRecipient {
 public:
-    static char const *getServiceName() { return "SurfaceFlinger"; }
+    static char const *getServiceName()
+    {
+        return "SurfaceFlinger";
+    }
 
     void binderDied(const wp<IBinder> &who)
     {
         // Nothing
     }
 
-    sp<ISurfaceComposerClient> createConnection() { return sp<ISurfaceComposerClient>(); }
+    sp<ISurfaceComposerClient> createConnection()
+    {
+        return sp<ISurfaceComposerClient>();
+    }
 
     sp<IGraphicBufferAlloc> createGraphicBufferAlloc()
     {
@@ -69,11 +75,20 @@ public:
         return BAD_VALUE;
     }
 
-    virtual status_t turnElectronBeamOff(int32_t mode) { return BAD_VALUE; }
+    virtual status_t turnElectronBeamOff(int32_t mode)
+    {
+        return BAD_VALUE;
+    }
 
-    virtual status_t turnElectronBeamOn(int32_t mode) { return BAD_VALUE; }
+    virtual status_t turnElectronBeamOn(int32_t mode)
+    {
+        return BAD_VALUE;
+    }
 
-    bool authenticateSurfaceTexture(const sp<ISurfaceTexture> &surface) const { return false; }
+    bool authenticateSurfaceTexture(const sp<ISurfaceTexture> &surface) const
+    {
+        return false;
+    }
 };
 
 #include <binder/IPermissionController.h>
@@ -81,7 +96,10 @@ public:
 class FakePermissionController : public BinderService<FakePermissionController>,
                                  public BnPermissionController {
 public:
-    static char const *getServiceName() { return "permission"; }
+    static char const *getServiceName()
+    {
+        return "permission";
+    }
 
     bool checkPermission(const String16 &permission, int32_t, int32_t)
     {

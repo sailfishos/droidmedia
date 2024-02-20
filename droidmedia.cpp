@@ -22,7 +22,10 @@
 
 extern "C" {
 
-void _droid_media_init() { android::ProcessState::self()->startThreadPool(); }
+void _droid_media_init()
+{
+    android::ProcessState::self()->startThreadPool();
+}
 
 void droid_media_deinit()
 {

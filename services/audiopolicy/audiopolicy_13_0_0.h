@@ -47,14 +47,23 @@ class FakeAudioPolicyService : public BinderService<FakeAudioPolicyService>,
 
 public:
     // for BinderService
-    static const char *getServiceName() ANDROID_API { return "media.audio_policy"; }
+    static const char *getServiceName() ANDROID_API
+    {
+        return "media.audio_policy";
+    }
 
-    status_t dump(int fd, const Vector<String16> &args) { return NO_ERROR; }
+    status_t dump(int fd, const Vector<String16> &args)
+    {
+        return NO_ERROR;
+    }
 
     //
     // BnAudioPolicyService (see AudioPolicyInterface for method descriptions)
     //
-    ::binder::Status onNewAudioModulesAvailable() override { return ::binder::Status::ok(); }
+    ::binder::Status onNewAudioModulesAvailable() override
+    {
+        return ::binder::Status::ok();
+    }
     ::binder::Status setDeviceConnectionState(media::AudioPolicyDeviceState,
         const media::audio::common::AudioPort &,
         const media::audio::common::AudioFormatDescription &) override
@@ -98,18 +107,36 @@ public:
     {
         return ::binder::Status::ok();
     }
-    ::binder::Status startOutput(int32_t portId) override { return ::binder::Status::ok(); }
-    ::binder::Status stopOutput(int32_t portId) override { return ::binder::Status::ok(); }
-    ::binder::Status releaseOutput(int32_t portId) override { return ::binder::Status::ok(); }
+    ::binder::Status startOutput(int32_t portId) override
+    {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status stopOutput(int32_t portId) override
+    {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status releaseOutput(int32_t portId) override
+    {
+        return ::binder::Status::ok();
+    }
     ::binder::Status getInputForAttr(const media::AudioAttributesInternal &, int32_t, int32_t,
         int32_t, const AttributionSourceState &, const media::audio::common::AudioConfigBase &,
         int32_t, int32_t, media::GetInputForAttrResponse *input) override
     {
         return ::binder::Status::ok();
     }
-    ::binder::Status startInput(int32_t portId) override { return ::binder::Status::ok(); }
-    ::binder::Status stopInput(int32_t portId) override { return ::binder::Status::ok(); }
-    ::binder::Status releaseInput(int32_t portId) override { return ::binder::Status::ok(); }
+    ::binder::Status startInput(int32_t portId) override
+    {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status stopInput(int32_t portId) override
+    {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status releaseInput(int32_t portId) override
+    {
+        return ::binder::Status::ok();
+    }
     ::binder::Status initStreamVolume(
         media::audio::common::AudioStreamType, int32_t, int32_t) override
     {
@@ -170,8 +197,14 @@ public:
     {
         return ::binder::Status::ok();
     }
-    ::binder::Status unregisterEffect(int32_t) override { return ::binder::Status::ok(); }
-    ::binder::Status setEffectEnabled(int32_t, bool) override { return ::binder::Status::ok(); }
+    ::binder::Status unregisterEffect(int32_t) override
+    {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status setEffectEnabled(int32_t, bool) override
+    {
+        return ::binder::Status::ok();
+    }
     ::binder::Status moveEffectsToIo(const std::vector<int32_t> &, int32_t) override
     {
         return ::binder::Status::ok();
@@ -210,8 +243,14 @@ public:
     {
         return ::binder::Status::ok();
     }
-    ::binder::Status removeSourceDefaultEffect(int32_t) override { return ::binder::Status::ok(); }
-    ::binder::Status removeStreamDefaultEffect(int32_t) override { return ::binder::Status::ok(); }
+    ::binder::Status removeSourceDefaultEffect(int32_t) override
+    {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status removeStreamDefaultEffect(int32_t) override
+    {
+        return ::binder::Status::ok();
+    }
     ::binder::Status setSupportedSystemUsages(
         const std::vector<media::audio::common::AudioUsage> &systemUsages) override
     {
@@ -246,7 +285,10 @@ public:
     {
         return ::binder::Status::ok();
     }
-    ::binder::Status releaseAudioPatch(int32_t handle) override { return ::binder::Status::ok(); }
+    ::binder::Status releaseAudioPatch(int32_t handle) override
+    {
+        return ::binder::Status::ok();
+    }
     ::binder::Status listAudioPatches(media::audio::common::Int *count,
         std::vector<media::AudioPatch> *patches, int32_t *_aidl_return) override
     {
@@ -308,9 +350,18 @@ public:
     {
         return ::binder::Status::ok();
     }
-    ::binder::Status stopAudioSource(int32_t portId) override { return ::binder::Status::ok(); }
-    ::binder::Status setMasterMono(bool mono) override { return ::binder::Status::ok(); }
-    ::binder::Status getMasterMono(bool *_aidl_return) override { return ::binder::Status::ok(); }
+    ::binder::Status stopAudioSource(int32_t portId) override
+    {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status setMasterMono(bool mono) override
+    {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status getMasterMono(bool *_aidl_return) override
+    {
+        return ::binder::Status::ok();
+    }
     ::binder::Status getStreamVolumeDB(media::audio::common::AudioStreamType stream, int32_t index,
         const media::audio::common::AudioDeviceDescription &device, float *_aidl_return) override
     {
@@ -350,7 +401,10 @@ public:
     {
         return ::binder::Status::ok();
     }
-    ::binder::Status setCurrentImeUid(int32_t uid) override { return ::binder::Status::ok(); }
+    ::binder::Status setCurrentImeUid(int32_t uid) override
+    {
+        return ::binder::Status::ok();
+    }
     ::binder::Status isHapticPlaybackSupported(bool *_aidl_return) override
     {
         return ::binder::Status::ok();
@@ -379,7 +433,10 @@ public:
     {
         return ::binder::Status::ok();
     }
-    ::binder::Status setRttEnabled(bool enabled) override { return ::binder::Status::ok(); }
+    ::binder::Status setRttEnabled(bool enabled) override
+    {
+        return ::binder::Status::ok();
+    }
     ::binder::Status isCallScreenModeSupported(bool *_aidl_return) override
     {
         return ::binder::Status::ok();
@@ -461,10 +518,16 @@ public:
     }
 
     // IBinder::DeathRecipient
-    void binderDied(const wp<IBinder> &who) { return; }
+    void binderDied(const wp<IBinder> &who)
+    {
+        return;
+    }
 
     // RefBase
-    void onFirstRef() { return; }
+    void onFirstRef()
+    {
+        return;
+    }
 
     //
     // Helpers for the struct audio_policy_service_ops implementation.
@@ -481,32 +544,68 @@ public:
     {
         return NO_ERROR;
     }
-    virtual status_t setVoiceVolume(float volume, int delayMs = 0) { return NO_ERROR; }
+    virtual status_t setVoiceVolume(float volume, int delayMs = 0)
+    {
+        return NO_ERROR;
+    }
 
-    void doOnNewAudioModulesAvailable() { return; }
+    void doOnNewAudioModulesAvailable()
+    {
+        return;
+    }
 
-    status_t doStopOutput(audio_port_handle_t portId) { return NO_ERROR; }
-    void doReleaseOutput(audio_port_handle_t portId) { return; }
+    status_t doStopOutput(audio_port_handle_t portId)
+    {
+        return NO_ERROR;
+    }
+    void doReleaseOutput(audio_port_handle_t portId)
+    {
+        return;
+    }
 
     status_t clientCreateAudioPatch(
         const struct audio_patch *patch, audio_patch_handle_t *handle, int delayMs)
     {
         return NO_ERROR;
     }
-    status_t clientReleaseAudioPatch(audio_patch_handle_t handle, int delayMs) { return NO_ERROR; }
+    status_t clientReleaseAudioPatch(audio_patch_handle_t handle, int delayMs)
+    {
+        return NO_ERROR;
+    }
     virtual status_t clientSetAudioPortConfig(const struct audio_port_config *config, int delayMs)
     {
         return NO_ERROR;
     }
 
-    void removeNotificationClient(uid_t uid, pid_t pid) { return; }
-    void onAudioPortListUpdate() { return; }
-    void doOnAudioPortListUpdate() { return; }
-    void onAudioPatchListUpdate() { return; }
-    void doOnAudioPatchListUpdate() { return; }
+    void removeNotificationClient(uid_t uid, pid_t pid)
+    {
+        return;
+    }
+    void onAudioPortListUpdate()
+    {
+        return;
+    }
+    void doOnAudioPortListUpdate()
+    {
+        return;
+    }
+    void onAudioPatchListUpdate()
+    {
+        return;
+    }
+    void doOnAudioPatchListUpdate()
+    {
+        return;
+    }
 
-    void onDynamicPolicyMixStateUpdate(const String8 &regId, int32_t state) { return; }
-    void doOnDynamicPolicyMixStateUpdate(const String8 &regId, int32_t state) { return; }
+    void onDynamicPolicyMixStateUpdate(const String8 &regId, int32_t state)
+    {
+        return;
+    }
+    void doOnDynamicPolicyMixStateUpdate(const String8 &regId, int32_t state)
+    {
+        return;
+    }
     void onRecordingConfigurationUpdate(int event, const record_client_info_t *clientInfo,
         const audio_config_base_t *clientConfig, std::vector<effect_descriptor_t> clientEffects,
         const audio_config_base_t *deviceConfig, std::vector<effect_descriptor_t> effects,
@@ -522,19 +621,55 @@ public:
         return;
     }
 
-    void onAudioVolumeGroupChanged(volume_group_t group, int flags) { return; }
-    void doOnAudioVolumeGroupChanged(volume_group_t group, int flags) { return; }
-    void onRoutingUpdated() { return; }
-    void doOnRoutingUpdated() { return; }
-    void onVolumeRangeInitRequest() { return; }
-    void doOnVolumeRangeInitRequest() { return; }
-    void onCheckSpatializer() { return; }
-    void onCheckSpatializer_l() { return; }
-    void doOnCheckSpatializer() { return; }
-    void onUpdateActiveSpatializerTracks_l() { return; }
-    void doOnUpdateActiveSpatializerTracks() { return; }
+    void onAudioVolumeGroupChanged(volume_group_t group, int flags)
+    {
+        return;
+    }
+    void doOnAudioVolumeGroupChanged(volume_group_t group, int flags)
+    {
+        return;
+    }
+    void onRoutingUpdated()
+    {
+        return;
+    }
+    void doOnRoutingUpdated()
+    {
+        return;
+    }
+    void onVolumeRangeInitRequest()
+    {
+        return;
+    }
+    void doOnVolumeRangeInitRequest()
+    {
+        return;
+    }
+    void onCheckSpatializer()
+    {
+        return;
+    }
+    void onCheckSpatializer_l()
+    {
+        return;
+    }
+    void doOnCheckSpatializer()
+    {
+        return;
+    }
+    void onUpdateActiveSpatializerTracks_l()
+    {
+        return;
+    }
+    void doOnUpdateActiveSpatializerTracks()
+    {
+        return;
+    }
 
-    void setEffectSuspended(int effectId, audio_session_t sessionId, bool suspended) { return; }
+    void setEffectSuspended(int effectId, audio_session_t sessionId, bool suspended)
+    {
+        return;
+    }
 
 #ifdef AUDIOPOLICY_LINEAGE_AUDIOSESSIONINFO
     status_t listAudioSessions(audio_stream_type_t streams, Vector<sp<AudioSessionInfo>> &sessions)

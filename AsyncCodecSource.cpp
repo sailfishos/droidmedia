@@ -396,7 +396,10 @@ void AsyncCodecSource::queueEOS(size_t index)
     ALOGV("[%s] Queued EOS buffer #%zu.", mComponentName.c_str(), index);
 }
 
-void AsyncCodecSource::flush() { mCodec->flush(); }
+void AsyncCodecSource::flush()
+{
+    mCodec->flush();
+}
 
 void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg)
 {

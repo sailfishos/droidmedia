@@ -91,7 +91,10 @@ DroidMediaConvert *droid_media_convert_create()
     return NULL;
 }
 
-void droid_media_convert_destroy(DroidMediaConvert *convert) { delete convert; }
+void droid_media_convert_destroy(DroidMediaConvert *convert)
+{
+    delete convert;
+}
 
 bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in, void *out)
 {
