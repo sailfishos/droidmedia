@@ -131,8 +131,7 @@ public:
 
                 return;
             }
-            // either get() will signal us or we will be signaled in case of an
-            // error
+            // either get() will signal us or we will be signaled in case of an error
             m_framesReceived.cond.wait(m_framesReceived.lock);
         }
 
