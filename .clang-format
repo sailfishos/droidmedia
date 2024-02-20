@@ -63,7 +63,7 @@ NamespaceIndentation: None
 # Allow indentation for preprocessing directives (if/ifdef/endif). https://reviews.llvm.org/rL312125
 IndentPPDirectives: AfterHash
 # We only indent with 2 spaces for preprocessor directives
-PPIndentWidth: 2
+#PPIndentWidth: 2
 
 # Horizontally align arguments after an open bracket.
 # The coding style does not specify the following, but this is what gives
@@ -93,7 +93,7 @@ BreakConstructorInitializers: BeforeColon
 FixNamespaceComments: true
 
 # Definition of how short a short namespace is, default 1
-ShortNamespaceLines: 1
+#ShortNamespaceLines: 1
 
 # When escaping newlines in a macro attach the '\' as far left as possible, e.g.
 ##define a     \
