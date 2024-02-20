@@ -19,7 +19,7 @@
 
 #include "droidmediacamera.h"
 #if ANDROID_MAJOR < 8
-#include "allocator.h"
+#    include "allocator.h"
 #endif
 #include <camera/Camera.h>
 #include <camera/CameraParameters.h>
@@ -27,7 +27,7 @@
 #include <utils/String8.h>
 #include <utils/Condition.h>
 #if ANDROID_MAJOR >= 8
-#include <media/hardware/MetadataBufferType.h>
+#    include <media/hardware/MetadataBufferType.h>
 #endif
 #include <media/stagefright/CameraSource.h>
 #include <media/openmax/OMX_IVCommon.h>
@@ -74,17 +74,15 @@ int32_t getColorFormat(const char *colorFormat)
 
 extern "C" {
 
-struct _DroidMediaCameraRecordingData {
+struct _DroidMediaCameraRecordingData
+{
     android::sp<android::IMemory> mem;
     nsecs_t ts;
 };
 
-struct _DroidMediaCamera {
-    _DroidMediaCamera()
-        : m_cb_data(0)
-    {
-        memset(&m_cb, 0x0, sizeof(m_cb));
-    }
+struct _DroidMediaCamera
+{
+    _DroidMediaCamera() : m_cb_data(0) { memset(&m_cb, 0x0, sizeof(m_cb)); }
 
     android::sp<android::Camera> m_camera;
     android::sp<DroidMediaBufferQueue> m_queue;
@@ -93,12 +91,10 @@ struct _DroidMediaCamera {
     void *m_cb_data;
 };
 
-class CameraListener : public android::CameraListener {
+class CameraListener : public android::CameraListener
+{
 public:
-    CameraListener(DroidMediaCamera *cam)
-        : m_cam(cam)
-    {
-    }
+    CameraListener(DroidMediaCamera *cam) : m_cam(cam) { }
 
     void notify(int32_t msgType, int32_t ext1, int32_t ext2)
     {
@@ -139,7 +135,7 @@ public:
     }
 
     void postData(int32_t msgType, const android::sp<android::IMemory> &dataPtr,
-        camera_frame_metadata_t *metadata)
+                  camera_frame_metadata_t *metadata)
     {
         int32_t dataMsgType = msgType & ~CAMERA_MSG_PREVIEW_METADATA;
         DroidMediaData mem;
@@ -216,8 +212,8 @@ public:
         }
     }
 
-    void postDataTimestamp(
-        nsecs_t timestamp, int32_t msgType, const android::sp<android::IMemory> &dataPtr)
+    void postDataTimestamp(nsecs_t timestamp, int32_t msgType,
+                           const android::sp<android::IMemory> &dataPtr)
     {
         switch (msgType) {
         case CAMERA_MSG_VIDEO_FRAME:
@@ -246,8 +242,8 @@ public:
 #endif
 
 #if ANDROID_MAJOR >= 8
-    void postRecordingFrameHandleTimestampBatch(
-        const std::vector<nsecs_t> &timestamps, const std::vector<native_handle_t *> &handles)
+    void postRecordingFrameHandleTimestampBatch(const std::vector<nsecs_t> &timestamps,
+                                                const std::vector<native_handle_t *> &handles)
     {
         ALOGW("postRecordingFrameHandleTimestampBatch - not sure what to do");
     }
@@ -302,11 +298,11 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
     android::CameraInfo inf;
 
     if (android::Camera::getCameraInfo(camera_number,
-#if ANDROID_MAJOR >= 13                                                                            \
-    && (!defined(LEGACY_ANDROID_13_REVISION) || LEGACY_ANDROID_13_REVISION >= 32)
-            false /*overrideToPortrait*/,
+#if ANDROID_MAJOR >= 13 \
+        && (!defined(LEGACY_ANDROID_13_REVISION) || LEGACY_ANDROID_13_REVISION >= 32)
+                                       false /*overrideToPortrait*/,
 #endif
-            &inf)
+                                       &inf)
         != 0) {
         return false;
     }
@@ -324,7 +320,7 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 DroidMediaCamera *droid_media_camera_connect(int camera_number)
 {
     android::sp<DroidMediaBufferQueue> queue(
-        new DroidMediaBufferQueue("DroidMediaCameraBufferQueue"));
+            new DroidMediaBufferQueue("DroidMediaCameraBufferQueue"));
     if (!queue->connectListener()) {
         ALOGE("Failed to connect buffer queue listener");
         return NULL;
@@ -339,37 +335,38 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
     cam->m_camera = android::Camera::connect(camera_number);
 #elif (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4)
-    cam->m_camera = android::Camera::connect(
-        camera_number, android::String16("droidmedia"), android::Camera::USE_CALLING_UID);
+    cam->m_camera = android::Camera::connect(camera_number, android::String16("droidmedia"),
+                                             android::Camera::USE_CALLING_UID);
 #else // Force HAL version if defined
-#ifdef FORCE_HAL
+#    ifdef FORCE_HAL
     ALOGI("Connecting HAL version %d", FORCE_HAL);
     android::OK
-        != android::Camera::connectLegacy(camera_number, FORCE_HAL << 8,
-            android::String16("droidmedia"), android::Camera::USE_CALLING_UID, cam->m_camera);
-#else // Default connect
-    cam->m_camera = android::Camera::connect(
-        camera_number, android::String16("droidmedia"), android::Camera::USE_CALLING_UID
-#if (ANDROID_MAJOR >= 7)
-        ,
-        android::Camera::USE_CALLING_PID
-#endif
-#if (ANDROID_MAJOR >= 12)
-        ,
-        __ANDROID_API_FUTURE__
-#endif
-#if (ANDROID_MAJOR >= 13)                                                                          \
-    && (!defined(LEGACY_ANDROID_13_REVISION) || LEGACY_ANDROID_13_REVISION >= 32)
-        ,
-        false
-#endif
-#if (ANDROID_MAJOR >= 13)                                                                          \
-    && (!defined(LEGACY_ANDROID_13_REVISION) || LEGACY_ANDROID_13_REVISION >= 50)
-        ,
-        false
-#endif
+            != android::Camera::connectLegacy(camera_number, FORCE_HAL << 8,
+                                              android::String16("droidmedia"),
+                                              android::Camera::USE_CALLING_UID, cam->m_camera);
+#    else // Default connect
+    cam->m_camera = android::Camera::connect(camera_number, android::String16("droidmedia"),
+                                             android::Camera::USE_CALLING_UID
+#        if (ANDROID_MAJOR >= 7)
+                                             ,
+                                             android::Camera::USE_CALLING_PID
+#        endif
+#        if (ANDROID_MAJOR >= 12)
+                                             ,
+                                             __ANDROID_API_FUTURE__
+#        endif
+#        if (ANDROID_MAJOR >= 13) \
+                && (!defined(LEGACY_ANDROID_13_REVISION) || LEGACY_ANDROID_13_REVISION >= 32)
+                                             ,
+                                             false
+#        endif
+#        if (ANDROID_MAJOR >= 13) \
+                && (!defined(LEGACY_ANDROID_13_REVISION) || LEGACY_ANDROID_13_REVISION >= 50)
+                                             ,
+                                             false
+#        endif
     );
-#endif
+#    endif
 #endif
     if (cam->m_camera.get() == NULL) {
         delete cam;
@@ -382,14 +379,14 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 
 #if ANDROID_MAJOR >= 9
     android::sp<DroidMediaBufferQueue> recording_queue(
-        new DroidMediaBufferQueue("DroidMediaCameraBufferRecordingQueue"));
+            new DroidMediaBufferQueue("DroidMediaCameraBufferRecordingQueue"));
     if (!recording_queue->connectListener()) {
         ALOGE("Failed to connect video buffer queue listener");
     } else {
         cam->m_recording_queue = recording_queue;
         cam->m_recording_queue->attachToCameraVideo(cam->m_camera);
         cam->m_camera->setVideoBufferMode(
-            android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE);
+                android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE);
     }
 #endif
 
@@ -468,15 +465,15 @@ bool droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera)
     return camera->m_camera->cancelAutoFocus() == android::NO_ERROR;
 }
 
-void droid_media_camera_set_callbacks(
-    DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb, void *data)
+void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb,
+                                      void *data)
 {
     memcpy(&camera->m_cb, cb, sizeof(camera->m_cb));
     camera->m_cb_data = data;
 }
 
-bool droid_media_camera_send_command(
-    DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2)
+bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1,
+                                     int32_t arg2)
 {
     return camera->m_camera->sendCommand(cmd, arg1, arg2) == android::NO_ERROR;
 }
@@ -489,25 +486,25 @@ bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, boo
     if (enabled) {
         if (android::OK
             == camera->m_camera->setVideoBufferMode(
-                android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE)) {
+                    android::hardware::ICamera::VIDEO_BUFFER_MODE_BUFFER_QUEUE)) {
             ALOGI("Recording in buffer queue mode");
             return true;
         } else if (android::OK
-            == camera->m_camera->setVideoBufferMode(
-                android::hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_METADATA)) {
+                   == camera->m_camera->setVideoBufferMode(
+                           android::hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_METADATA)) {
             ALOGI("Recording in callback metadata mode");
             return true;
         }
     }
     camera->m_camera->setVideoBufferMode(
-        android::hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_YUV);
+            android::hardware::ICamera::VIDEO_BUFFER_MODE_DATA_CALLBACK_YUV);
     ALOGI("Recording in callback yuv mode");
     return !enabled; // false if metadata mode was requested.
 #endif
 }
 
-void droid_media_camera_set_preview_callback_flags(
-    DroidMediaCamera *camera, int preview_callback_flag)
+void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera,
+                                                   int preview_callback_flag)
 {
     camera->m_camera->setPreviewCallbackFlags(preview_callback_flag);
 }
@@ -544,8 +541,8 @@ bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType)
     return camera->m_camera->takePicture(msgType) == android::NO_ERROR;
 }
 
-void droid_media_camera_release_recording_frame(
-    DroidMediaCamera *camera, DroidMediaCameraRecordingData *data)
+void droid_media_camera_release_recording_frame(DroidMediaCamera *camera,
+                                                DroidMediaCameraRecordingData *data)
 {
     camera->m_camera->releaseRecordingFrame(data->mem);
     delete data;
@@ -570,8 +567,8 @@ void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData 
 #endif
 }
 
-bool droid_media_camera_enable_face_detection(
-    DroidMediaCamera *camera, DroidMediaCameraFaceDetectionType type, bool enable)
+bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
+                                              DroidMediaCameraFaceDetectionType type, bool enable)
 {
     int detection_type = type == DROID_MEDIA_CAMERA_FACE_DETECTION_HW ? CAMERA_FACE_DETECTION_HW
                                                                       : CAMERA_FACE_DETECTION_SW;

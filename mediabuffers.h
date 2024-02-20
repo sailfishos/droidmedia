@@ -20,7 +20,9 @@
 #include <utils/Condition.h>
 #include <utils/List.h>
 
-template <typename T> struct Buffers {
+template <typename T>
+struct Buffers
+{
     android::List<T> buffers;
     android::Condition cond;
     android::Mutex lock;

@@ -38,31 +38,36 @@ typedef void *EGLSyncKHR;
 
 typedef void (*DroidMediaCallback)(void *data);
 
-typedef struct {
+typedef struct
+{
     void *data;
     ssize_t size;
 } DroidMediaData;
 
-typedef struct {
+typedef struct
+{
     DroidMediaCallback ref;
     DroidMediaCallback unref;
     void *data;
 } DroidMediaBufferCallbacks;
 
-typedef struct {
+typedef struct
+{
     int32_t left;
     int32_t top;
     int32_t right;
     int32_t bottom;
 } DroidMediaRect;
 
-typedef struct {
+typedef struct
+{
     bool (*buffer_created)(void *data, DroidMediaBuffer *buffer);
     bool (*frame_available)(void *data, DroidMediaBuffer *buffer);
     void (*buffers_released)(void *data);
 } DroidMediaBufferQueueCallbacks;
 
-typedef struct {
+typedef struct
+{
     uint32_t transform;
     uint32_t scaling_mode;
     int64_t timestamp;
@@ -74,7 +79,8 @@ typedef struct {
     int32_t stride;
 } DroidMediaBufferInfo;
 
-typedef struct {
+typedef struct
+{
     void *y;
     void *cb;
     void *cr;
@@ -96,8 +102,8 @@ void droid_media_deinit();
 /* droidmediabuffer.cpp */
 DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h, uint32_t format);
 void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags);
-bool droid_media_buffer_lock_ycbcr(
-    DroidMediaBuffer *buffer, uint32_t flags, DroidMediaBufferYCbCr *ycbcr);
+bool droid_media_buffer_lock_ycbcr(DroidMediaBuffer *buffer, uint32_t flags,
+                                   DroidMediaBufferYCbCr *ycbcr);
 void droid_media_buffer_unlock(DroidMediaBuffer *buffer);
 
 void droid_media_buffer_get_info(DroidMediaBuffer *buffer, DroidMediaBufferInfo *info);
@@ -115,8 +121,8 @@ void droid_media_buffer_set_user_data(DroidMediaBuffer *buffer, void *data);
 void *droid_media_buffer_get_user_data(DroidMediaBuffer *buffer);
 
 /* private.h */
-void droid_media_buffer_queue_set_callbacks(
-    DroidMediaBufferQueue *queue, DroidMediaBufferQueueCallbacks *cb, void *data);
+void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
+                                            DroidMediaBufferQueueCallbacks *cb, void *data);
 int droid_media_buffer_queue_length();
 
 #ifdef __cplusplus

@@ -40,12 +40,14 @@ typedef enum {
     DROID_MEDIA_CAMERA_FACE_DETECTION_SW = 1,
 } DroidMediaCameraFaceDetectionType;
 
-typedef struct {
+typedef struct
+{
     int facing;
     int orientation;
 } DroidMediaCameraInfo;
 
-typedef struct {
+typedef struct
+{
     int32_t left;
     int32_t top;
     int32_t right;
@@ -58,7 +60,8 @@ typedef struct {
     int32_t mouth[2];
 } DroidMediaCameraFace;
 
-typedef struct {
+typedef struct
+{
     void (*shutter_cb)(void *data);
     void (*focus_cb)(void *data, int arg);
     void (*focus_move_cb)(void *data, int arg);
@@ -98,28 +101,28 @@ bool droid_media_camera_is_recording_enabled(DroidMediaCamera *camera);
 bool droid_media_camera_start_auto_focus(DroidMediaCamera *camera);
 bool droid_media_camera_cancel_auto_focus(DroidMediaCamera *camera);
 
-void droid_media_camera_set_callbacks(
-    DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb, void *data);
-bool droid_media_camera_send_command(
-    DroidMediaCamera *camera, int32_t cmd, int32_t arg1, int32_t arg2);
+void droid_media_camera_set_callbacks(DroidMediaCamera *camera, DroidMediaCameraCallbacks *cb,
+                                      void *data);
+bool droid_media_camera_send_command(DroidMediaCamera *camera, int32_t cmd, int32_t arg1,
+                                     int32_t arg2);
 bool droid_media_camera_store_meta_data_in_buffers(DroidMediaCamera *camera, bool enabled);
-void droid_media_camera_set_preview_callback_flags(
-    DroidMediaCamera *camera, int preview_callback_flag);
+void droid_media_camera_set_preview_callback_flags(DroidMediaCamera *camera,
+                                                   int preview_callback_flag);
 
 bool droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *params);
 char *droid_media_camera_get_parameters(DroidMediaCamera *camera);
 
 bool droid_media_camera_take_picture(DroidMediaCamera *camera, int msgType);
 
-void droid_media_camera_release_recording_frame(
-    DroidMediaCamera *camera, DroidMediaCameraRecordingData *data);
+void droid_media_camera_release_recording_frame(DroidMediaCamera *camera,
+                                                DroidMediaCameraRecordingData *data);
 
 nsecs_t droid_media_camera_recording_frame_get_timestamp(DroidMediaCameraRecordingData *data);
 size_t droid_media_camera_recording_frame_get_size(DroidMediaCameraRecordingData *data);
 void *droid_media_camera_recording_frame_get_data(DroidMediaCameraRecordingData *data);
 
-bool droid_media_camera_enable_face_detection(
-    DroidMediaCamera *camera, DroidMediaCameraFaceDetectionType type, bool enable);
+bool droid_media_camera_enable_face_detection(DroidMediaCamera *camera,
+                                              DroidMediaCameraFaceDetectionType type, bool enable);
 
 int32_t droid_media_camera_get_video_color_format(DroidMediaCamera *camera);
 

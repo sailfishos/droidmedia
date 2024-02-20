@@ -25,25 +25,22 @@
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaBuffer"
 
-_DroidMediaBuffer::_DroidMediaBuffer(
-    DroidMediaBufferItem &buffer, android::sp<DroidMediaBufferQueue> queue)
-    : m_buffer(buffer.mGraphicBuffer)
-    , m_queue(queue)
-    , m_refCount(0)
-    , m_transform(buffer.mTransform)
-    , m_scalingMode(buffer.mScalingMode)
-    , m_timestamp(buffer.mTimestamp)
-    , m_frameNumber(buffer.mFrameNumber)
-    , m_crop(buffer.mCrop)
-    ,
+_DroidMediaBuffer::_DroidMediaBuffer(DroidMediaBufferItem &buffer,
+                                     android::sp<DroidMediaBufferQueue> queue)
+    : m_buffer(buffer.mGraphicBuffer),
+      m_queue(queue),
+      m_refCount(0),
+      m_transform(buffer.mTransform),
+      m_scalingMode(buffer.mScalingMode),
+      m_timestamp(buffer.mTimestamp),
+      m_frameNumber(buffer.mFrameNumber),
+      m_crop(buffer.mCrop),
 #if ANDROID_MAJOR >= 6
-    m_slot(buffer.mSlot)
-    ,
+      m_slot(buffer.mSlot),
 #else
-    m_slot(buffer.mBuf)
-    ,
+      m_slot(buffer.mBuf),
 #endif
-    m_userData(0)
+      m_userData(0)
 {
     width = buffer.mGraphicBuffer->width;
     height = buffer.mGraphicBuffer->height;
@@ -57,14 +54,14 @@ _DroidMediaBuffer::_DroidMediaBuffer(
 }
 
 _DroidMediaBuffer::_DroidMediaBuffer(android::sp<android::GraphicBuffer> &buffer)
-    : m_buffer(buffer)
-    , m_refCount(0)
-    , m_transform(-1)
-    , m_scalingMode(-1)
-    , m_timestamp(-1)
-    , m_frameNumber(-1)
-    , m_slot(-1)
-    , m_userData(0)
+    : m_buffer(buffer),
+      m_refCount(0),
+      m_transform(-1),
+      m_scalingMode(-1),
+      m_timestamp(-1),
+      m_frameNumber(-1),
+      m_slot(-1),
+      m_userData(0)
 {
     width = m_buffer->width;
     height = m_buffer->height;
@@ -77,9 +74,7 @@ _DroidMediaBuffer::_DroidMediaBuffer(android::sp<android::GraphicBuffer> &buffer
     common.decRef = decRef;
 }
 
-_DroidMediaBuffer::~_DroidMediaBuffer()
-{
-}
+_DroidMediaBuffer::~_DroidMediaBuffer() { }
 
 void _DroidMediaBuffer::incRef(struct android_native_base_t *base)
 {
@@ -111,7 +106,7 @@ extern "C" {
 DroidMediaBuffer *droid_media_buffer_create(uint32_t w, uint32_t h, uint32_t format)
 {
     android::sp<android::GraphicBuffer> buffer(
-        new android::GraphicBuffer(w, h, format, android::GraphicBuffer::USAGE_HW_TEXTURE));
+            new android::GraphicBuffer(w, h, format, android::GraphicBuffer::USAGE_HW_TEXTURE));
 
     android::status_t err = buffer->initCheck();
 
@@ -173,8 +168,8 @@ void *droid_media_buffer_lock(DroidMediaBuffer *buffer, uint32_t flags)
     }
 }
 
-bool droid_media_buffer_lock_ycbcr(
-    DroidMediaBuffer *buffer, uint32_t flags, DroidMediaBufferYCbCr *ycbcr)
+bool droid_media_buffer_lock_ycbcr(DroidMediaBuffer *buffer, uint32_t flags,
+                                   DroidMediaBufferYCbCr *ycbcr)
 {
     int usage = 0;
     android_ycbcr droid_ycbcr;

@@ -23,24 +23,26 @@
 #include <gui/BufferQueue.h>
 #include <camera/Camera.h>
 #if ANDROID_MAJOR >= 9 && ANDROID_MAJOR <= 10
-#include <media/MediaSource.h>
+#    include <media/MediaSource.h>
 #else
-#include <media/stagefright/MediaSource.h>
+#    include <media/stagefright/MediaSource.h>
 #endif
 #include "droidmediabuffer.h"
 #include "droidmediacamera.h"
 #include "droidmediacodec.h"
 #if ANDROID_MAJOR >= 5
-#include <media/stagefright/foundation/ALooper.h>
+#    include <media/stagefright/foundation/ALooper.h>
 #endif
 
 struct _DroidMediaBufferQueue;
 
 class DroidMediaBufferQueueListener :
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
-    public android::BufferQueue::ConsumerListener {
+    public android::BufferQueue::ConsumerListener
+{
 #else
-    public android::BufferQueue::ProxyConsumerListener {
+    public android::BufferQueue::ProxyConsumerListener
+{
 #endif
 public:
     DroidMediaBufferQueueListener(_DroidMediaBufferQueue *queue);
@@ -50,25 +52,22 @@ public:
     void onBuffersReleased();
 
 #if ANDROID_MAJOR >= 5
-    void onFrameAvailable(const android::BufferItem &)
-    {
-        onFrameAvailable();
-    }
-    void onSidebandStreamChanged()
-    {
-    }
+    void onFrameAvailable(const android::BufferItem &) { onFrameAvailable(); }
+    void onSidebandStreamChanged() { }
 #endif
 
 private:
     android::wp<_DroidMediaBufferQueue> m_queue;
 };
 
-class DroidMediaBufferSlot : public DroidMediaBufferItem {
+class DroidMediaBufferSlot : public DroidMediaBufferItem
+{
 public:
     android::sp<DroidMediaBuffer> droidBuffer;
 };
 
-struct _DroidMediaBufferQueue : public android::RefBase {
+struct _DroidMediaBufferQueue : public android::RefBase
+{
 public:
     _DroidMediaBufferQueue(const char *name);
     ~_DroidMediaBufferQueue();
@@ -110,11 +109,11 @@ private:
 };
 
 android::sp<android::Camera> droid_media_camera_get_camera(DroidMediaCamera *camera);
-android::sp<android::MediaSource> droid_media_codec_create_encoder_raw(
-    DroidMediaCodecEncoderMetaData *meta,
+android::sp<android::MediaSource>
+droid_media_codec_create_encoder_raw(DroidMediaCodecEncoderMetaData *meta,
 #if ANDROID_MAJOR >= 5
-    android::sp<android::ALooper> looper,
+                                     android::sp<android::ALooper> looper,
 #endif
-    android::sp<android::MediaSource> src);
+                                     android::sp<android::MediaSource> src);
 
 #endif /* DROID_MEDIA_PRIVATE_H */

@@ -20,9 +20,9 @@
 #include "private.h"
 #include "droidmediabuffer.h"
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
-#include <gui/SurfaceTextureClient.h>
+#    include <gui/SurfaceTextureClient.h>
 #else
-#include <gui/Surface.h>
+#    include <gui/Surface.h>
 #endif
 
 #undef LOG_TAG
@@ -43,16 +43,13 @@ static int slotIndex(const android::BufferQueue::BufferItem &item)
 DroidMediaBufferQueueListener::DroidMediaBufferQueueListener(_DroidMediaBufferQueue *queue)
     :
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
-    ProxyConsumerListener(NULL)
-    ,
+      ProxyConsumerListener(NULL),
 #endif
-    m_queue(queue)
+      m_queue(queue)
 {
 }
 
-DroidMediaBufferQueueListener::~DroidMediaBufferQueueListener()
-{
-}
+DroidMediaBufferQueueListener::~DroidMediaBufferQueueListener() { }
 
 void DroidMediaBufferQueueListener::onFrameAvailable()
 {
@@ -71,8 +68,7 @@ void DroidMediaBufferQueueListener::onBuffersReleased()
 }
 
 _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name)
-    : m_listener(new DroidMediaBufferQueueListener(this))
-    , m_data(0)
+    : m_listener(new DroidMediaBufferQueueListener(this)), m_data(0)
 {
 
     memset(&m_cb, 0x0, sizeof(m_cb));
@@ -252,15 +248,15 @@ int _DroidMediaBufferQueue::releaseMediaBuffer(int index, EGLDisplay dpy, EGLSyn
 
     int err = m_queue->releaseBuffer(index,
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
-        // TODO: fix this when we do video rendering
-        m_slots[index].mFrameNumber,
+                                     // TODO: fix this when we do video rendering
+                                     m_slots[index].mFrameNumber,
 #endif
-        dpy,
-        fence
+                                     dpy,
+                                     fence
 #if (ANDROID_MAJOR == 4 && (ANDROID_MINOR >= 2)) || ANDROID_MAJOR >= 5
-        // TODO: fix this when we do video rendering
-        ,
-        android::Fence::NO_FENCE
+                                     // TODO: fix this when we do video rendering
+                                     ,
+                                     android::Fence::NO_FENCE
 #endif
     );
     if (err != android::NO_ERROR) {
@@ -276,8 +272,8 @@ static const int staleBuffer = android::BufferQueue::STALE_BUFFER_SLOT;
 static const int staleBuffer = android::IGraphicBufferConsumer::STALE_BUFFER_SLOT;
 #endif
 
-void _DroidMediaBufferQueue::releaseMediaBuffer(
-    DroidMediaBuffer *buffer, EGLDisplay dpy, EGLSyncKHR fence)
+void _DroidMediaBufferQueue::releaseMediaBuffer(DroidMediaBuffer *buffer, EGLDisplay dpy,
+                                                EGLSyncKHR fence)
 {
 
     int err = releaseMediaBuffer(buffer->m_slot, dpy, fence);
@@ -311,8 +307,8 @@ void _DroidMediaBufferQueue::setCallbacks(DroidMediaBufferQueueCallbacks *cb, vo
 
 extern "C" {
 
-void droid_media_buffer_queue_set_callbacks(
-    DroidMediaBufferQueue *queue, DroidMediaBufferQueueCallbacks *cb, void *data)
+void droid_media_buffer_queue_set_callbacks(DroidMediaBufferQueue *queue,
+                                            DroidMediaBufferQueueCallbacks *cb, void *data)
 {
 
     if (queue) {

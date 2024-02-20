@@ -50,7 +50,8 @@ typedef enum {
     DROID_MEDIA_CODEC_BITRATE_CONTROL_CBR = 2,
 } DroidMediaCodecBitrateMode;
 
-typedef struct {
+typedef struct
+{
     const char *type;
     int32_t width;
     int32_t height;
@@ -61,20 +62,23 @@ typedef struct {
     DroidMediaCodecFlags flags;
 } DroidMediaCodecMetaData;
 
-typedef struct {
+typedef struct
+{
     DroidMediaCodecMetaData parent;
 
     DroidMediaData codec_data;
     int32_t color_format;
 } DroidMediaCodecDecoderMetaData;
 
-typedef struct DroidMediaCodecEncoderH264Settings {
+typedef struct DroidMediaCodecEncoderH264Settings
+{
     int32_t profile;
     int32_t level;
     int32_t prepend_header_to_sync_frames;
 } DroidMediaCodecEncoderH264Settings;
 
-typedef struct {
+typedef struct
+{
     DroidMediaCodecMetaData parent;
 
     int32_t color_format;
@@ -89,7 +93,8 @@ typedef struct {
     } codec_specific;
 } DroidMediaCodecEncoderMetaData;
 
-typedef struct {
+typedef struct
+{
     DroidMediaData data;
     int64_t ts;
     int64_t decoding_ts;
@@ -97,13 +102,15 @@ typedef struct {
     bool codec_config; /* user for encoder output */
 } DroidMediaCodecData;
 
-typedef struct {
+typedef struct
+{
     void (*signal_eos)(void *data);
     void (*error)(void *data, int err);
     int (*size_changed)(void *data, int32_t width, int32_t height);
 } DroidMediaCodecCallbacks;
 
-typedef struct {
+typedef struct
+{
     void (*data_available)(void *data, DroidMediaCodecData *encoded);
 } DroidMediaCodecDataCallbacks;
 
@@ -111,24 +118,25 @@ DroidMediaBufferQueue *droid_media_codec_get_buffer_queue(DroidMediaCodec *codec
 DroidMediaCodec *droid_media_codec_create_decoder(DroidMediaCodecDecoderMetaData *meta);
 DroidMediaCodec *droid_media_codec_create_encoder(DroidMediaCodecEncoderMetaData *meta);
 bool droid_media_codec_is_supported(DroidMediaCodecMetaData *meta, bool encoder);
-unsigned int droid_media_codec_get_supported_color_formats(
-    DroidMediaCodecMetaData *meta, int encoder, uint32_t *formats, unsigned int maxFormats);
+unsigned int droid_media_codec_get_supported_color_formats(DroidMediaCodecMetaData *meta,
+                                                           int encoder, uint32_t *formats,
+                                                           unsigned int maxFormats);
 
-void droid_media_codec_set_callbacks(
-    DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data);
-void droid_media_codec_set_data_callbacks(
-    DroidMediaCodec *codec, DroidMediaCodecDataCallbacks *cb, void *data);
+void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb,
+                                     void *data);
+void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec, DroidMediaCodecDataCallbacks *cb,
+                                          void *data);
 
 bool droid_media_codec_start(DroidMediaCodec *codec);
 void droid_media_codec_stop(DroidMediaCodec *codec);
 void droid_media_codec_destroy(DroidMediaCodec *codec);
-void droid_media_codec_queue(
-    DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb);
+void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data,
+                             DroidMediaBufferCallbacks *cb);
 void droid_media_codec_flush(DroidMediaCodec *codec);
 void droid_media_codec_drain(DroidMediaCodec *codec);
 DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec);
-void droid_media_codec_get_output_info(
-    DroidMediaCodec *codec, DroidMediaCodecMetaData *info, DroidMediaRect *crop);
+void droid_media_codec_get_output_info(DroidMediaCodec *codec, DroidMediaCodecMetaData *info,
+                                       DroidMediaRect *crop);
 
 bool droid_media_codec_set_video_encoder_bitrate(DroidMediaCodec *codec, int32_t bitrate);
 

@@ -23,7 +23,8 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct
+{
     int CAMERA_FRAME_CALLBACK_FLAG_ENABLE_MASK;
     int CAMERA_FRAME_CALLBACK_FLAG_ONE_SHOT_MASK;
     int CAMERA_FRAME_CALLBACK_FLAG_COPY_OUT_MASK;
@@ -60,7 +61,8 @@ typedef struct {
     int CAMERA_FACE_DETECTION_SW;
 } DroidMediaCameraConstants;
 
-typedef struct {
+typedef struct
+{
     int HAL_PIXEL_FORMAT_RGBA_8888;
     int HAL_PIXEL_FORMAT_RGBX_8888;
     int HAL_PIXEL_FORMAT_RGB_888;
@@ -75,7 +77,8 @@ typedef struct {
     int QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka;
 } DroidMediaPixelFormatConstants;
 
-typedef struct {
+typedef struct
+{
     int QOMX_COLOR_FormatYUV420PackedSemiPlanar32m;
     int QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka;
     int OMX_COLOR_FormatYUV420Planar;

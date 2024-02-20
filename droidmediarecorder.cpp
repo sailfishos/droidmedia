@@ -22,10 +22,10 @@
 #include "droidmediarecorder.h"
 #include "private.h"
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
-#include <gui/Surface.h>
+#    include <gui/Surface.h>
 #endif
 #if ANDROID_MAJOR >= 5
-#include <media/stagefright/foundation/ALooper.h>
+#    include <media/stagefright/foundation/ALooper.h>
 #endif
 
 #undef LOG_TAG
@@ -33,14 +33,16 @@
 
 #if ANDROID_MAJOR < 12
 namespace android {
-#if ANDROID_MAJOR >= 9
-struct CameraSourceListener {
-#else
-class CameraSourceListener {
-#endif
+#    if ANDROID_MAJOR >= 9
+struct CameraSourceListener
+{
+#    else
+class CameraSourceListener
+{
+#    endif
 public:
-    static int32_t getColorFormat(
-        android::sp<android::CameraSource> src, android::CameraParameters p)
+    static int32_t getColorFormat(android::sp<android::CameraSource> src,
+                                  android::CameraParameters p)
     {
         return src->isCameraColorFormatSupported(p) == android::NO_ERROR ? src->mColorFormat : -1;
     }
@@ -48,13 +50,9 @@ public:
 }; // namespace android
 #endif
 
-struct _DroidMediaRecorder {
-    _DroidMediaRecorder()
-        : m_cb_data(0)
-        , m_running(false)
-    {
-        memset(&m_cb, 0x0, sizeof(m_cb));
-    }
+struct _DroidMediaRecorder
+{
+    _DroidMediaRecorder() : m_cb_data(0), m_running(false) { memset(&m_cb, 0x0, sizeof(m_cb)); }
 
     android::status_t tick()
     {
@@ -149,8 +147,8 @@ struct _DroidMediaRecorder {
 };
 
 extern "C" {
-DroidMediaRecorder *droid_media_recorder_create(
-    DroidMediaCamera *camera, DroidMediaCodecEncoderMetaData *meta)
+DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera,
+                                                DroidMediaCodecEncoderMetaData *meta)
 {
 
     android::Size size(meta->parent.width, meta->parent.height);
@@ -163,24 +161,25 @@ DroidMediaRecorder *droid_media_recorder_create(
     recorder->m_looper->start();
 #endif
 
-    recorder->m_src = android::CameraSource::CreateFromCamera(cam->remote(),
-        cam->getRecordingProxy(), // proxy
-        -1, // cameraId
+    recorder->m_src =
+            android::CameraSource::CreateFromCamera(cam->remote(),
+                                                    cam->getRecordingProxy(), // proxy
+                                                    -1, // cameraId
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
-        android::String16("droidmedia"), // clientName
-        android::Camera::USE_CALLING_UID, // clientUid
-#if ANDROID_MAJOR >= 7
-        android::Camera::USE_CALLING_PID, // clientPid
+                                                    android::String16("droidmedia"), // clientName
+                                                    android::Camera::USE_CALLING_UID, // clientUid
+#    if ANDROID_MAJOR >= 7
+                                                    android::Camera::USE_CALLING_PID, // clientPid
+#    endif
 #endif
-#endif
-        size, // videoSize
-        meta->parent.fps, // frameRate
-        NULL // surface
+                                                    size, // videoSize
+                                                    meta->parent.fps, // frameRate
+                                                    NULL // surface
 #if ANDROID_MAJOR <= 11
-        ,
-        meta->meta_data // storeMetaDataInVideoBuffers
+                                                    ,
+                                                    meta->meta_data // storeMetaDataInVideoBuffers
 #endif
-    );
+            );
 
     // set metadata storage in codec according to whether the camera request
     // was successful
@@ -194,8 +193,8 @@ DroidMediaRecorder *droid_media_recorder_create(
 
     // Now the encoder:
 #if ANDROID_MAJOR >= 5
-    recorder->m_codec
-        = droid_media_codec_create_encoder_raw(meta, recorder->m_looper, recorder->m_src);
+    recorder->m_codec =
+            droid_media_codec_create_encoder_raw(meta, recorder->m_looper, recorder->m_src);
 #else
     recorder->m_codec = droid_media_codec_create_encoder_raw(meta, recorder->m_src);
 #endif
@@ -254,8 +253,8 @@ void droid_media_recorder_stop(DroidMediaRecorder *recorder)
     }
 }
 
-void droid_media_recorder_set_data_callbacks(
-    DroidMediaRecorder *recorder, DroidMediaCodecDataCallbacks *cb, void *data)
+void droid_media_recorder_set_data_callbacks(DroidMediaRecorder *recorder,
+                                             DroidMediaCodecDataCallbacks *cb, void *data)
 {
     memcpy(&recorder->m_cb, cb, sizeof(recorder->m_cb));
     recorder->m_cb_data = data;

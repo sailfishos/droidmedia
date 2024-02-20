@@ -29,7 +29,8 @@ typedef android::BufferItem DroidMediaBufferItem;
 typedef android::BufferQueue::BufferItem DroidMediaBufferItem;
 #endif
 
-struct _DroidMediaBuffer : public ANativeWindowBuffer {
+struct _DroidMediaBuffer : public ANativeWindowBuffer
+{
 public:
     _DroidMediaBuffer(DroidMediaBufferItem &buffer, android::sp<DroidMediaBufferQueue> queue);
 

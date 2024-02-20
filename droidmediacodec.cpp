@@ -18,39 +18,39 @@
  */
 
 #if ANDROID_MAJOR >= 9
-#include <media/stagefright/omx/1.0/Omx.h>
+#    include <media/stagefright/omx/1.0/Omx.h>
 #elif ANDROID_MAJOR >= 8
-#include <media/stagefright/omx/OMX.h>
+#    include <media/stagefright/omx/OMX.h>
 #else
-#include <media/stagefright/OMXClient.h>
+#    include <media/stagefright/OMXClient.h>
 #endif
 
 #include <media/stagefright/MediaCodecList.h>
 // MediaCodecSource should be used instead of OMXCodec from Android 5
 #if ANDROID_MAJOR >= 5
-#include <media/stagefright/MediaBuffer.h>
-#include <media/stagefright/MediaCodecSource.h>
-#include <media/stagefright/MediaCodec.h>
-#include <media/openmax/OMX_Video.h>
-#include <media/openmax/OMX_Audio.h>
-#include <media/stagefright/ACodec.h>
-#include <media/stagefright/foundation/ALooper.h>
-#include <media/stagefright/foundation/AMessage.h>
+#    include <media/stagefright/MediaBuffer.h>
+#    include <media/stagefright/MediaCodecSource.h>
+#    include <media/stagefright/MediaCodec.h>
+#    include <media/openmax/OMX_Video.h>
+#    include <media/openmax/OMX_Audio.h>
+#    include <media/stagefright/ACodec.h>
+#    include <media/stagefright/foundation/ALooper.h>
+#    include <media/stagefright/foundation/AMessage.h>
 #endif
 
 #include "mediabuffers.h"
 
 #if ANDROID_MAJOR < 7
-#include <media/stagefright/OMXCodec.h>
+#    include <media/stagefright/OMXCodec.h>
 #else
-#include <media/hardware/MetadataBufferType.h>
-#include "AsyncCodecSource.h"
+#    include <media/hardware/MetadataBufferType.h>
+#    include "AsyncCodecSource.h"
 #endif
 
 #if ANDROID_MAJOR >= 9 && ANDROID_MAJOR <= 10
-#include <media/MediaSource.h>
+#    include <media/MediaSource.h>
 #else
-#include <media/stagefright/MediaSource.h>
+#    include <media/stagefright/MediaSource.h>
 #endif
 #include <media/stagefright/MetaData.h>
 #include <media/stagefright/MediaDefs.h>
@@ -58,7 +58,7 @@
 #include <inttypes.h>
 #include "droidmediacodec.h"
 #if ANDROID_MAJOR < 8
-#include "allocator.h"
+#    include "allocator.h"
 #endif
 #include "private.h"
 #include "droidmediabuffer.h"
@@ -67,12 +67,13 @@
 #define LOG_TAG "DroidMediaCodec"
 #define DROID_MEDIA_CODEC_MAX_INPUT_BUFFERS 5
 
-#define SET_PARAM(k, v)                                                                            \
-    if (meta->v >= 0) {                                                                            \
-        md->setInt32(android::k, meta->v);                                                         \
+#define SET_PARAM(k, v)                    \
+    if (meta->v >= 0) {                    \
+        md->setInt32(android::k, meta->v); \
     }
 
-struct DroidMediaCodecMetaDataKey {
+struct DroidMediaCodecMetaDataKey
+{
     const char *mime;
     int key;
     int type;
@@ -85,15 +86,15 @@ struct DroidMediaCodecMetaDataKey {
 #endif
     { android::MEDIA_MIMETYPE_VIDEO_MPEG4, android::kKeyESDS, android::kTypeESDS },
     { android::MEDIA_MIMETYPE_AUDIO_AAC, android::kKeyESDS, android::kTypeESDS },
-    { android::MEDIA_MIMETYPE_VIDEO_AVC, android::kKeyAVCC, android::kTypeAVCC }, { NULL, 0, 0 }
+    { android::MEDIA_MIMETYPE_VIDEO_AVC, android::kKeyAVCC, android::kTypeAVCC },
+    { NULL, 0, 0 }
 };
 
-class Source : public android::MediaSource {
+class Source : public android::MediaSource
+{
 public:
     Source(android::sp<android::MetaData> &metaData)
-        : m_metaData(metaData)
-        , m_running(false)
-        , m_draining(false)
+        : m_metaData(metaData), m_running(false), m_draining(false)
     {
     }
 
@@ -150,8 +151,8 @@ public:
             }
 
             if (!m_framesReceived.buffers.empty()) {
-                android::List<android::MediaBuffer *>::iterator iter
-                    = m_framesReceived.buffers.begin();
+                android::List<android::MediaBuffer *>::iterator iter =
+                        m_framesReceived.buffers.begin();
                 android::MediaBuffer *buffer = *iter;
 
                 m_framesReceived.buffers.erase(iter);
@@ -183,8 +184,8 @@ public:
     void removeProcessedBuffer(android::MediaBuffer *buffer)
     {
         m_framesBeingProcessed.lock.lock();
-        for (android::List<android::MediaBuffer *>::iterator iter
-             = m_framesBeingProcessed.buffers.begin();
+        for (android::List<android::MediaBuffer *>::iterator iter =
+                     m_framesBeingProcessed.buffers.begin();
              iter != m_framesBeingProcessed.buffers.end(); iter++) {
             if (*iter == buffer) {
                 m_framesBeingProcessed.buffers.erase(iter);
@@ -259,7 +260,7 @@ private:
 #else
     android::status_t read(android::MediaBuffer **buffer,
 #endif
-        const android::MediaSource::ReadOptions *options DM_UNUSED = NULL)
+                           const android::MediaSource::ReadOptions *options DM_UNUSED = NULL)
     {
         *buffer = get();
 
@@ -277,27 +278,23 @@ private:
     Buffers<android::MediaBuffer *> m_framesBeingProcessed;
 };
 
-class InputBuffer : public android::MediaBuffer {
+class InputBuffer : public android::MediaBuffer
+{
 public:
     InputBuffer(void *data, size_t size, void *cb_data, DroidMediaCallback unref)
-        : android::MediaBuffer(data, size)
-        , m_cb_data(cb_data)
-        , m_unref(unref)
+        : android::MediaBuffer(data, size), m_cb_data(cb_data), m_unref(unref)
     {
     }
 
-    ~InputBuffer()
-    {
-    }
+    ~InputBuffer() { }
 
     void *m_cb_data;
     DroidMediaCallback m_unref;
 };
 
-struct _DroidMediaCodec : public android::MediaBufferObserver {
-    _DroidMediaCodec()
-        : m_cb_data(0)
-        , m_data_cb_data(0)
+struct _DroidMediaCodec : public android::MediaBufferObserver
+{
+    _DroidMediaCodec() : m_cb_data(0), m_data_cb_data(0)
     {
         memset(&m_cb, 0x0, sizeof(m_cb));
         memset(&m_data_cb, 0x0, sizeof(m_data_cb));
@@ -370,13 +367,10 @@ struct _DroidMediaCodec : public android::MediaBufferObserver {
     void *m_data_cb_data;
 };
 
-class DroidMediaCodecLoop : public android::Thread {
+class DroidMediaCodecLoop : public android::Thread
+{
 public:
-    DroidMediaCodecLoop(DroidMediaCodec *codec)
-        : Thread(false)
-        , m_codec(codec)
-    {
-    }
+    DroidMediaCodecLoop(DroidMediaCodec *codec) : Thread(false), m_codec(codec) { }
 
     bool threadLoop()
     {
@@ -387,25 +381,18 @@ private:
     DroidMediaCodec *m_codec;
 };
 
-class DroidMediaCodecBuilder {
+class DroidMediaCodecBuilder
+{
 public:
-    DroidMediaCodecBuilder(DroidMediaCodecEncoderMetaData *meta)
-        : m_enc(meta)
-        , m_dec(NULL)
-    {
-    }
-    DroidMediaCodecBuilder(DroidMediaCodecDecoderMetaData *meta)
-        : m_enc(NULL)
-        , m_dec(meta)
-    {
-    }
+    DroidMediaCodecBuilder(DroidMediaCodecEncoderMetaData *meta) : m_enc(meta), m_dec(NULL) { }
+    DroidMediaCodecBuilder(DroidMediaCodecDecoderMetaData *meta) : m_enc(NULL), m_dec(meta) { }
 
     android::sp<android::MediaSource> createCodec(android::sp<android::MediaSource> src,
-        android::sp<ANativeWindow> window,
+                                                  android::sp<ANativeWindow> window,
 #if ANDROID_MAJOR >= 5
-        android::sp<android::ALooper> looper = NULL,
+                                                  android::sp<android::ALooper> looper = NULL,
 #endif
-        android::sp<android::MetaData> md = NULL)
+                                                  android::sp<android::MetaData> md = NULL)
     {
 
         if (md == NULL) {
@@ -467,13 +454,13 @@ public:
                     format->setInt32("i-frame-interval", iframes);
                 }
 
-#if ANDROID_MAJOR >= 7
+#    if ANDROID_MAJOR >= 7
                 if (m_enc->meta_data) {
                     format->setInt32("android._input-metadata-buffer-type", m_enc->meta_data);
                     format->setInt32("android._store-metadata-in-buffers-output", false);
                 }
                 format->setInt32("android._using-recorder", 1);
-#endif
+#    endif
 
                 if (!strcmp(mime, android::MEDIA_MIMETYPE_VIDEO_AVC)) {
                     int32_t profile = m_enc->codec_specific.h264.profile;
@@ -484,12 +471,13 @@ public:
                     }
 
                     if (!level) {
-                        level = android::ACodec::getAVCLevelFor(width, height, frames, bitrate,
-#if (ANDROID_MAJOR == 8 && ANDROID_MINOR >= 1) || ANDROID_MAJOR >= 9
-                            (OMX_VIDEO_AVCPROFILEEXTTYPE)profile);
-#else
-                            (OMX_VIDEO_AVCPROFILETYPE)profile);
-#endif
+                        level = android::ACodec::getAVCLevelFor(
+                                width, height, frames, bitrate,
+#    if (ANDROID_MAJOR == 8 && ANDROID_MINOR >= 1) || ANDROID_MAJOR >= 9
+                                (OMX_VIDEO_AVCPROFILEEXTTYPE)profile);
+#    else
+                                (OMX_VIDEO_AVCPROFILETYPE)profile);
+#    endif
                     }
 
                     format->setInt32("profile", profile);
@@ -505,14 +493,14 @@ public:
                 }
                 // TODO: time-scale
 
-#if ANDROID_MAJOR > 6
-                return android::AsyncCodecSource::Create(
-                    src, format, true /* isEncoder */, flags(), window, looper);
-#elif ANDROID_MAJOR == 6
+#    if ANDROID_MAJOR > 6
+                return android::AsyncCodecSource::Create(src, format, true /* isEncoder */, flags(),
+                                                         window, looper);
+#    elif ANDROID_MAJOR == 6
                 return android::MediaCodecSource::Create(looper, format, src, NULL, flags());
-#else
+#    else
                 return android::MediaCodecSource::Create(looper, format, src, flags());
-#endif
+#    endif
             } else {
                 android::sp<android::AMessage> format = new android::AMessage();
                 format->setString("mime", mime);
@@ -546,18 +534,16 @@ public:
             return NULL;
         }
 
-        return android::OMXCodec::Create(
-            omx.interface(), md, isEncoder(), src, NULL, flags(), window);
+        return android::OMXCodec::Create(omx.interface(), md, isEncoder(), src, NULL, flags(),
+                                         window);
 #else
         return android::AsyncCodecSource::Create(src, nullptr, false /* isEncoder */, flags(),
-            window, looper, nullptr, (OMX_COLOR_FORMATTYPE)m_dec->color_format);
+                                                 window, looper, nullptr,
+                                                 (OMX_COLOR_FORMATTYPE)m_dec->color_format);
 #endif
     }
 
-    bool isEncoder()
-    {
-        return m_enc != NULL;
-    }
+    bool isEncoder() { return m_enc != NULL; }
 
     DroidMediaCodecMetaData *meta()
     {
@@ -658,13 +644,13 @@ private:
         return flags((DroidMediaCodecMetaData *)meta, 0);
 #else
         return flags((DroidMediaCodecMetaData *)meta,
-            meta->meta_data ?
-#if ANDROID_MAJOR >= 5
-                            android::MediaCodecSource::FLAG_USE_METADATA_INPUT
-#else
-                            android::OMXCodec::kStoreMetaDataInVideoBuffers
-#endif
-                            : 0);
+                     meta->meta_data ?
+#    if ANDROID_MAJOR >= 5
+                                     android::MediaCodecSource::FLAG_USE_METADATA_INPUT
+#    else
+                                     android::OMXCodec::kStoreMetaDataInVideoBuffers
+#    endif
+                                     : 0);
 #endif
     }
 
@@ -673,8 +659,8 @@ private:
         return flags((DroidMediaCodecMetaData *)meta, 0);
     }
 
-    android::sp<android::MetaData> buildMetaData(
-        DroidMediaCodecMetaData *meta, android::sp<android::MetaData> md)
+    android::sp<android::MetaData> buildMetaData(DroidMediaCodecMetaData *meta,
+                                                 android::sp<android::MetaData> md)
     {
         md->setCString(android::kKeyMIMEType, meta->type);
         SET_PARAM(kKeyWidth, width);
@@ -692,12 +678,12 @@ private:
     DroidMediaCodecDecoderMetaData *m_dec;
 };
 
-android::sp<android::MediaSource> droid_media_codec_create_encoder_raw(
-    DroidMediaCodecEncoderMetaData *meta,
+android::sp<android::MediaSource>
+droid_media_codec_create_encoder_raw(DroidMediaCodecEncoderMetaData *meta,
 #if ANDROID_MAJOR >= 5
-    android::sp<android::ALooper> looper,
+                                     android::sp<android::ALooper> looper,
 #endif
-    android::sp<android::MediaSource> src)
+                                     android::sp<android::MediaSource> src)
 {
     DroidMediaCodecBuilder builder(meta);
 #if ANDROID_MAJOR >= 5
@@ -763,8 +749,8 @@ DroidMediaCodec *droid_media_codec_create(DroidMediaCodecBuilder &builder)
 #if ANDROID_MAJOR >= 5
     mediaCodec->m_looper = looper;
 #endif
-    mediaCodec->m_useExternalLoop
-        = (meta->flags & DROID_MEDIA_CODEC_USE_EXTERNAL_LOOP) ? true : false;
+    mediaCodec->m_useExternalLoop =
+            (meta->flags & DROID_MEDIA_CODEC_USE_EXTERNAL_LOOP) ? true : false;
 
     return mediaCodec;
 }
@@ -796,19 +782,21 @@ bool droid_media_codec_is_supported(DroidMediaCodecMetaData *meta, bool encoder)
 #if ANDROID_MAJOR < 7
     android::OMXCodec::findMatchingCodecs(meta->type, encoder, NULL,
 #else
-    android::MediaCodecList::findMatchingCodecs(meta->type, encoder,
+    android::MediaCodecList::findMatchingCodecs(
+            meta->type, encoder,
 #endif
-        DroidMediaCodecBuilder::flags(meta, 0), &matchingCodecs);
+                                          DroidMediaCodecBuilder::flags(meta, 0), &matchingCodecs);
 
     return matchingCodecs.size() > 0;
 }
 
-unsigned int droid_media_codec_get_supported_color_formats(
-    DroidMediaCodecMetaData *meta, int encoder, uint32_t *formats, unsigned int maxFormats)
+unsigned int droid_media_codec_get_supported_color_formats(DroidMediaCodecMetaData *meta,
+                                                           int encoder, uint32_t *formats,
+                                                           unsigned int maxFormats)
 {
 #if ANDROID_MAJOR >= 5
-    android::sp<android::MediaCodecList::IMediaCodecList> list
-        = android::MediaCodecList::getInstance();
+    android::sp<android::MediaCodecList::IMediaCodecList> list =
+            android::MediaCodecList::getInstance();
 #else
     const android::MediaCodecList *list = android::MediaCodecList::getInstance();
 #endif
@@ -824,9 +812,10 @@ unsigned int droid_media_codec_get_supported_color_formats(
 #if ANDROID_MAJOR < 7
     android::OMXCodec::findMatchingCodecs(meta->type, encoder, NULL,
 #else
-    android::MediaCodecList::findMatchingCodecs(meta->type, encoder,
+    android::MediaCodecList::findMatchingCodecs(
+            meta->type, encoder,
 #endif
-        DroidMediaCodecBuilder::flags(meta, 0), &matchingCodecs);
+                                          DroidMediaCodecBuilder::flags(meta, 0), &matchingCodecs);
 
     if (matchingCodecs.size() > 0) {
         const char *matchName;
@@ -835,14 +824,14 @@ unsigned int droid_media_codec_get_supported_color_formats(
 #elif ANDROID_MAJOR < 7
         matchName = matchingCodecs.itemAt(0).mName.string();
 #else
-            matchName = matchingCodecs.itemAt(0).c_str();
+                                              matchName = matchingCodecs.itemAt(0).c_str();
 #endif
         ssize_t matchIndex = list->findCodecByName(matchName);
 #if ANDROID_MAJOR >= 5
         const android::sp<android::MediaCodecInfo> info = list->getCodecInfo(matchIndex);
         if (info != NULL) {
-            const android::sp<android::MediaCodecInfo::Capabilities> caps
-                = info->getCapabilitiesFor(meta->type);
+            const android::sp<android::MediaCodecInfo::Capabilities> caps =
+                    info->getCapabilitiesFor(meta->type);
             if (caps != NULL) {
                 android::Vector<uint32_t> colorFormats;
                 caps->getSupportedColorFormats(&colorFormats);
@@ -861,7 +850,7 @@ unsigned int droid_media_codec_get_supported_color_formats(
         uint32_t flags;
 
         android::status_t err = android::MediaCodecList::getInstance()->getCodecCapabilities(
-            matchIndex, meta->type, &profileLevels, &colorFormats, &flags);
+                matchIndex, meta->type, &profileLevels, &colorFormats, &flags);
 
         if (err == android::OK) {
             if (maxFormats > colorFormats.size()) {
@@ -885,8 +874,8 @@ bool droid_media_codec_start(DroidMediaCodec *codec)
             ALOGE("Failed to connect buffer queue listener");
             return false;
         }
-        android::status_t err
-            = native_window_api_connect(codec->m_window.get(), NATIVE_WINDOW_API_MEDIA);
+        android::status_t err =
+                native_window_api_connect(codec->m_window.get(), NATIVE_WINDOW_API_MEDIA);
         if (err != android::NO_ERROR) {
             ALOGE("Failed to connect window");
             return false;
@@ -960,8 +949,8 @@ void droid_media_codec_destroy(DroidMediaCodec *codec)
     delete codec;
 }
 
-void droid_media_codec_queue(
-    DroidMediaCodec *codec, DroidMediaCodecData *data, DroidMediaBufferCallbacks *cb)
+void droid_media_codec_queue(DroidMediaCodec *codec, DroidMediaCodecData *data,
+                             DroidMediaBufferCallbacks *cb)
 {
     InputBuffer *buffer = new InputBuffer(data->data.data, data->data.size, cb->data, cb->unref);
 #if ANDROID_MAJOR >= 9
@@ -1140,8 +1129,8 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
 
         int err = codec->m_window->queueBuffer(codec->m_window.get(), buff.get()
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR >= 5
-                                                                          ,
-            -1 /* TODO: Where do we get the fence from? */
+                                                                              ,
+                                               -1 /* TODO: Where do we get the fence from? */
 #endif
         );
         if (err != android::NO_ERROR) {
@@ -1161,15 +1150,15 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
     return DROID_MEDIA_CODEC_LOOP_OK;
 }
 
-void droid_media_codec_set_callbacks(
-    DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb, void *data)
+void droid_media_codec_set_callbacks(DroidMediaCodec *codec, DroidMediaCodecCallbacks *cb,
+                                     void *data)
 {
     memcpy(&codec->m_cb, cb, sizeof(codec->m_cb));
     codec->m_cb_data = data;
 }
 
-void droid_media_codec_set_data_callbacks(
-    DroidMediaCodec *codec, DroidMediaCodecDataCallbacks *cb, void *data)
+void droid_media_codec_set_data_callbacks(DroidMediaCodec *codec, DroidMediaCodecDataCallbacks *cb,
+                                          void *data)
 {
     memcpy(&codec->m_data_cb, cb, sizeof(codec->m_data_cb));
     codec->m_data_cb_data = data;
@@ -1185,8 +1174,8 @@ void droid_media_codec_drain(DroidMediaCodec *codec)
     codec->m_src->drain();
 }
 
-void droid_media_codec_get_output_info(
-    DroidMediaCodec *codec, DroidMediaCodecMetaData *info, DroidMediaRect *crop)
+void droid_media_codec_get_output_info(DroidMediaCodec *codec, DroidMediaCodecMetaData *info,
+                                       DroidMediaRect *crop)
 {
     android::sp<android::MetaData> md(codec->m_codec->getFormat());
     // TODO: is there a way to set info->flags?
@@ -1198,8 +1187,8 @@ void droid_media_codec_get_output_info(
     md->findInt32(android::kKeySampleRate, &info->sample_rate);
     md->findInt32(android::kKeyColorFormat, &info->hal_format);
 
-    if (!md->findRect(
-            android::kKeyCropRect, &crop->left, &crop->top, &crop->right, &crop->bottom)) {
+    if (!md->findRect(android::kKeyCropRect, &crop->left, &crop->top, &crop->right,
+                      &crop->bottom)) {
         crop->left = crop->top = 0;
         crop->right = info->width;
         crop->bottom = info->height;
@@ -1216,8 +1205,8 @@ bool droid_media_codec_set_video_encoder_bitrate(DroidMediaCodec *codec, int32_t
     ALOGI("Setting video encoder bitrate to %d bps", bitrate);
     android::sp<android::AMessage> params = new android::AMessage();
     params->setInt32("video-bitrate", bitrate);
-    android::sp<android::AsyncCodecSource> src
-        = static_cast<android::AsyncCodecSource *>(codec->m_codec.get());
+    android::sp<android::AsyncCodecSource> src =
+            static_cast<android::AsyncCodecSource *>(codec->m_codec.get());
     android::status_t err = src->setParameters(params);
     return err == android::NO_ERROR;
 #else

@@ -17,36 +17,32 @@
  */
 
 #if ANDROID_MAJOR < 8
-#include "allocator.h"
-#include <ui/GraphicBuffer.h>
+#    include "allocator.h"
+#    include <ui/GraphicBuffer.h>
 
-#define LOG_TAG "DroidMediaAllocator"
+#    define LOG_TAG "DroidMediaAllocator"
 
-DroidMediaAllocator::DroidMediaAllocator()
-    : m_size(0)
-{
-}
+DroidMediaAllocator::DroidMediaAllocator() : m_size(0) { }
 
-DroidMediaAllocator::~DroidMediaAllocator()
-{
-}
+DroidMediaAllocator::~DroidMediaAllocator() { }
 
-android::sp<android::GraphicBuffer> DroidMediaAllocator::createGraphicBuffer(uint32_t w, uint32_t h,
-    android::PixelFormat format, uint32_t usage,
-#if ANDROID_MAJOR >= 7 && ANDROID_MINOR >= 1
-    std::string requestorName,
-#endif
-    android::status_t *error)
+android::sp<android::GraphicBuffer>
+DroidMediaAllocator::createGraphicBuffer(uint32_t w, uint32_t h, android::PixelFormat format,
+                                         uint32_t usage,
+#    if ANDROID_MAJOR >= 7 && ANDROID_MINOR >= 1
+                                         std::string requestorName,
+#    endif
+                                         android::status_t *error)
 {
     usage |= android::GraphicBuffer::USAGE_HW_TEXTURE;
 
     // Copied from SurfaceFlinger.cpp
     android::sp<android::GraphicBuffer>
-#if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 2)
-        graphicBuffer(new android::GraphicBuffer(w, h, format, usage, m_size));
-#else
-        graphicBuffer(new android::GraphicBuffer(w, h, format, usage));
-#endif
+#    if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 2)
+            graphicBuffer(new android::GraphicBuffer(w, h, format, usage, m_size));
+#    else
+            graphicBuffer(new android::GraphicBuffer(w, h, format, usage));
+#    endif
     android::status_t err = graphicBuffer->initCheck();
 
     *error = err;
@@ -54,7 +50,7 @@ android::sp<android::GraphicBuffer> DroidMediaAllocator::createGraphicBuffer(uin
     if (err != android::NO_ERROR || graphicBuffer->handle == 0) {
         ALOGE("createGraphicBuffer(w=%d, h=%d) "
               "failed (%s), handle=%p, format=0x%x, usage=0x%x, size=%d",
-            w, h, strerror(-err), graphicBuffer->handle, format, usage, m_size);
+              w, h, strerror(-err), graphicBuffer->handle, format, usage, m_size);
         return 0;
     }
 

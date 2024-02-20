@@ -22,7 +22,7 @@
 #include <binder/BinderService.h>
 #include <binder/MemoryHeapBase.h>
 #if ANDROID_MAJOR < 8
-#include "allocator.h"
+#    include "allocator.h"
 #endif
 #include "services/services.h"
 
@@ -40,9 +40,9 @@ int main(int, char **)
 
 #if (ANDROID_MAJOR == 4)
     FakePermissionController::instantiate();
-#if (ANDROID_MINOR == 4)
+#    if (ANDROID_MINOR == 4)
     FakeAppOps::instantiate();
-#endif
+#    endif
 #endif
 
     ProcessState::self()->startThreadPool();

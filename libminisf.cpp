@@ -22,7 +22,7 @@
 #include <binder/BinderService.h>
 #include <binder/MemoryHeapBase.h>
 #if ANDROID_MAJOR < 8
-#include "allocator.h"
+#    include "allocator.h"
 #endif
 #include "services/services.h"
 

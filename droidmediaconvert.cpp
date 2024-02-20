@@ -30,10 +30,10 @@ typedef void (*_getI420ColorConverter)(II420ColorConverter *converter);
 
 extern "C" {
 
-struct _DroidMediaConvert : public II420ColorConverter {
+struct _DroidMediaConvert : public II420ColorConverter
+{
 public:
-    _DroidMediaConvert()
-        : m_handle(NULL)
+    _DroidMediaConvert() : m_handle(NULL)
     {
         m_crop.top = m_crop.left = m_crop.bottom = m_crop.right = -1;
         m_width = m_height = 0;
@@ -60,8 +60,8 @@ public:
             return false;
         }
 
-        _getI420ColorConverter func
-            = (_getI420ColorConverter)dlsym(m_handle, "getI420ColorConverter");
+        _getI420ColorConverter func =
+                (_getI420ColorConverter)dlsym(m_handle, "getI420ColorConverter");
         if (!func) {
             ALOGE("failed to find symbol getI420ColorConverter");
             dlclose(m_handle);
@@ -107,7 +107,7 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in,
     }
 
     android::status_t err = convert->convertDecoderOutputToI420(
-        in->data, convert->m_width, convert->m_height, convert->m_crop, out);
+            in->data, convert->m_width, convert->m_height, convert->m_crop, out);
 
     if (err != android::NO_ERROR) {
         ALOGE("error 0x%x converting buffer", -err);
@@ -117,8 +117,8 @@ bool droid_media_convert_to_i420(DroidMediaConvert *convert, DroidMediaData *in,
     return true;
 }
 
-void droid_media_convert_set_crop_rect(
-    DroidMediaConvert *convert, DroidMediaRect rect, int32_t width, int32_t height)
+void droid_media_convert_set_crop_rect(DroidMediaConvert *convert, DroidMediaRect rect,
+                                       int32_t width, int32_t height)
 {
     convert->m_crop.left = rect.left;
     convert->m_crop.top = rect.top;
