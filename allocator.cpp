@@ -22,7 +22,10 @@
 
 #define LOG_TAG "DroidMediaAllocator"
 
-DroidMediaAllocator::DroidMediaAllocator() : m_size(0) { }
+DroidMediaAllocator::DroidMediaAllocator()
+    : m_size(0)
+{
+}
 
 DroidMediaAllocator::~DroidMediaAllocator() { }
 

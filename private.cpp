@@ -63,7 +63,8 @@ void DroidMediaBufferQueueListener::onBuffersReleased()
 }
 
 _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name)
-    : m_listener(new DroidMediaBufferQueueListener(this)), m_data(0)
+    : m_listener(new DroidMediaBufferQueueListener(this))
+    , m_data(0)
 {
 
     memset(&m_cb, 0x0, sizeof(m_cb));

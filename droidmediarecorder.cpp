@@ -49,7 +49,12 @@ public:
 #endif
 
 struct _DroidMediaRecorder {
-    _DroidMediaRecorder() : m_cb_data(0), m_running(false) { memset(&m_cb, 0x0, sizeof(m_cb)); }
+    _DroidMediaRecorder()
+        : m_cb_data(0)
+        , m_running(false)
+    {
+        memset(&m_cb, 0x0, sizeof(m_cb));
+    }
 
     android::status_t tick()
     {

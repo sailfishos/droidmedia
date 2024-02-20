@@ -91,7 +91,9 @@ struct DroidMediaCodecMetaDataKey {
 class Source : public android::MediaSource {
 public:
     Source(android::sp<android::MetaData> &metaData)
-        : m_metaData(metaData), m_running(false), m_draining(false)
+        : m_metaData(metaData)
+        , m_running(false)
+        , m_draining(false)
     {
     }
 
@@ -280,7 +282,9 @@ private:
 class InputBuffer : public android::MediaBuffer {
 public:
     InputBuffer(void *data, size_t size, void *cb_data, DroidMediaCallback unref)
-        : android::MediaBuffer(data, size), m_cb_data(cb_data), m_unref(unref)
+        : android::MediaBuffer(data, size)
+        , m_cb_data(cb_data)
+        , m_unref(unref)
     {
     }
 
@@ -291,7 +295,9 @@ public:
 };
 
 struct _DroidMediaCodec : public android::MediaBufferObserver {
-    _DroidMediaCodec() : m_cb_data(0), m_data_cb_data(0)
+    _DroidMediaCodec()
+        : m_cb_data(0)
+        , m_data_cb_data(0)
     {
         memset(&m_cb, 0x0, sizeof(m_cb));
         memset(&m_data_cb, 0x0, sizeof(m_data_cb));
@@ -366,7 +372,11 @@ struct _DroidMediaCodec : public android::MediaBufferObserver {
 
 class DroidMediaCodecLoop : public android::Thread {
 public:
-    DroidMediaCodecLoop(DroidMediaCodec *codec) : Thread(false), m_codec(codec) { }
+    DroidMediaCodecLoop(DroidMediaCodec *codec)
+        : Thread(false)
+        , m_codec(codec)
+    {
+    }
 
     bool threadLoop()
     {
@@ -379,8 +389,16 @@ private:
 
 class DroidMediaCodecBuilder {
 public:
-    DroidMediaCodecBuilder(DroidMediaCodecEncoderMetaData *meta) : m_enc(meta), m_dec(NULL) { }
-    DroidMediaCodecBuilder(DroidMediaCodecDecoderMetaData *meta) : m_enc(NULL), m_dec(meta) { }
+    DroidMediaCodecBuilder(DroidMediaCodecEncoderMetaData *meta)
+        : m_enc(meta)
+        , m_dec(NULL)
+    {
+    }
+    DroidMediaCodecBuilder(DroidMediaCodecDecoderMetaData *meta)
+        : m_enc(NULL)
+        , m_dec(meta)
+    {
+    }
 
     android::sp<android::MediaSource> createCodec(android::sp<android::MediaSource> src,
         android::sp<ANativeWindow> window,

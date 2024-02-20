@@ -47,7 +47,10 @@ typedef ABuffer MediaCodecBuffer;
 #define LOG_TAG "AsyncCodecSource"
 
 AsyncCodecSource::SourceReader::SourceReader(AsyncCodecSource *codec, const sp<MediaSource> source)
-    : Thread(false), mRunning(true), mCodec(codec), mSource(source)
+    : Thread(false)
+    , mRunning(true)
+    , mCodec(codec)
+    , mSource(source)
 {
 }
 
@@ -290,7 +293,11 @@ sp<MetaData> AsyncCodecSource::getFormat()
     return *meta;
 }
 
-AsyncCodecSource::Output::Output() : mReachedEOS(false), mReading(false) { }
+AsyncCodecSource::Output::Output()
+    : mReachedEOS(false)
+    , mReading(false)
+{
+}
 
 status_t AsyncCodecSource::read(DroidMediaBuffer **buffer, const ReadOptions *options)
 {

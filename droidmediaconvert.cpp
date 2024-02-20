@@ -32,7 +32,8 @@ extern "C" {
 
 struct _DroidMediaConvert : public II420ColorConverter {
 public:
-    _DroidMediaConvert() : m_handle(NULL)
+    _DroidMediaConvert()
+        : m_handle(NULL)
     {
         m_crop.top = m_crop.left = m_crop.bottom = m_crop.right = -1;
         m_width = m_height = 0;

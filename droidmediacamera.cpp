@@ -80,7 +80,11 @@ struct _DroidMediaCameraRecordingData {
 };
 
 struct _DroidMediaCamera {
-    _DroidMediaCamera() : m_cb_data(0) { memset(&m_cb, 0x0, sizeof(m_cb)); }
+    _DroidMediaCamera()
+        : m_cb_data(0)
+    {
+        memset(&m_cb, 0x0, sizeof(m_cb));
+    }
 
     android::sp<android::Camera> m_camera;
     android::sp<DroidMediaBufferQueue> m_queue;
@@ -91,7 +95,10 @@ struct _DroidMediaCamera {
 
 class CameraListener : public android::CameraListener {
 public:
-    CameraListener(DroidMediaCamera *cam) : m_cam(cam) { }
+    CameraListener(DroidMediaCamera *cam)
+        : m_cam(cam)
+    {
+    }
 
     void notify(int32_t msgType, int32_t ext1, int32_t ext2)
     {
