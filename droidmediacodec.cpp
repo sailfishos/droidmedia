@@ -104,10 +104,9 @@ public:
         m_framesReceived.lock.unlock();
     }
 
-    // After this is called all new buffers will be rejected. get() will still
-    // return any already queued buffers but once the queue has been emptied it
-    // will return a null buffer indicating the end of the stream. There is no
-    // coming back from this.
+    // After this is called all new buffers will be rejected. get() will still return any already
+    // queued buffers but once the queue has been emptied it will return a null buffer indicating
+    // the end of the stream. There is no coming back from this.
     void drain()
     {
         m_framesReceived.lock.lock();

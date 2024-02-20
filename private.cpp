@@ -170,9 +170,9 @@ void _DroidMediaBufferQueue::frameAvailable()
 #endif
 
     if (err != android::OK) {
-        // Invalid operation means we've tried to acquire too many concurrent
-        // buffers. That's expected, we'll attempt to over acquire a few times
-        // at the start and then an equilibrium will be reached.
+        // Invalid operation means we've tried to acquire too many concurrent buffers. That's
+        // expected, we'll attempt to over acquire a few times at the start and then an equilibrium
+        // will be reached.
         if (err != android::INVALID_OPERATION) {
             ALOGE("Failed to acquire item from the queue. Error 0x%x", -err);
         }
@@ -188,10 +188,9 @@ void _DroidMediaBufferQueue::frameAvailable()
 
         slot.droidBuffer = new DroidMediaBuffer(slot, this);
 
-        // Keep the original reference count for ourselves and give one to the
-        // buffer_created callback to release with droid_media_buffer_destroy.
-        // If there is no buffer_created callback or it returns false we
-        // dereference both.
+        // Keep the original reference count for ourselves and give one to the buffer_created
+        // callback to release with droid_media_buffer_destroy. If there is no buffer_created
+        // callback or it returns false we dereference both.
         slot.droidBuffer->incStrong(0);
 
         if (!m_data || !m_cb.buffer_created(m_data, slot.droidBuffer.get())) {
