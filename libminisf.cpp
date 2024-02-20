@@ -22,27 +22,24 @@
 #include <binder/BinderService.h>
 #include <binder/MemoryHeapBase.h>
 #if ANDROID_MAJOR < 8
-#include "allocator.h"
+#    include "allocator.h"
 #endif
 #include "services/services.h"
 
 using namespace android;
 
-extern "C"
-void startMiniSurfaceFlinger()
+extern "C" void startMiniSurfaceFlinger()
 {
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();
 
-    if (sm->checkService(String16("SurfaceFlinger")) == NULL)
-    {
+    if (sm->checkService(String16("SurfaceFlinger")) == NULL) {
         MiniSurfaceFlinger::instantiate();
-    }
-    else
-    {
-        ALOGW("SurfaceFlinger service already running, so we won't start it here. If you have trouble with media, try disabling the minisf service.");
+    } else {
+        ALOGW("SurfaceFlinger service already running, so we won't start it "
+              "here. If you have trouble with media, try disabling the minisf "
+              "service.");
     }
 
     ProcessState::self()->startThreadPool();
-
 }

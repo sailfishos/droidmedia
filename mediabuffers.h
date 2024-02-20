@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef MEDIA_BUFFERS_H_
 #define MEDIA_BUFFERS_H_
 
 #include <utils/Condition.h>
 #include <utils/List.h>
 
-template<typename T>
-struct Buffers {
-    android::List<T>buffers;
+template <typename T>
+struct Buffers
+{
+    android::List<T> buffers;
     android::Condition cond;
     android::Mutex lock;
 };

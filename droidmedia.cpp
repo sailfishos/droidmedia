@@ -20,7 +20,6 @@
 #include <binder/ProcessState.h>
 #include <binder/IPCThreadState.h>
 
-
 extern "C" {
 
 void _droid_media_init()
@@ -33,5 +32,4 @@ void droid_media_deinit()
     android::IPCThreadState::self()->stopProcess(false);
     android::IPCThreadState::self()->joinThreadPool();
 }
-
 };
