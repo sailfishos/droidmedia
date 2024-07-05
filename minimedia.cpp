@@ -98,6 +98,9 @@ main(int, char**)
 #if ANDROID_MAJOR < 8
     FakeCameraServiceProxy::instantiate();
 #endif
+#if ANDROID_MAJOR >= 14
+    FakePermissionChecker::instantiate();
+#endif
     // Camera service needs to be told which users may use the camera
     sp<IBinder> binder;
     do {
