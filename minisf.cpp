@@ -25,6 +25,9 @@
 #include "allocator.h"
 #endif
 #include "services/services.h"
+#ifdef USE_MOTO_SF
+#include "SurfaceFlinger.h"
+#endif
 
 using namespace android;
 
@@ -34,7 +37,27 @@ main(int, char**)
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();
 
-    MiniSurfaceFlinger::instantiate();
+#ifdef USE_MOTO_SF
+    ProcessState::self()->setThreadPoolMaxThreadCount(4);
+    ALOGI("MOTO_SF SurfaceFlinger: start the thread pool"); 
+    // start the thread pool
+    sp<ProcessState> ps(ProcessState::self());
+    ps->startThreadPool();
+
+    ALOGI("MOTO_SF SurfaceFlinger: create SurfaceFlinger"); 
+    sp<SurfaceFlinger> flinger = new SurfaceFlinger();
+    // initialize before clients can connect
+    ALOGI("MOTO_SF SurfaceFlinger: call SurfaceFlinger->init()"); 
+    flinger->init();
+    // publish surface flinger
+    ALOGI("MOTO_SF SurfaceFlinger: publish SurfaceFlinger"); 
+    sm->addService(String16(SurfaceFlinger::getServiceName()), flinger, false);
+    ALOGI("MOTO_SF SurfaceFlinger: call SurfaceFlinger->run()"); 
+    flinger->run();
+    ALOGI("MOTO_SF SurfaceFlinger: after SurfaceFlinger->run()"); 
+#else
+     MiniSurfaceFlinger::instantiate();
+#endif
 
 // Android 4 will not allow system services to be run from minimediaservice. So keep them here instead.
 
