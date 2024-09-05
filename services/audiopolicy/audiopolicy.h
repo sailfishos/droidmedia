@@ -46,3 +46,7 @@
 #if ANDROID_MAJOR == 13
 #include "audiopolicy_13_0_0.h"
 #endif
+
+#if ANDROID_MAJOR == 14
+#include "audiopolicy_14_0_0.h"
+#endif

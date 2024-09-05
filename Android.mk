@@ -10,7 +10,7 @@ ifdef FORCE_HAL
 FORCE_HAL_PARAM := -DFORCE_HAL=$(FORCE_HAL)
 endif
 ifdef LEGACY_ANDROID_13_REVISION
-LEGACY_ANDROID_13_PARAM := -DLEGACY_ANDROID_13_REVISION=$(LEGACY_ANDROID_13_REVISION)
+LEGACY_ANDROID_REVISION_PARAM := -DLEGACY_ANDROID_13_REVISION=$(LEGACY_ANDROID_13_REVISION)
 endif
 
 ifndef ANDROID_MAJOR
@@ -60,6 +60,11 @@ endif
 endif
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -eq 14 && echo true),true)
+ifneq ($(shell grep -q CameraPrivacyAllowlistEntry frameworks/base/core/java/android/hardware/ISensorPrivacyManager.aidl && echo true),true)
+LEGACY_ANDROID_REVISION_PARAM := -DLEGACY_ANDROID_14_REVISION=45
+endif
+endif
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := droidmedia.cpp \
@@ -112,7 +117,7 @@ LOCAL_SHARED_LIBRARIES += libactivitymanager_aidl \
                           libpermission
 endif
 
-LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) $(LEGACY_ANDROID_13_PARAM) -Wno-unused-parameter
+LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
 
@@ -150,14 +155,74 @@ LOCAL_C_INCLUDES := frameworks/av/services/camera/libcameraservice \
 		    frameworks/av/media/libmedia \
 		    frameworks/av/services/audioflinger
 
-LOCAL_SHARED_LIBRARIES := libcameraservice \
-                          libcamera_client \
+LOCAL_SHARED_LIBRARIES := libcamera_client \
                           libutils \
                           libmedia \
                           libbinder \
                           libgui \
                           libcutils \
                           libui
+
+ifeq ($(shell test $(ANDROID_MAJOR) -le 13 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libcameraservice
+else
+LOCAL_SHARED_LIBRARIES += libbase \
+                          libdl \
+                          libutilscallstack \
+                          libexif \
+                          libcamera_metadata \
+                          libfmq \
+                          libhardware \
+                          libimage_io \
+                          libjpeg \
+                          libultrahdr \
+                          libmedia_omx \
+                          libmemunreachable \
+                          libnativewindow \
+                          libprocessgroup \
+                          libprocinfo \
+                          libstagefright \
+                          libstagefright_foundation \
+                          libxml2 \
+                          libyuv \
+                          android.hardware.camera.common@1.0 \
+                          android.hardware.camera.device@1.0 \
+                          android.hardware.camera.device@3.2 \
+                          android.hardware.camera.device@3.3 \
+                          android.hardware.camera.device@3.4 \
+                          android.hardware.camera.device@3.5 \
+                          android.hardware.camera.device@3.6 \
+                          android.hardware.camera.device@3.7 \
+                          android.hardware.common-V2-ndk \
+                          android.hardware.common.fmq-V1-ndk \
+                          camera_platform_flags_c_lib \
+                          media_permission-aidl-cpp
+
+LOCAL_STATIC_LIBRARIES += libcameraservice \
+                          android.frameworks.cameraservice.common@2.0 \
+                          android.frameworks.cameraservice.service@2.0 \
+                          android.frameworks.cameraservice.service@2.1 \
+                          android.frameworks.cameraservice.service@2.2 \
+                          android.frameworks.cameraservice.device@2.0 \
+                          android.frameworks.cameraservice.device@2.1 \
+                          android.frameworks.cameraservice.common-V1-ndk \
+                          android.frameworks.cameraservice.service-V2-ndk \
+                          android.frameworks.cameraservice.device-V2-ndk \
+                          android.hardware.camera.common-V1-ndk \
+                          android.hardware.camera.device-V3-ndk \
+                          android.hardware.camera.metadata-V2-ndk \
+                          android.hardware.camera.provider@2.4 \
+                          android.hardware.camera.provider@2.5 \
+                          android.hardware.camera.provider@2.6 \
+                          android.hardware.camera.provider@2.7 \
+                          android.hardware.camera.provider-V3-ndk \
+                          libaidlcommonsupport \
+                          libbinderthreadstateutils \
+                          libcameraservice_device_independent \
+                          libdynamic_depth \
+                          libprocessinfoservice_aidl \
+                          media_permission-aidl-cpp
+endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
 LOCAL_C_INCLUDES += frameworks/av/media/libmediaplayerservice
@@ -196,6 +261,9 @@ endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),12 13))
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.7
+endif
+
+ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),12 13 14))
 LOCAL_C_INCLUDES += frameworks/native/libs/binder/include_activitymanager \
                     frameworks/native/libs/binder/include_batterystats \
                     frameworks/native/libs/binder/include_processinfo
@@ -258,8 +326,14 @@ LOCAL_SHARED_LIBRARIES += libresourcemanagerservice
 endif
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 14 && echo true),true)
+LOCAL_AIDL_INCLUDES += frameworks/native/libs/gui/aidl
+
+LOCAL_C_INCLUDES += frameworks/av/media/libeffects/config/include
+endif
+
 LOCAL_MODULE_TAGS := optional
-LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter
+LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 ifeq ($(MINIMEDIA_SENSORSERVER_DISABLE),1)
     LOCAL_CPPFLAGS += -DSENSORSERVER_DISABLE
 endif
@@ -318,7 +392,7 @@ LOCAL_C_INCLUDES += frameworks/native/libs/binder/include_activitymanager \
 endif
 
 LOCAL_MODULE_TAGS := optional
-LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter
+LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 ifneq ($(CM_BUILD),)
 LOCAL_CPPFLAGS += -DCM_BUILD
 endif
@@ -342,7 +416,7 @@ LOCAL_SHARED_LIBRARIES := libutils \
                           libcutils \
                           libui
 LOCAL_MODULE_TAGS := optional
-LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter
+LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 ifneq ($(CM_BUILD),)
 LOCAL_CPPFLAGS += -DCM_BUILD
 endif
