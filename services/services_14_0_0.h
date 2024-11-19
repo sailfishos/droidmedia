@@ -224,6 +224,13 @@ public:
         return BAD_VALUE;
     }
 
+    status_t setTransactionState(const FrameTimelineInfo&, Vector<ComposerState>&,
+                             Vector<DisplayState>&, uint32_t, const sp<IBinder>&,
+                             InputWindowCommands, int64_t, bool, const std::vector<client_cache_t>&,
+                             bool, const std::vector<ListenerCallbacks>&, uint64_t, const std::vector<uint64_t>&) {
+        return BAD_VALUE;
+    }
+
     void bootFinished() {
         // Nothing
     }
