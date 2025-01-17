@@ -90,8 +90,7 @@ LOCAL_SHARED_LIBRARIES := libc \
                           libui \
                           libbinder \
                           libstagefright \
-                          libstagefright_foundation \
-                          libmedia
+                          libstagefright_foundation
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
 LOCAL_SHARED_LIBRARIES += liblog
@@ -115,6 +114,10 @@ LOCAL_SHARED_LIBRARIES += libactivitymanager_aidl \
                           libbatterystats_aidl \
                           libmediautils \
                           libpermission
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libmedia
 endif
 
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
@@ -355,7 +358,6 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minisf.cpp allocator.cpp
 LOCAL_SHARED_LIBRARIES := libutils \
                           libbinder \
-                          libmedia \
                           libgui \
                           libcutils \
                           libui
@@ -391,6 +393,10 @@ LOCAL_C_INCLUDES += frameworks/native/libs/binder/include_activitymanager \
                     frameworks/native/libs/binder/include_processinfo
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libmedia
+endif
+
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 ifneq ($(CM_BUILD),)
@@ -411,7 +417,6 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := libminisf.cpp allocator.cpp
 LOCAL_SHARED_LIBRARIES := libutils \
                           libbinder \
-                          libmedia \
                           libgui \
                           libcutils \
                           libui
@@ -437,6 +442,10 @@ endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),12 13))
 LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.7
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libmedia
 endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
