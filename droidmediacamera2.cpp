@@ -129,6 +129,9 @@ struct _DroidMediaCamera
 
     // Requests
     ACaptureRequest *m_preview_request = NULL;
+    // Holding a list of parameters that come too early to apply so that they can be applied when the requests exists.
+    std::unordered_map<std::string, std::string> m_param_map;
+
     ACaptureRequest *m_image_request = NULL;
     ACaptureRequest *m_video_request = NULL;
 
@@ -864,6 +867,9 @@ bool droid_media_camera_unlock(DroidMediaCamera *camera)
     return true;
 }
 
+// Forward declaration.
+void update_request(DroidMediaCamera *camera, ACaptureRequest *request, std::unordered_map<std::string, std::string> &param_map);
+
 bool droid_media_camera_start_preview(DroidMediaCamera *camera)
 {
     ALOGI("start_preview");
@@ -875,6 +881,21 @@ bool droid_media_camera_start_preview(DroidMediaCamera *camera)
     if (!setup_capture_session(camera)) {
         ALOGE("Failed to setup capture session");
         return false;
+    }
+
+    if (camera->m_image_request) {
+        ALOGI("update_request image mode again.");
+        update_request(camera, camera->m_image_request, camera->m_param_map);
+    }
+
+    if (camera->m_video_request) {
+        ALOGI("update_request video mode again.");
+        update_request(camera, camera->m_video_request, camera->m_param_map);
+    }
+
+    if (camera->m_preview_request) {
+        ALOGI("update_request preview again.");
+        update_request(camera, camera->m_preview_request, camera->m_param_map);
     }
 
     status = ACameraCaptureSession_setRepeatingRequest(camera->m_session, &camera->m_capture_callbacks, 1,
@@ -1608,6 +1629,20 @@ bool droid_media_camera_set_parameters(DroidMediaCamera *camera, const char *par
         update_request(camera, camera->m_video_request, param_map);
     }
 
+    ALOGI("update_request preview");
+    if (!camera->m_preview_request) {
+        ALOGI("Not even preview, copy to try again later");
+        // In addition to holding the first sent params until preview and other requests are available
+        // it seems exposure compensation is only sent the first time, and there are more than one calls before
+        // the preview and other requests are available, but only the first has this parameter from gstreamer.
+        // Solution: propagate the initial exposure compensation to all subsequent retries before the preview and other requests are 'on'.
+        std::string exposure_compensation = camera->m_param_map["exposure-compensation"];
+        camera->m_param_map = param_map;
+        if (exposure_compensation.size()) {
+            ALOGI("Found existing exposure compensation");
+            camera->m_param_map["exposure-compensation"] = exposure_compensation;
+        }
+    }
     if (camera->m_preview_request) {
         update_request(camera, camera->m_preview_request, param_map);
         if (camera->m_preview_enabled) {
@@ -1674,6 +1709,9 @@ char *droid_media_camera_get_parameters(DroidMediaCamera *camera)
                 }
                 params += ab + ";";
             }
+            break;
+        case ACAMERA_CONTROL_AE_EXPOSURE_COMPENSATION:
+            params += "exposure-compensation="+std::to_string(entry.data.i32[0]);
             break;
         case ACAMERA_CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES: {
             if (entry.count > 0) {
