@@ -13,11 +13,21 @@ https://docs.sailfishos.org/Develop/HW_Adaptation/Sailfish_X_Xperia_Android_11_B
 
 For quick iterations it is usually sufficient to compile and transfer libdroidmedia.so:
 ```
+sfossdk
+hadk
+ubu-chroot -r $PLATFORM_SDK_ROOT/sdks/ubuntu
+cd $ANDROID_ROOT
+
+source build/envsetup.sh
+lunch aosp_$DEVICE-user
+
 make libdroidmedia
 scp out/target/product/pdx213/system/lib64/libdroidmedia.so defaultuser@192.168.0.123:/home/defaultuser/
 ssh defaultuser@192.168.0.123
 devel-su cp libdroidmedia.so /usr/libexec/droid-hybris/system/lib64/libdroidmedia.so
 ```
+
+Now iterate on the code in `$ANDROID_ROOT/external/droidmedia` and repeat the last steps to build and copy as needed.
 
 You can revert to the currently installed version at any time using
 ```
