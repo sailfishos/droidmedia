@@ -100,6 +100,8 @@ main(int, char**)
 #endif
 #if ANDROID_MAJOR >= 14
     FakePermissionChecker::instantiate();
+    FakeSensorManagerAidl::instantiate();
+    FakeStatsAidl::instantiate();
 #endif
     // Camera service needs to be told which users may use the camera
     sp<IBinder> binder;
