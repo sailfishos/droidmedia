@@ -330,10 +330,10 @@ ifeq ($(shell test $(ANDROID_MAJOR) -ge 14 && echo true),true)
 LOCAL_AIDL_INCLUDES += frameworks/native/libs/gui/aidl
 
 LOCAL_C_INCLUDES += frameworks/av/media/libeffects/config/include
-endif
 
 LOCAL_SHARED_LIBRARIES += android.frameworks.stats-V2-ndk \
                           android.frameworks.sensorservice-V1-ndk
+endif
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
@@ -392,6 +392,11 @@ ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
 LOCAL_C_INCLUDES += frameworks/native/libs/binder/include_activitymanager \
                     frameworks/native/libs/binder/include_batterystats \
                     frameworks/native/libs/binder/include_processinfo
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 14 && echo true),true)
+LOCAL_SHARED_LIBRARIES += android.frameworks.stats-V2-ndk \
+                          android.frameworks.sensorservice-V1-ndk
 endif
 
 LOCAL_MODULE_TAGS := optional
@@ -477,6 +482,11 @@ ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
 LOCAL_C_INCLUDES += frameworks/native/libs/binder/include_activitymanager \
                     frameworks/native/libs/binder/include_batterystats \
                     frameworks/native/libs/binder/include_processinfo
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 14 && echo true),true)
+LOCAL_SHARED_LIBRARIES += android.frameworks.stats-V2-ndk \
+                          android.frameworks.sensorservice-V1-ndk
 endif
 
 LOCAL_MODULE := libminisf
