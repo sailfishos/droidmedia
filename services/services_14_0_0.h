@@ -893,3 +893,87 @@ public:
     }
 };
 
+#include <aidl/android/frameworks/stats/BnStats.h>
+
+class FakeStatsAidl : public BinderService<FakeStatsAidl>,
+		public aidl::android::frameworks::stats::BnStats
+{
+public:
+    static char const *getServiceName() {
+        return "android.frameworks.stats.IStats/default";
+    }
+
+    static void instantiate() {
+        std::shared_ptr<FakeStatsAidl> service = ::ndk::SharedRefBase::make<FakeStatsAidl>();
+        binder_status_t status =
+                AServiceManager_addService(service->asBinder().get(), getServiceName());
+        if (status != STATUS_OK) {
+            return;
+        }
+    }
+
+    ::ndk::ScopedAStatus reportVendorAtom(const ::aidl::android::frameworks::stats::VendorAtom& in_vendorAtom) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+};
+
+#include <aidl/android/frameworks/sensorservice/BnSensorManager.h>
+#include <aidl/android/frameworks/sensorservice/BnEventQueue.h>
+
+class FakeEventQueueAidl : public aidl::android::frameworks::sensorservice::BnEventQueue
+{
+public:
+    FakeEventQueueAidl() {}
+
+    ::ndk::ScopedAStatus disableSensor(int32_t in_sensorHandle) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus enableSensor(int32_t in_sensorHandle, int32_t in_samplingPeriodUs,
+                                      int64_t in_maxBatchReportLatencyUs) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+};
+
+class FakeSensorManagerAidl : public BinderService<FakeSensorManagerAidl>,
+		public aidl::android::frameworks::sensorservice::BnSensorManager
+{
+public:
+    static char const *getServiceName() {
+        return "android.frameworks.sensorservice.ISensorManager/default";
+    }
+
+    static void instantiate() {
+        std::shared_ptr<FakeSensorManagerAidl> service = ::ndk::SharedRefBase::make<FakeSensorManagerAidl>();
+        binder_status_t status =
+                AServiceManager_addService(service->asBinder().get(), getServiceName());
+        if (status != STATUS_OK) {
+            return;
+        }
+    }
+
+    ::ndk::ScopedAStatus createAshmemDirectChannel(const ::aidl::android::hardware::common::Ashmem& in_mem, int64_t in_size,
+				std::shared_ptr<::aidl::android::frameworks::sensorservice::IDirectReportChannel>* _aidl_return) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus createEventQueue(const std::shared_ptr<::aidl::android::frameworks::sensorservice::IEventQueueCallback>& in_callback,
+				std::shared_ptr<::aidl::android::frameworks::sensorservice::IEventQueue>* _aidl_return) override {
+        std::shared_ptr<::aidl::android::frameworks::sensorservice::IEventQueue> ptr = ::ndk::SharedRefBase::make<FakeEventQueueAidl>();
+        *_aidl_return = ptr;
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus createGrallocDirectChannel(const ::ndk::ScopedFileDescriptor& in_buffer, int64_t in_size,
+				std::shared_ptr<::aidl::android::frameworks::sensorservice::IDirectReportChannel>* _aidl_return) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus getDefaultSensor(::aidl::android::hardware::sensors::SensorType in_type, ::aidl::android::hardware::sensors::SensorInfo* _aidl_return) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus getSensorList(std::vector<::aidl::android::hardware::sensors::SensorInfo>* _aidl_return) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+};
