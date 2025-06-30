@@ -34,6 +34,10 @@
 #include "droidmediabuffer.h"
 #include "private.h"
 
+#if ANDROID_MAJOR >= 15
+#include <android/content/AttributionSourceState.h>
+#endif
+
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaCamera"
 
@@ -293,16 +297,38 @@ DroidMediaBufferQueue *droid_media_camera_get_recording_buffer_queue (DroidMedia
 
 int droid_media_camera_get_number_of_cameras()
 {
+#if ANDROID_MAJOR >= 15
+    android::content::AttributionSourceState clientAttribution;
+    clientAttribution.uid = android::hardware::ICameraService::USE_CALLING_UID;
+    clientAttribution.pid = android::hardware::ICameraService::USE_CALLING_PID;
+    clientAttribution.deviceId = android::kDefaultDeviceId;
+    clientAttribution.packageName = "droidmedia";
+
+    return android::Camera::getNumberOfCameras(clientAttribution, 0);
+#else
     return android::Camera::getNumberOfCameras();
+#endif
 }
 
 bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 {
     android::CameraInfo inf;
 
+#if ANDROID_MAJOR >= 15
+    android::content::AttributionSourceState clientAttribution;
+    clientAttribution.uid = android::hardware::ICameraService::USE_CALLING_UID;
+    clientAttribution.pid = android::hardware::ICameraService::USE_CALLING_PID;
+    clientAttribution.deviceId = android::kDefaultDeviceId;
+    clientAttribution.packageName = "droidmedia";
+#endif
+
     if (android::Camera::getCameraInfo(camera_number,
 #if ANDROID_MAJOR >= 13 && (!defined(LEGACY_ANDROID_13_REVISION) || LEGACY_ANDROID_13_REVISION >= 32)
                                        false/*overrideToPortrait*/,
+#endif
+#if ANDROID_MAJOR >= 15
+                                       clientAttribution,
+                                       0,
 #endif
                                        &inf) != 0) {
         return false;
@@ -344,6 +370,21 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     android::OK != android::Camera::connectLegacy(camera_number, FORCE_HAL << 8, android::String16("droidmedia"),
 					     android::Camera::USE_CALLING_UID, cam->m_camera);
 #else // Default connect
+#if (ANDROID_MAJOR >= 15)
+    android::content::AttributionSourceState clientAttribution;
+    clientAttribution.uid = android::hardware::ICameraService::USE_CALLING_UID;
+    clientAttribution.pid = android::hardware::ICameraService::USE_CALLING_PID;
+    clientAttribution.deviceId = android::kDefaultDeviceId;
+    clientAttribution.packageName = "droidmedia";
+
+    cam->m_camera = android::Camera::connect(camera_number
+					     , __ANDROID_API_FUTURE__
+					     , false
+					     , false
+					     , clientAttribution
+					     , 0
+					     );
+#else
 #if (ANDROID_MAJOR >= 14)
     cam->m_camera = android::Camera::connect(camera_number, "droidmedia",
 #else
@@ -363,6 +404,7 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 					     , false
 #endif
 					      );
+#endif
 #endif
 #endif
     if (cam->m_camera.get() == NULL) {
