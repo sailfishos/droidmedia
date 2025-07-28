@@ -977,3 +977,97 @@ public:
         return ::ndk::ScopedAStatus::ok();
     }
 };
+
+#include <android/content/pm/BnPackageManagerNative.h>
+
+class FakePackageManagerNative : public BinderService<FakePackageManagerNative>,
+                                 public content::pm::BnPackageManagerNative {
+public:
+    static char const *getServiceName() {
+        return "package_native";
+    }
+
+    binder::Status getNamesForUids(const std::vector<int32_t>& /*uids*/,
+                                   std::vector<std::string>* _aidl_return) override {
+        _aidl_return->push_back("");
+        return binder::Status::ok();
+    }
+
+    binder::Status getInstallerForPackage(const String16& packageName,
+                                          std::string* _aidl_return) override {
+        *_aidl_return = "";
+        return binder::Status::ok();
+    }
+
+    binder::Status getVersionCodeForPackage(const String16& /*packageName*/,
+                                            int64_t* _aidl_return) override {
+        *_aidl_return = 1;
+        return binder::Status::ok();
+    }
+
+    binder::Status isAudioPlaybackCaptureAllowed(const std::vector<std::string>& /*packages*/,
+                                                 std::vector<bool>* _aidl_return) override {
+        _aidl_return->push_back(false);
+        return binder::Status::ok();
+    }
+
+    binder::Status getLocationFlags(const std::string& /*packageName*/,
+                                    int32_t* _aidl_return) override {
+        *_aidl_return = 0;
+        return binder::Status::ok();
+    }
+
+    binder::Status getTargetSdkVersionForPackage(const String16& /*packageName*/,
+                                                 int32_t* _aidl_return) override {
+        *_aidl_return = 34;
+        return binder::Status::ok();
+    }
+
+    binder::Status getModuleMetadataPackageName(std::string* _aidl_return) override {
+        *_aidl_return = "";
+        return binder::Status::ok();
+    }
+
+    binder::Status hasSha256SigningCertificate(const std::string& /*packageName*/,
+                                               const std::vector<uint8_t>& /*cert*/,
+                                               bool* _aidl_return) override {
+        *_aidl_return = false;
+        return binder::Status::ok();
+    }
+
+    binder::Status isPackageDebuggable(const String16& /*packageName*/,
+                                       bool* _aidl_return) override {
+        *_aidl_return = false;
+        return binder::Status::ok();
+    }
+
+    binder::Status hasSystemFeature(const String16& featureName,
+                                    int32_t /*version*/,
+                                    bool* _aidl_return) override {
+        if (featureName == String16("android.hardware.touchscreen")) {
+            *_aidl_return = true;
+        } else {
+            *_aidl_return = false;
+        }
+        return binder::Status::ok();
+    }
+
+    binder::Status registerStagedApexObserver(const sp<content::pm::IStagedApexObserver>& /*observer*/) override {
+        return binder::Status::ok();
+    }
+
+    binder::Status unregisterStagedApexObserver(const sp<content::pm::IStagedApexObserver>& /*observer*/) override {
+        return binder::Status::ok();
+    }
+
+    binder::Status getStagedApexModuleNames(std::vector<std::string>* _aidl_return) override {
+        *_aidl_return = {};
+        return binder::Status::ok();
+    }
+
+    binder::Status getStagedApexInfo(const std::string& /*moduleName*/,
+                                     std::optional<content::pm::StagedApexInfo>* _aidl_return) override {
+        *_aidl_return = std::nullopt;
+        return binder::Status::ok();
+    }
+};

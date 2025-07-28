@@ -98,6 +98,9 @@ main(int, char**)
 #if ANDROID_MAJOR < 8
     FakeCameraServiceProxy::instantiate();
 #endif
+#if ANDROID_MAJOR >= 12
+    FakePackageManagerNative::instantiate();
+#endif
 #if ANDROID_MAJOR >= 14
     FakePermissionChecker::instantiate();
     FakeSensorManagerAidl::instantiate();
