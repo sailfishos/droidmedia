@@ -16,7 +16,7 @@
  *
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
-
+#include <inttypes.h>
 #include "private.h"
 #include "droidmediabuffer.h"
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
@@ -63,6 +63,9 @@ void DroidMediaBufferQueueListener::onBuffersReleased()
 }
 
 _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) :
+#if ANDROID_MAJOR > 5
+  m_unslotted({}),
+#endif
   m_listener(new DroidMediaBufferQueueListener(this)),
   m_data(0) {
 
@@ -171,8 +174,19 @@ void _DroidMediaBufferQueue::frameAvailable() {
   DroidMediaBufferSlot &slot = m_slots[slotIndex(item)];
 
   if (item.mGraphicBuffer != NULL) {
+#if ANDROID_MAJOR > 5
+    if (slot.droidBuffer.get()) {
+      // It seems the buffers are not recycled. We're manually releasing this previous slot.
+      ALOGW("Releasing only resources, keeping memory %" PRIxPTR, (uintptr_t)slot.droidBuffer.get());
+      slot.mGraphicBuffer = 0;
+      slot.droidBuffer->m_buffer.clear();
+      // instead of clear-ing the entire memory which leads to droid_media_buffer_destroy crashing.
+      releaseBufferResources(slot.droidBuffer.get());
+      // Add the buffer to the list of unslotted buffers that droid_media_buffer_destroy will check and don't do anything.
+      m_unslotted.emplace(slot.droidBuffer.get(), slot.droidBuffer);
+    }
+#endif
     static_cast<DroidMediaBufferItem &>(slot) = item;
-
     slot.droidBuffer = new DroidMediaBuffer(slot, this);
 
     // Keep the original reference count for ourselves and give one to the buffer_created
@@ -218,18 +232,36 @@ void _DroidMediaBufferQueue::frameAvailable() {
   }
 }
 
-void _DroidMediaBufferQueue::buffersReleased() {
-  for (int i = 0; i < android::BufferQueue::NUM_BUFFER_SLOTS; ++i) {
-    DroidMediaBufferSlot &slot = m_slots[i];
-    slot.droidBuffer.clear();
-    slot.mGraphicBuffer = 0;
+#if ANDROID_MAJOR > 5
+void _DroidMediaBufferQueue::releaseBufferResources(DroidMediaBuffer *buffer) {
+  if (m_unslotted.find(buffer) != m_unslotted.end()) {
+    ALOGI("Unslotted buffer, resources already released %" PRIxPTR, (uintptr_t)buffer);
+  } else {
+    buffer->decStrong(0);
   }
+}
+#endif
 
+void _DroidMediaBufferQueue::buffersReleased() {
   android::AutoMutex locker(&m_lock);
 
   if (m_data) {
     m_cb.buffers_released(m_data);
   }
+
+  // Releasing DroidMediaBuffer memory for slots
+  for (int i = 0; i < android::BufferQueue::NUM_BUFFER_SLOTS; ++i) {
+    DroidMediaBufferSlot &slot = m_slots[i];
+    slot.droidBuffer.clear();
+    slot.mGraphicBuffer = 0;
+  }
+#if ANDROID_MAJOR > 5
+  // Releasing DroidMediaBuffer memory for unslotted buffers
+  for (auto& droidBufferPair : m_unslotted) {
+    droidBufferPair.second.clear();
+  }
+  m_unslotted.clear();
+#endif
 }
 
 int _DroidMediaBufferQueue::releaseMediaBuffer(int index, EGLDisplay dpy, EGLSyncKHR fence) {

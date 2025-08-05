@@ -181,7 +181,7 @@ public:
         for (android::List<android::MediaBuffer *>::iterator iter = m_framesBeingProcessed.buffers.begin();
              iter != m_framesBeingProcessed.buffers.end(); iter++) {
             if (*iter == buffer) {
-                m_framesBeingProcessed.buffers.erase(iter);                
+                m_framesBeingProcessed.buffers.erase(iter);
                 m_framesBeingProcessed.cond.signal();
                 m_framesBeingProcessed.lock.unlock();
                 return;
