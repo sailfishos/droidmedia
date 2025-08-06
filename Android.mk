@@ -278,7 +278,9 @@ LOCAL_SHARED_LIBRARIES += libactivitymanager_aidl \
                           libmediautils \
                           libpermission \
                           audiopolicy-aidl-cpp
+endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 13 && echo true),true)
 LOCAL_STATIC_LIBRARIES += packagemanager_aidl-cpp
 endif
 
@@ -394,7 +396,9 @@ ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
 LOCAL_C_INCLUDES += frameworks/native/libs/binder/include_activitymanager \
                     frameworks/native/libs/binder/include_batterystats \
                     frameworks/native/libs/binder/include_processinfo
+endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 13 && echo true),true)
 LOCAL_STATIC_LIBRARIES += packagemanager_aidl-cpp
 endif
 
@@ -486,7 +490,9 @@ ifeq ($(shell test $(ANDROID_MAJOR) -ge 12 && echo true),true)
 LOCAL_C_INCLUDES += frameworks/native/libs/binder/include_activitymanager \
                     frameworks/native/libs/binder/include_batterystats \
                     frameworks/native/libs/binder/include_processinfo
+endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 13 && echo true),true)
 LOCAL_STATIC_LIBRARIES += packagemanager_aidl-cpp
 endif
 
