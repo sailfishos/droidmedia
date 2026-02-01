@@ -877,9 +877,10 @@ public:
                         const ::std::optional<::android::String16>&, bool, bool, bool, int, int32_t* ret) {
         if (permission == String16("android.permission.CAMERA")) {
             *ret = PERMISSION_GRANTED;
+        } else {
+            *ret = PERMISSION_SOFT_DENIED;
         }
 
-        *ret = PERMISSION_SOFT_DENIED;
         return ::android::binder::Status::ok();
     }
 
