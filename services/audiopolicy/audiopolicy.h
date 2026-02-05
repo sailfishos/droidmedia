@@ -58,3 +58,7 @@
 #if ANDROID_MAJOR == 15
 #include "audiopolicy_15_0_0.h"
 #endif
+
+#if ANDROID_MAJOR == 16
+#include "audiopolicy_16_0_0.h"
+#endif

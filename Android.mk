@@ -352,6 +352,10 @@ LOCAL_SHARED_LIBRARIES += libvendorsupport \
                           android.hardware.common.fmq-V1-cpp
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 16 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libtinyxml2
+endif
+
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 ifeq ($(MINIMEDIA_SENSORSERVER_DISABLE),1)
