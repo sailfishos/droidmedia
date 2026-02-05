@@ -117,6 +117,10 @@ LOCAL_SHARED_LIBRARIES += libactivitymanager_aidl \
                           libpermission
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 15 && echo true),true)
+LOCAL_SHARED_LIBRARIES += framework-permission-aidl-cpp
+endif
+
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
@@ -339,6 +343,15 @@ LOCAL_SHARED_LIBRARIES += android.frameworks.stats-V2-ndk \
                           android.frameworks.sensorservice-V1-ndk
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 15 && echo true),true)
+LOCAL_STATIC_LIBRARIES += libvirtualdevicebuildflags
+
+LOCAL_SHARED_LIBRARIES += libvendorsupport \
+                          android.companion.virtualdevice.flags-aconfig-cc \
+                          android.hardware.common-V2-cpp \
+                          android.hardware.common.fmq-V1-cpp
+endif
+
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 ifeq ($(MINIMEDIA_SENSORSERVER_DISABLE),1)
@@ -373,13 +386,15 @@ LOCAL_C_INCLUDES := frameworks/native/libs/sensor/include \
 LOCAL_SHARED_LIBRARIES += liblog \
                           libhidlbase \
                           libsensor \
-                          android.frameworks.sensorservice@1.0 \
-                          android.hardware.camera.common@1.0 \
-                          android.hardware.camera.provider@2.4
+                          android.frameworks.sensorservice@1.0
 
 ifeq ($(shell test $(ANDROID_MAJOR) -le 9 && echo true),true)
 LOCAL_SHARED_LIBRARIES += libhidltransport \
                           libhwbinder
+endif
+ifeq ($(shell test $(ANDROID_MAJOR) -le 14 && echo true),true)
+LOCAL_SHARED_LIBRARIES += android.hardware.camera.provider@2.4 \
+                          android.hardware.camera.common@1.0
 endif
 endif
 
