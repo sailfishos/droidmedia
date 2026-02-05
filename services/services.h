@@ -85,4 +85,8 @@
 #include "services_15_0_0.h"
 #endif
 
+#if ANDROID_MAJOR == 16
+#include "services_16_0_0.h"
+#endif
+
 #endif
