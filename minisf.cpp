@@ -34,6 +34,8 @@ main(int, char**)
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();
 
+    ProcessState::self()->startThreadPool();
+
     MiniSurfaceFlinger::instantiate();
 
 // Android 4 will not allow system services to be run from minimediaservice. So keep them here instead.
@@ -45,8 +47,6 @@ main(int, char**)
 #endif
 #endif
 
-
-    ProcessState::self()->startThreadPool();
     IPCThreadState::self()->joinThreadPool();
 
     return 0;
