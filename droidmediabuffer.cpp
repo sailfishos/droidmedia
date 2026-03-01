@@ -48,6 +48,7 @@ _DroidMediaBuffer::_DroidMediaBuffer(DroidMediaBufferItem& buffer,
     format = buffer.mGraphicBuffer->format;
     usage  = buffer.mGraphicBuffer->usage;
     handle = buffer.mGraphicBuffer->handle;
+    layerCount = 1;
 
     common.incRef = incRef;
     common.decRef = decRef;
@@ -69,6 +70,7 @@ _DroidMediaBuffer::_DroidMediaBuffer(android::sp<android::GraphicBuffer>& buffer
     format = m_buffer->format;
     usage  = m_buffer->usage;
     handle = m_buffer->handle;
+    layerCount = 1;
 
     common.incRef = incRef;
     common.decRef = decRef;
