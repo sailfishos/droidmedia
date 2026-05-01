@@ -468,9 +468,16 @@ void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
             mCodec->renderOutputBufferAndRelease(index);
             me->mAvailable.signal();
         } else {
+            if (size > out_buffer->size()) {
+                ALOGE("[%s] Output buffer #%d is too small: %zu < %zu",
+                        mComponentName.c_str(), index, out_buffer->size(), size);
+                mState = ERROR;
+                mCodec->releaseOutputBuffer(index);
+                return;
+            }
+
             MediaBuffer     *buffer = new MediaBuffer(size);
-            CHECK_LE(out_buffer->size(), buffer->size());
-            memcpy(buffer->data(), out_buffer->data(), out_buffer->size());
+            memcpy(buffer->data(), out_buffer->data(), size);
 #if ANDROID_MAJOR >= 9
             buffer->meta_data().setInt64(kKeyTime, timeUs);
 #else
