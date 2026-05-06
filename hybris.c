@@ -81,6 +81,15 @@ static inline void *__resolve_sym(const char *sym)
   return ptr;
 }
 
+static inline void *__try_resolve_sym(const char *sym)
+{
+  if (!__handle) {
+    __load_library();
+  }
+
+  return _android_dlsym(__handle, sym);
+}
+
 #define HYBRIS_WRAPPER_1_0(ret,sym)		    \
   ret sym() {					    \
     static ret (* _sym)() = NULL;		    \
@@ -261,6 +270,19 @@ HYBRIS_WRAPPER_0_1(DroidMediaRecorder*,droid_media_recorder_destroy);
 HYBRIS_WRAPPER_1_1(bool,DroidMediaRecorder*,droid_media_recorder_start);
 HYBRIS_WRAPPER_0_1(DroidMediaRecorder*,droid_media_recorder_stop);
 HYBRIS_WRAPPER_0_3(DroidMediaRecorder*,DroidMediaCodecDataCallbacks*,void*,droid_media_recorder_set_data_callbacks);
+
+bool droid_media_camera_set_torch_mode(bool enabled)
+{
+  static bool (* _sym)(bool) = NULL;
+  static bool attempted = false;
+
+  if (!attempted) {
+    _sym = __try_resolve_sym("droid_media_camera_set_torch_mode");
+    attempted = true;
+  }
+
+  return _sym ? _sym(enabled) : false;
+}
 
 bool droid_media_init(void)
 {
