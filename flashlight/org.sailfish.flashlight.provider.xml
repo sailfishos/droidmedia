@@ -1,0 +1,16 @@
+<!--
+ * SPDX-FileCopyrightText: 2025-2026 Jolla Mobile Ltd
+ * SPDX-License-Identifier: Apache-2.0
+-->
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+    <interface name="org.sailfish.flashlight.provider">
+        <property name="flashlightOn" type="b" access="read" />
+        <signal name="flashlightOnChanged">
+            <arg name="newOn" type="b" direction="out" />
+        </signal>
+        <method name="toggleFlashlight">
+            <arg name="available" type="b" direction="out" />
+        </method>
+    </interface>
+</node>
