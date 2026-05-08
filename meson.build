@@ -57,6 +57,7 @@ executable(
     flashlight_moc,
   ],
   include_directories : root_dir,
+  cpp_args : ['-fPIC'],
   dependencies : flashlight_deps,
   link_with : libdroidmedia_a,
   install : true,
