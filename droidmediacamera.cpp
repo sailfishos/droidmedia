@@ -367,15 +367,21 @@ static bool set_torch_mode_for_camera(const char *camera_id, bool enabled)
         return false;
     }
 #else
+#if ANDROID_MAJOR >= 14
 #if ANDROID_MAJOR >= 15
     android::content::AttributionSourceState clientAttribution;
     clientAttribution.uid = android::hardware::ICameraService::USE_CALLING_UID;
     clientAttribution.pid = android::hardware::ICameraService::USE_CALLING_PID;
     clientAttribution.deviceId = android::kDefaultDeviceId;
     clientAttribution.packageName = "droidmedia";
+#endif
 
     android::binder::Status status = camera_service->setTorchMode(
-            std::string(camera_id), enabled, client_binder, clientAttribution, 0);
+            std::string(camera_id), enabled, client_binder
+#if ANDROID_MAJOR >= 15
+            , clientAttribution, 0
+#endif
+            );
 #else
     android::binder::Status status = camera_service->setTorchMode(
             android::String16(camera_id), enabled, client_binder);
