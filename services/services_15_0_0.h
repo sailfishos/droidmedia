@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2014-2021 Jolla Ltd.
  * Copyright (C) 2024 Jollyboys Ltd.
+ * Copyright (C) 2025 Jolla Mobile Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +14,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
 #include <sensor/ISensorServer.h>
@@ -268,6 +267,7 @@ public:
         return BAD_VALUE;
     }
 
+/*
     status_t overrideHdrTypes(const sp<IBinder>&, const std::vector<ui::Hdr>&) {
         return BAD_VALUE;
     }
@@ -300,15 +300,16 @@ public:
     status_t setDisplayContentSamplingEnabled(const sp<IBinder>&, bool, uint8_t, uint64_t) {
         return BAD_VALUE;
     }
-
+*/
     status_t getDisplayedContentSample(const sp<IBinder>&, uint64_t, uint64_t, DisplayedFrameStats*) const {
         return BAD_VALUE;
     }
 
+/*
     status_t getProtectedContentSupport(bool* outSupported) const {
         return BAD_VALUE;
     }
-
+*/
     status_t addRegionSamplingListener(const Rect&, const sp<IBinder>&, const sp<gui::IRegionSamplingListener>&) {
         return BAD_VALUE;
     }
@@ -391,7 +392,8 @@ public:
     }
 
     bool checkPermission(const String16& permission, int32_t, int32_t) {
-        if (permission == String16("android.permission.CAMERA")) {
+        if (permission == String16("android.permission.CAMERA")
+            || permission == String16("android.permission.MEDIA_RESOURCE_OVERRIDE_PID")) {
             return true;
         }
 
@@ -834,8 +836,7 @@ public:
         return ::android::binder::Status::ok();
     }
 
-#if (!defined(LEGACY_ANDROID_14_REVISION) || LEGACY_ANDROID_14_REVISION >= 50)
-    ::android::binder::Status getCameraPrivacyAllowlist(::std::vector<::android::hardware::CameraPrivacyAllowlistEntry>*) {
+    ::android::binder::Status getCameraPrivacyAllowlist(::std::vector<::android::String16>*) {
         return ::android::binder::Status::ok();
     }
 
@@ -856,7 +857,6 @@ public:
         *enabled = false;
         return ::android::binder::Status::ok();
     }
-#endif
 };
 
 #include <android/permission/BnPermissionChecker.h>
@@ -875,12 +875,12 @@ public:
 
     ::android::binder::Status checkPermission(const ::android::String16&permission, const ::android::content::AttributionSourceState&,
                         const ::std::optional<::android::String16>&, bool, bool, bool, int, int32_t* ret) {
-        if (permission == String16("android.permission.CAMERA")) {
+        if (permission == String16("android.permission.CAMERA")
+            || permission == String16("android.permission.MEDIA_RESOURCE_OVERRIDE_PID")) {
             *ret = PERMISSION_GRANTED;
         } else {
             *ret = PERMISSION_SOFT_DENIED;
         }
-
         return ::android::binder::Status::ok();
     }
 
@@ -994,6 +994,14 @@ public:
         return binder::Status::ok();
     }
 
+    binder::Status getPackageUid(const ::std::string& packageName,
+                                 int64_t flags,
+                                 int32_t userId,
+                                 int32_t* _aidl_return) override {
+        *_aidl_return = -1;
+        return binder::Status::ok();
+    }
+
     binder::Status getInstallerForPackage(const String16& packageName,
                                           std::string* _aidl_return) override {
         *_aidl_return = "";
@@ -1020,7 +1028,7 @@ public:
 
     binder::Status getTargetSdkVersionForPackage(const String16& /*packageName*/,
                                                  int32_t* _aidl_return) override {
-        *_aidl_return = 34;
+        *_aidl_return = 35;
         return binder::Status::ok();
     }
 
@@ -1061,14 +1069,7 @@ public:
         return binder::Status::ok();
     }
 
-    binder::Status getStagedApexModuleNames(std::vector<std::string>* _aidl_return) override {
-        *_aidl_return = {};
-        return binder::Status::ok();
-    }
-
-    binder::Status getStagedApexInfo(const std::string& /*moduleName*/,
-                                     std::optional<content::pm::StagedApexInfo>* _aidl_return) override {
-        *_aidl_return = std::nullopt;
+    binder::Status getStagedApexInfos(::std::vector<content::pm::StagedApexInfo>* _aidl_return) override {
         return binder::Status::ok();
     }
 };

@@ -57,6 +57,8 @@ main(int, char**)
     sp<ProcessState> proc(ProcessState::self());
     sp<IServiceManager> sm = defaultServiceManager();
 
+    ProcessState::self()->startThreadPool();
+
     // Disable things which break hybris once and for all.
     property_set("persist.camera.shutter.disable", "1");
     property_set("persist.media.metrics.enabled", "0");
@@ -129,7 +131,6 @@ main(int, char**)
 #endif
 #endif
 
-    ProcessState::self()->startThreadPool();
     IPCThreadState::self()->joinThreadPool();
 
     return 0;
