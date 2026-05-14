@@ -419,6 +419,8 @@ endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 13 && echo true),true)
 LOCAL_STATIC_LIBRARIES += packagemanager_aidl-cpp
+LOCAL_SHARED_LIBRARIES += libcamera_client
+LOCAL_AIDL_INCLUDES += frameworks/av/camera/aidl
 endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 14 && echo true),true)

@@ -103,8 +103,11 @@ main(int, char**)
 #if ANDROID_MAJOR >= 12
     FakePackageManagerNative::instantiate();
 #endif
-#if ANDROID_MAJOR >= 14
+#if ANDROID_MAJOR >= 13
+    FakeCameraServiceProxy::instantiate();
     FakePermissionChecker::instantiate();
+#endif
+#if ANDROID_MAJOR >= 14
     FakeSensorManagerAidl::instantiate();
     FakeStatsAidl::instantiate();
 #endif
