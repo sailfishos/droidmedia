@@ -1079,3 +1079,43 @@ public:
         return binder::Status::ok();
     }
 };
+
+#include <android/hardware/BnCameraServiceProxy.h>
+
+class FakeCameraServiceProxy : public BinderService<FakeCameraServiceProxy>,
+                               public android::hardware::BnCameraServiceProxy
+{
+public:
+    static char const *getServiceName() {
+        return "media.camera.proxy";
+    }
+
+    binder::Status pingForUserUpdate() {
+        return binder::Status::ok();
+    }
+
+    binder::Status notifyCameraState(const android::hardware::CameraSessionStats &cameraSessionStats) {
+        return binder::Status::ok();
+    }
+
+    binder::Status notifyFeatureCombinationStats(const android::hardware::CameraFeatureCombinationStats& cameraFeatureCombinationStats) {
+        return binder::Status::ok();
+    }
+
+    binder::Status getRotateAndCropOverride(const std::string &packageName, int32_t lensFacing, int32_t userId, int32_t* _aidl_return) {
+        return binder::Status::ok();
+    }
+
+    binder::Status getAutoframingOverride(const std::string& packageName, int32_t* _aidl_return) override {
+        return binder::Status::ok();
+    }
+
+    binder::Status isCameraDisabled(int32_t userId, bool* _aidl_return) {
+        *_aidl_return = false;
+        return binder::Status::ok();
+    }
+
+    binder::Status notifyWatchdog(int32_t /* pid_t */ pid, bool isNative) {
+        return binder::Status::ok();
+    }
+};

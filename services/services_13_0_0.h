@@ -774,6 +774,40 @@ public:
 
 };
 
+#include <android/permission/BnPermissionChecker.h>
+
+class FakePermissionChecker : public BinderService<FakePermissionChecker>,
+                        public android::permission::BnPermissionChecker
+{
+public:
+    static char const *getServiceName() {
+        return "permission_checker";
+    }
+
+    const int PERMISSION_GRANTED = 0;
+    const int PERMISSION_SOFT_DENIED = 1;
+    const int PERMISSION_HARD_DENIED = 2;
+
+    ::android::binder::Status checkPermission(const ::android::String16&permission, const ::android::content::AttributionSourceState&,
+                        const ::std::optional<::android::String16>&, bool, bool, bool, int32_t, int32_t* ret) {
+        if (permission == String16("android.permission.CAMERA")) {
+            *ret = PERMISSION_GRANTED;
+        }
+
+        *ret = PERMISSION_SOFT_DENIED;
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status finishDataDelivery(int32_t, const ::android::content::AttributionSourceState&, bool) {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status checkOp(int32_t, const ::android::content::AttributionSourceState&,
+                const ::android::String16&, bool, bool, int32_t*) {
+        return ::android::binder::Status::ok();
+    }
+};
+
 #include <android/content/pm/BnPackageManagerNative.h>
 
 class FakePackageManagerNative : public BinderService<FakePackageManagerNative>,
@@ -877,6 +911,39 @@ public:
     binder::Status getStagedApexInfo(const std::string& /*moduleName*/,
                                      std::optional<content::pm::StagedApexInfo>* _aidl_return) override {
         *_aidl_return = std::nullopt;
+        return binder::Status::ok();
+    }
+};
+
+#include <android/hardware/BnCameraServiceProxy.h>
+
+class FakeCameraServiceProxy : public BinderService<FakeCameraServiceProxy>,
+                               public android::hardware::BnCameraServiceProxy
+{
+public:
+    static char const *getServiceName() {
+        return "media.camera.proxy";
+    }
+
+    binder::Status pingForUserUpdate() {
+        return binder::Status::ok();
+    }
+
+    binder::Status notifyCameraState(const android::hardware::CameraSessionStats &cameraSessionStats) {
+        return binder::Status::ok();
+    }
+
+    binder::Status getRotateAndCropOverride(const String16 &packageName, int32_t lensFacing, int32_t userId, int32_t* _aidl_return) {
+        return binder::Status::ok();
+    }
+
+    binder::Status isCameraDisabled(bool* _aidl_return) {
+        *_aidl_return = false;
+        return binder::Status::ok();
+    }
+
+    binder::Status isCameraDisabled(int32_t userId, bool* _aidl_return) {
+        *_aidl_return = false;
         return binder::Status::ok();
     }
 };
