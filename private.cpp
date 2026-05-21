@@ -78,8 +78,15 @@ _DroidMediaBufferQueue::_DroidMediaBufferQueue(const char *name) :
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
   m_queue->setSynchronousMode(false);
 #else
-  // Some devices require more than 2 buffers
-  m_queue->setMaxAcquiredBufferCount(4);
+  // Some devices require more than 2 buffers. Codec2 B-frames even more,
+  // since they come out of order and gst-droid holds all the frames until the oldest one becomes available.
+  // However, MAX_MAX_ACQUIRED_BUFFERS doesn't work either.
+  auto maxAcquiredBuffers = android::BufferQueue::NUM_BUFFER_SLOTS / 2;
+  auto err = m_queue->setMaxAcquiredBufferCount(maxAcquiredBuffers);
+  if (err != android::OK) {
+      ALOGE("Failed to set %d maxAcquiredBufferCount, falling back to 4. Error 0x%x", maxAcquiredBuffers, -err);
+      m_queue->setMaxAcquiredBufferCount(4);
+  }
 #endif
 
   m_queue->setConsumerName(android::String8(name));
