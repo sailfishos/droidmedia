@@ -33,7 +33,9 @@
 #if ANDROID_MAJOR >=5
 #include <media/stagefright/foundation/ALooper.h>
 #endif
-
+#if ANDROID_MAJOR > 5
+#include <unordered_map>
+#endif
 struct _DroidMediaBufferQueue;
 
 class DroidMediaBufferQueueListener :
@@ -81,6 +83,9 @@ public:
 
   void buffersReleased();
 
+#if ANDROID_MAJOR > 5
+  void releaseBufferResources(DroidMediaBuffer *buffer);
+#endif
 private:
   friend class DroidMediaBufferQueueListener;
 
@@ -97,6 +102,11 @@ private:
 
   DroidMediaBufferSlot m_slots[android::BufferQueue::NUM_BUFFER_SLOTS];
 
+#if ANDROID_MAJOR > 5
+  // Storage for buffers that have their resources cleaned up, but the client still holds a raw reference.
+  // The first part is used to identify the raw pointer from client, the second to actually clean the memory.
+  std::unordered_map<DroidMediaBuffer*, android::sp<DroidMediaBuffer>> m_unslotted;
+#endif
   android::sp<DroidMediaBufferQueueListener> m_listener;
   android::Mutex m_lock;
 
@@ -111,5 +121,5 @@ android::sp<android::MediaSource> droid_media_codec_create_encoder_raw(DroidMedi
 							      android::sp<android::ALooper> looper,
 #endif
 							      android::sp<android::MediaSource> src);
- 
+
 #endif /* DROID_MEDIA_PRIVATE_H */
