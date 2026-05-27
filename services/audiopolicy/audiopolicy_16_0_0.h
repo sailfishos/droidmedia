@@ -103,15 +103,27 @@ public:
                                       media::GetOutputForAttrResponse *output) override {
         return ::binder::Status::ok();
     }
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+    ::binder::Status startOutput(int32_t portId,
+                                 media::StartOutputResponse* _aidl_return) override {
+        return ::binder::Status::ok();
+    }
+#else
     ::binder::Status startOutput(int32_t portId) override {
         return ::binder::Status::ok();
     }
+#endif
     ::binder::Status stopOutput(int32_t portId) override {
         return ::binder::Status::ok();
     }
     ::binder::Status releaseOutput(int32_t portId) override {
         return ::binder::Status::ok();
     }
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+    ::binder::Status forceReleaseDirectOutput(int32_t outputId) override {
+        return ::binder::Status::ok();
+    }
+#endif
     ::binder::Status getInputForAttr(const media::audio::common::AudioAttributes &,
                                      int32_t ,
                                      int32_t,
@@ -173,7 +185,29 @@ public:
                                                     int32_t *index) override {
         return ::binder::Status::ok();
     }
-
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+    ::binder::Status getMaxVolumeIndexForGroup(int32_t groupId, int32_t* _aidl_return) override {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status setMaxVolumeIndexForGroup(int32_t groupId, int32_t index) override {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status getMinVolumeIndexForGroup(int32_t groupId, int32_t* _aidl_return) override {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status setMinVolumeIndexForGroup(int32_t groupId, int32_t index) override {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status setVolumeIndexForGroup(int32_t groupId,
+            const media::audio::common::AudioDeviceDescription& device, int32_t index, bool muted) override {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status getVolumeIndexForGroup(int32_t groupId,
+                                            const media::audio::common::AudioDeviceDescription& device,
+                                            int32_t* _aidl_return) override {
+        return ::binder::Status::ok();
+    }
+#endif
     ::binder::Status getStrategyForStream(media::audio::common::AudioStreamType stream,
                                           int32_t *strategy) override {
         *strategy = PRODUCT_STRATEGY_NONE;
@@ -403,6 +437,16 @@ public:
     ::binder::Status isHotwordStreamSupported(bool lookbackAudio, bool* _aidl_return) override {
         return ::binder::Status::ok();
     }
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+    ::binder::Status getStreamTypeForAttributes(const media::audio::common::AudioAttributes& attributesAidl,
+                                                media::audio::common::AudioStreamType* _aidl_return) {
+        return ::binder::Status::ok();
+    }
+    ::binder::Status getAttributesForStreamType(media::audio::common::AudioStreamType stream,
+                                                media::audio::common::AudioAttributes* attributes) override {
+        return ::binder::Status::ok();
+    }
+#endif
     ::binder::Status listAudioProductStrategies(
             std::vector<media::AudioProductStrategy>* _aidl_return) override {
         return ::binder::Status::ok();

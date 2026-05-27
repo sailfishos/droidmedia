@@ -50,6 +50,10 @@
 #include <android/content/AttributionSourceState.h>
 #endif
 
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+#include <android/content/res/CameraCompatibilityInfo.h>
+#endif
+
 #undef LOG_TAG
 #define LOG_TAG "DroidMediaCamera"
 
@@ -335,9 +339,12 @@ bool droid_media_camera_get_info(DroidMediaCameraInfo *info, int camera_number)
 #endif
 
     if (android::Camera::getCameraInfo(camera_number,
-#if ANDROID_MAJOR >= 13 && (!defined(LEGACY_ANDROID_13_REVISION) || LEGACY_ANDROID_13_REVISION >= 32)
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+                                       android::CameraCompatibilityInfo(),
+#elif ANDROID_MAJOR >= 13 && (!defined(LEGACY_ANDROID_13_REVISION) || LEGACY_ANDROID_13_REVISION >= 32)
                                        false/*overrideToPortrait*/,
 #endif
+
 #if ANDROID_MAJOR >= 15
                                        clientAttribution,
                                        0,
@@ -516,7 +523,11 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
 
     cam->m_camera = android::Camera::connect(camera_number
 					     , __ANDROID_API_FUTURE__
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+					     , android::CameraCompatibilityInfo()
+#else
 					     , false
+#endif
 					     , false
 					     , clientAttribution
 					     , 0

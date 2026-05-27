@@ -223,9 +223,15 @@ public:
         return BAD_VALUE;
     }
 */
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+    status_t setTransactionState(TransactionState&&, const sp<IBinder>&) {
+        return BAD_VALUE;
+    }
+#else
     status_t setTransactionState(TransactionState&&) {
         return BAD_VALUE;
     }
+#endif
 
     void bootFinished() {
         // Nothing
@@ -477,6 +483,136 @@ public:
     }
 };
 
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+#include <android/os/BnProcessInfoService.h>
+
+class BnProcessInfoService : public BnInterface<os::IProcessInfoService> {
+public:
+    virtual status_t    onTransact( uint32_t code,
+                                    const Parcel& data,
+                                    Parcel* reply,
+                                    uint32_t flags = 0);
+};
+
+::android::status_t BnProcessInfoService::onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) {
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  switch (_aidl_code) {
+  case os::BnProcessInfoService::TRANSACTION_getProcessStatesFromPids:
+  {
+    ::std::vector<int32_t> in_pids;
+    ::std::vector<int32_t> out_states;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    ::android::binder::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IProcessInfoService::getProcessStatesFromPids::cppServer");
+    _aidl_ret_status = _aidl_data.readInt32Vector(&in_pids);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.resizeOutVector(&out_states);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(getProcessStatesFromPids(in_pids, &out_states));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeInt32Vector(out_states);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case os::BnProcessInfoService::TRANSACTION_getProcessStatesAndOomScoresFromPids:
+  {
+    ::std::vector<int32_t> in_pids;
+    ::std::vector<int32_t> out_states;
+    ::std::vector<int32_t> out_scores;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    ::android::binder::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IProcessInfoService::getProcessStatesAndOomScoresFromPids::cppServer");
+    _aidl_ret_status = _aidl_data.readInt32Vector(&in_pids);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.resizeOutVector(&out_states);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.resizeOutVector(&out_scores);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(getProcessStatesAndOomScoresFromPids(in_pids, &out_states, &out_scores));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeInt32Vector(out_states);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeInt32Vector(out_scores);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  default:
+  {
+    _aidl_ret_status = ::android::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
+  }
+  break;
+  }
+  if (_aidl_ret_status == ::android::UNEXPECTED_NULL) {
+    _aidl_ret_status = ::android::binder::Status::fromExceptionCode(::android::binder::Status::EX_NULL_POINTER).writeOverParcel(_aidl_reply);
+  }
+  return _aidl_ret_status;
+}
+
+class FakeProcessInfoService : public BinderService<FakeProcessInfoService>,
+                        public BnProcessInfoService
+{
+public:
+    static char const *getServiceName() {
+        return "processinfo";
+    }
+
+    ::android::binder::Status getProcessStatesFromPids(const ::std::vector<int32_t>& /*pids*/, ::std::vector<int32_t>* states) override {
+        for (unsigned int i=0; i< states->size(); i++)
+            states->at(i) = 0;
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status getProcessStatesAndOomScoresFromPids(const ::std::vector<int32_t>& /*pids*/, ::std::vector<int32_t>* states, ::std::vector<int32_t>* scores) override {
+        for (unsigned int i=0; i< states->size(); i++) {
+            states->at(i) = 0;
+            scores->at(i) = 0;
+        }
+        return ::android::binder::Status::ok();
+    }
+};
+
+#else
+
 #include <processinfo/IProcessInfoService.h>
 
 class BnProcessInfoService : public BnInterface<IProcessInfoService> {
@@ -575,6 +711,7 @@ public:
         return 0;
     }
 };
+#endif
 
 #include <batterystats/IBatteryStats.h>
 
@@ -782,6 +919,20 @@ public:
                                            int32_t appPid) {
         return BAD_VALUE;
     };
+
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+    virtual status_t registerProcessObserver(const sp<app::IProcessObserver>& observer) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t unregisterProcessObserver(const sp<app::IProcessObserver>& observer) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t getRunningAppProcesses(::std::vector<app::RunningAppProcessInfo>* output) {
+        return BAD_VALUE;
+    };
+#endif
 };
 
 #include <android/hardware/BnSensorPrivacyManager.h>
@@ -999,6 +1150,27 @@ public:
         _aidl_return->push_back("");
         return binder::Status::ok();
     }
+
+#if ANDROID_MAJOR >= 16 && (defined(LEGACY_ANDROID_16_REVISION) && LEGACY_ANDROID_16_REVISION >= 4)
+    binder::Status getPackageInfoWithSigningInfo(const String16& /*packageName*/,
+                                                 int userId,
+                                                 std::optional<content::pm::PackageInfoNative>* _aidl_return) override {
+        return binder::Status::ok();
+    }
+
+    binder::Status getPackageInfoWithSigningInfoForUid(int uid,
+                                                       std::optional<std::vector<std::optional<content::pm::PackageInfoNative>>>* _aidl_return) override {
+        return binder::Status::ok();
+    }
+
+    binder::Status checkPermission(const String16& /*permName*/,
+                                   const String16& /*packageName*/,
+                                   int userId,
+                                   int32_t* _aidl_return) override {
+        *_aidl_return = -1;
+        return binder::Status::ok();
+    }
+#endif
 
     binder::Status getPackageUid(const ::std::string& packageName,
                                  int64_t flags,

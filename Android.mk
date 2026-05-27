@@ -44,6 +44,12 @@ $(warning *** ANDROID_MICRO undefined. Assuming 0)
 ANDROID_MICRO = 0
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -eq 16 && echo true),true)
+ifeq ($(shell grep -q CameraCompatibilityInfo frameworks/av/camera/include/camera/Camera.h && echo true),true)
+LEGACY_ANDROID_REVISION_PARAM := -DLEGACY_ANDROID_16_REVISION=4
+endif
+endif
+
 ifeq ($(shell test $(ANDROID_MAJOR) -le 11 && echo true),true)
 ifneq (,$(wildcard frameworks/av/media/mediaserver/Android.mk))
 DROIDMEDIA_32 := $(shell cat frameworks/av/media/mediaserver/Android.mk |grep "LOCAL_32_BIT_ONLY[[:space:]]*:=[[:space:]]*" |grep -o "true\|1\|false\|0")
@@ -119,6 +125,12 @@ endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 15 && echo true),true)
 LOCAL_SHARED_LIBRARIES += framework-permission-aidl-cpp
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 16 && echo true),true)
+ifeq ($(shell grep -q CameraCompatibilityInfo frameworks/av/camera/include/camera/Camera.h && echo true),true)
+LOCAL_SHARED_LIBRARIES += libcameracompatbilityinfo
+endif
 endif
 
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
@@ -356,6 +368,14 @@ ifeq ($(shell test $(ANDROID_MAJOR) -ge 16 && echo true),true)
 LOCAL_SHARED_LIBRARIES += libtinyxml2
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -eq 16 && echo true),true)
+ifeq ($(shell grep -q CameraCompatibilityInfo frameworks/av/camera/include/camera/Camera.h && echo true),true)
+LOCAL_SHARED_LIBRARIES += process_info_service_aidl-cpp \
+                          libcameracompatbilityinfo
+LOCAL_AIDL_INCLUDES += frameworks/base/core/java
+endif
+endif
+
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 ifeq ($(MINIMEDIA_SENSORSERVER_DISABLE),1)
@@ -426,6 +446,13 @@ endif
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 14 && echo true),true)
 LOCAL_SHARED_LIBRARIES += android.frameworks.stats-V2-ndk \
                           android.frameworks.sensorservice-V1-ndk
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -eq 16 && echo true),true)
+ifeq ($(shell grep -q CameraCompatibilityInfo frameworks/av/camera/include/camera/Camera.h && echo true),true)
+LOCAL_SHARED_LIBRARIES += process_info_service_aidl-cpp
+LOCAL_AIDL_INCLUDES += frameworks/base/core/java
+endif
 endif
 
 LOCAL_MODULE_TAGS := optional
@@ -520,6 +547,13 @@ endif
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 14 && echo true),true)
 LOCAL_SHARED_LIBRARIES += android.frameworks.stats-V2-ndk \
                           android.frameworks.sensorservice-V1-ndk
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 16 && echo true),true)
+ifeq ($(shell grep -q CameraCompatibilityInfo frameworks/av/camera/include/camera/Camera.h && echo true),true)
+LOCAL_SHARED_LIBRARIES += process_info_service_aidl-cpp
+LOCAL_AIDL_INCLUDES += frameworks/base/core/java
+endif
 endif
 
 LOCAL_MODULE := libminisf
