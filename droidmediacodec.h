@@ -59,6 +59,8 @@ typedef struct {
   int32_t sample_rate;
   int32_t hal_format;
   DroidMediaCodecFlags flags;
+  int32_t stride;
+  int32_t slice_height;
 } DroidMediaCodecMetaData;
 
 typedef struct {
