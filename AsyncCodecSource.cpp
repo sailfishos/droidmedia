@@ -207,7 +207,11 @@ AsyncCodecSource::AsyncCodecSource(
 }
 
 AsyncCodecSource::~AsyncCodecSource() {
-    mCodec->release();
+    // Null when Create() could not allocate the codec (e.g. MediaCodec
+    // without a ResourceManagerService refuses every codec).
+    if (mCodec != nullptr) {
+        mCodec->release();
+    }
     mCodecLooper->stop();
     mLooper->unregisterHandler(mReflector->id());
 }
