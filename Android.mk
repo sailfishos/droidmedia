@@ -133,6 +133,10 @@ LOCAL_SHARED_LIBRARIES += libcameracompatbilityinfo
 endif
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 17 && echo true),true)
+LOCAL_SHARED_LIBRARIES += libcameracompatbilityinfo
+endif
+
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(FORCE_HAL_PARAM) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdroidmedia
@@ -376,6 +380,13 @@ LOCAL_AIDL_INCLUDES += frameworks/base/core/java
 endif
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 17 && echo true),true)
+LOCAL_SHARED_LIBRARIES += process_info_service_aidl-cpp \
+                          libcameracompatbilityinfo
+LOCAL_STATIC_LIBRARIES += libperfetto_client_experimental
+LOCAL_AIDL_INCLUDES += frameworks/base/core/java
+endif
+
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPPFLAGS=-DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) $(LEGACY_ANDROID_REVISION_PARAM) -Wno-unused-parameter
 ifeq ($(MINIMEDIA_SENSORSERVER_DISABLE),1)
@@ -453,6 +464,11 @@ ifeq ($(shell grep -q CameraCompatibilityInfo frameworks/av/camera/include/camer
 LOCAL_SHARED_LIBRARIES += process_info_service_aidl-cpp
 LOCAL_AIDL_INCLUDES += frameworks/base/core/java
 endif
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 17 && echo true),true)
+LOCAL_SHARED_LIBRARIES += process_info_service_aidl-cpp
+LOCAL_AIDL_INCLUDES += frameworks/base/core/java
 endif
 
 LOCAL_MODULE_TAGS := optional
@@ -554,6 +570,11 @@ ifeq ($(shell grep -q CameraCompatibilityInfo frameworks/av/camera/include/camer
 LOCAL_SHARED_LIBRARIES += process_info_service_aidl-cpp
 LOCAL_AIDL_INCLUDES += frameworks/base/core/java
 endif
+endif
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 17 && echo true),true)
+LOCAL_SHARED_LIBRARIES += process_info_service_aidl-cpp
+LOCAL_AIDL_INCLUDES += frameworks/base/core/java
 endif
 
 LOCAL_MODULE := libminisf

@@ -129,13 +129,17 @@ void _DroidMediaBufferQueue::attachToCameraPreview(android::sp<android::Camera>&
     camera->setPreviewTexture(m_queue);
 #elif ANDROID_MAJOR < 5
     camera->setPreviewTarget(m_queue);
-#else
+#elif ANDROID_MAJOR <= 16
     camera->setPreviewTarget(m_producer);
+#else
+    camera->setPreviewTarget(new android::Surface(m_producer, true));
 #endif
 }
 
 void _DroidMediaBufferQueue::attachToCameraVideo(android::sp<android::Camera>& camera) {
-#if ANDROID_MAJOR >= 9
+#if ANDROID_MAJOR >= 17
+    camera->setVideoTarget(new android::Surface(m_producer, true));
+#elif ANDROID_MAJOR >= 9
     camera->setVideoTarget(m_producer);
 #endif
 }
@@ -240,12 +244,14 @@ void _DroidMediaBufferQueue::buffersReleased() {
 
 int _DroidMediaBufferQueue::releaseMediaBuffer(int index, EGLDisplay dpy, EGLSyncKHR fence) {
 
-    int err = m_queue->releaseBuffer(index,
+    int err = m_queue->releaseBuffer(index
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR == 4) || ANDROID_MAJOR >= 5
     // TODO: fix this when we do video rendering
-    m_slots[index].mFrameNumber,
+    , m_slots[index].mFrameNumber
 #endif
-    dpy, fence
+#if ANDROID_MAJOR <= 16
+    , dpy, fence
+#endif
 #if (ANDROID_MAJOR == 4 && (ANDROID_MINOR >= 2)) || ANDROID_MAJOR >= 5
                                              // TODO: fix this when we do video rendering
     , android::Fence::NO_FENCE

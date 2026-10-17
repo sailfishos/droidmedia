@@ -1,0 +1,1170 @@
+/*
+ * Copyright (C) 2014-2021 Jolla Ltd.
+ * Copyright (C) 2024 Jollyboys Ltd.
+ * Copyright (C) 2025 Jolla Mobile Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <sensor/ISensorServer.h>
+#include <sensor/ISensorEventConnection.h>
+#include <sensor/Sensor.h>
+#include <sensor/BitTube.h>
+
+class FakeSensorEventConnection : public android::BnSensorEventConnection
+{
+    android::sp<android::BitTube> mChannel;
+public:
+    FakeSensorEventConnection() {
+        mChannel = new android::BitTube(0);
+    }
+
+    android::sp<android::BitTube> getSensorChannel() const {
+        return mChannel;
+    }
+
+    android::status_t enableDisable(int, bool, nsecs_t, nsecs_t, int) {
+        return 0;
+    }
+
+    android::status_t setEventRate(int, nsecs_t) {
+        return 0;
+    }
+
+    android::status_t flush() {
+        return 0;
+    }
+
+    virtual int32_t configureChannel(int32_t, int32_t) {
+        return 0;
+    }
+
+protected:
+    void destroy() {
+    }
+
+};
+
+class FakeSensorServer : public android::BinderService<FakeSensorServer>,
+                         public android::BnSensorServer
+{
+public:
+    static char const *getServiceName() {
+        return "sensorservice";
+    }
+
+    android::Vector<android::Sensor> getSensorList(const android::String16&) {
+        return android::Vector<android::Sensor>();
+    }
+
+    android::Vector<android::Sensor> getDynamicSensorList(const android::String16&) {
+        return android::Vector<android::Sensor>();
+    }
+
+    android::Vector<android::Sensor> getRuntimeSensorList(const android::String16&, int) {
+        return android::Vector<android::Sensor>();
+    }
+
+    android::sp<android::ISensorEventConnection> createSensorEventConnection(
+            const android::String8&, int, const android::String16&,
+            const android::String16&) {
+        return android::sp<android::ISensorEventConnection>(new FakeSensorEventConnection);
+    }
+
+    android::sp<android::ISensorEventConnection> createSensorDirectConnection(
+            const android::String16&, int, uint32_t, int32_t, int32_t, const native_handle_t *) {
+        return android::sp<android::ISensorEventConnection>(new FakeSensorEventConnection);
+    }
+
+    android::status_t registerClientListener(
+            const android::sp<android::hardware::sensor::ISensorClientListener>& listener) {
+        return 0;
+    }
+
+
+    int setOperationParameter(
+            int32_t, int32_t, const android::Vector<float> &, const android::Vector<int32_t> &) {
+        return 0;
+    }
+
+    int32_t isDataInjectionEnabled() {
+        return 0;
+    }
+
+    int32_t isReplayDataInjectionEnabled() {
+        return 0;
+    }
+
+    int32_t isHalBypassReplayDataInjectionEnabled() {
+        return 0;
+    }
+
+    android::status_t shellCommand(int, int, int,
+            android::Vector<android::String16>&) {
+        return 0;
+    }
+};
+
+#include <android/frameworks/sensorservice/1.0/IEventQueue.h>
+#include <android/frameworks/sensorservice/1.0/ISensorManager.h>
+#include <android/frameworks/sensorservice/1.0/types.h>
+#include <android/hardware/sensors/1.0/types.h>
+
+class FakeEventQueue :
+    public android::frameworks::sensorservice::V1_0::IEventQueue
+{
+public:
+    FakeEventQueue() {}
+
+    android::hardware::Return<android::frameworks::sensorservice::V1_0::Result> enableSensor(
+            int32_t sensorHandle, int32_t samplingPeriodUs, int64_t maxBatchReportLatencyUs) {
+        return android::frameworks::sensorservice::V1_0::Result::BAD_VALUE;
+    }
+
+    android::hardware::Return<android::frameworks::sensorservice::V1_0::Result> disableSensor(
+            int32_t sensorHandle) {
+        return android::frameworks::sensorservice::V1_0::Result::BAD_VALUE;
+    }
+};
+
+class FakeSensorManager :
+    public android::frameworks::sensorservice::V1_0::ISensorManager
+{
+
+    // Methods from ::android::frameworks::sensorservice::V1_0::ISensorManager follow.
+    android::hardware::Return<void> getSensorList(getSensorList_cb _hidl_cb) {
+        android::hardware::hidl_vec<::android::hardware::sensors::V1_0::SensorInfo> ret;
+        _hidl_cb(ret, android::frameworks::sensorservice::V1_0::Result::OK);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> getDefaultSensor(
+            android::hardware::sensors::V1_0::SensorType type,
+            getDefaultSensor_cb _hidl_cb) {
+        _hidl_cb({}, android::frameworks::sensorservice::V1_0::Result::NOT_EXIST);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> createAshmemDirectChannel(
+            const android::hardware::hidl_memory& mem, uint64_t size,
+            createAshmemDirectChannel_cb _hidl_cb) {
+        _hidl_cb(nullptr, android::frameworks::sensorservice::V1_0::Result::BAD_VALUE);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> createGrallocDirectChannel(
+            const android::hardware::hidl_handle& buffer, uint64_t size,
+            createGrallocDirectChannel_cb _hidl_cb) {
+        _hidl_cb(nullptr, android::frameworks::sensorservice::V1_0::Result::UNKNOWN_ERROR);
+        return android::hardware::Void();
+    }
+
+    android::hardware::Return<void> createEventQueue(
+            const android::sp<android::frameworks::sensorservice::V1_0::IEventQueueCallback> &callback,
+            createEventQueue_cb _hidl_cb) {
+        if (callback == nullptr) {
+            _hidl_cb(nullptr, android::frameworks::sensorservice::V1_0::Result::BAD_VALUE);
+            return android::hardware::Void();
+        }
+
+        android::sp<android::frameworks::sensorservice::V1_0::IEventQueue> queue = new FakeEventQueue();
+
+        _hidl_cb(queue, android::frameworks::sensorservice::V1_0::Result::OK);
+        return android::hardware::Void();
+    }
+};
+
+using namespace android;
+
+#include <gui/ISurfaceComposer.h>
+#include <gui/DisplayEventReceiver.h>
+#include <gui/LayerState.h>
+#include <android/gui/IDisplayEventConnection.h>
+#include <android/gui/ISurfaceComposerClient.h>
+#include <ui/Rect.h>
+#include <system/graphics.h>
+
+//class IGraphicBufferProducer;
+
+using DisplayToken = IBinder;
+
+class MiniSurfaceFlinger : public BinderService<MiniSurfaceFlinger>,
+                           public BnSurfaceComposer,
+                           public IBinder::DeathRecipient
+{
+public:
+    static char const *getServiceName() {
+        return "SurfaceFlingerAIDL";
+    }
+
+    void binderDied(const wp<IBinder>&) {
+        // Nothing
+    }
+
+    enum class VsyncSource : int8_t {
+        eVsyncSourceApp = 0,
+        eVsyncSourceSurfaceFlinger = 1,
+    };
+
+    sp<IDisplayEventConnection> createDisplayEventConnection(
+            VsyncSource, gui::ISurfaceComposer::EventRegistration,
+            const sp<IBinder>&) {
+        return sp<gui::IDisplayEventConnection>();
+    }
+
+    status_t setTransactionState(TransactionState&&, const sp<IBinder>&) {
+        return BAD_VALUE;
+    }
+
+    status_t registerGraphicBuffers(const gui::GraphicBuffersRegisterInfo&) {
+        return BAD_VALUE;
+    }
+
+    status_t unregisterGraphicBuffers(const gui::GraphicBuffersUnregisterInfo&) {
+        return BAD_VALUE;
+    }
+
+    void bootFinished() {
+        // Nothing
+    }
+
+    status_t getSupportedFrameTimestamps(
+            std::vector<FrameEvent>*) const {
+        return BAD_VALUE;
+    }
+
+    status_t getStaticDisplayInfo(const sp<IBinder>&, gui::StaticDisplayInfo*) {
+        return BAD_VALUE;
+    }
+
+    status_t getDynamicDisplayInfo(const sp<IBinder>&, gui::DynamicDisplayInfo*) {
+        return BAD_VALUE;
+    }
+
+    status_t getDisplayNativePrimaries(const sp<IBinder>& display, ui::DisplayPrimaries&) {
+        return BAD_VALUE;
+    }
+
+    status_t setActiveColorMode(const sp<IBinder>&, ui::ColorMode) {
+        return BAD_VALUE;
+    }
+
+    status_t setBootDisplayMode(const sp<IBinder>&, const sp<DisplayToken>&) {
+        return BAD_VALUE;
+    }
+
+    status_t clearAnimationFrameStats() {
+        return BAD_VALUE;
+    }
+
+    status_t getAnimationFrameStats(gui::FrameStats*) const {
+        return BAD_VALUE;
+    }
+
+    status_t getDisplayedContentSample(const sp<IBinder>&, uint64_t, uint64_t, DisplayedFrameStats*) const {
+        return BAD_VALUE;
+    }
+
+    status_t addRegionSamplingListener(const Rect&, const sp<IBinder>&, const sp<gui::IRegionSamplingListener>&) {
+        return BAD_VALUE;
+    }
+
+    status_t removeRegionSamplingListener(const sp<gui::IRegionSamplingListener>&) {
+        return BAD_VALUE;
+    }
+
+    status_t addFpsListener(int32_t, const sp<gui::IFpsListener>&) {
+        return BAD_VALUE;
+    }
+
+    status_t removeFpsListener(const sp<gui::IFpsListener>&) {
+        return BAD_VALUE;
+    }
+
+    status_t addTunnelModeEnabledListener(const sp<gui::ITunnelModeEnabledListener>&) {
+        return BAD_VALUE;
+    }
+
+    status_t removeTunnelModeEnabledListener(const sp<gui::ITunnelModeEnabledListener>&) {
+        return BAD_VALUE;
+    }
+
+    status_t setDesiredDisplayModeSpecs(const sp<IBinder>&, const gui::DisplayModeSpecs&) {
+        return BAD_VALUE;
+    }
+
+    status_t getDesiredDisplayModeSpecs(const sp<IBinder>&, gui::DisplayModeSpecs*) {
+        return BAD_VALUE;
+    }
+
+    status_t setGlobalShadowSettings(const half4&, const half4&, float, float, float) {
+        return BAD_VALUE;
+    }
+
+    status_t getDisplayDecorationSupport(const sp<IBinder>&,
+            std::optional<gui::DisplayDecorationSupport>*) const {
+        return BAD_VALUE;
+    }
+
+    status_t setFrameRate(const sp<IGraphicBufferProducer>&, float, int8_t, int8_t) {
+        return BAD_VALUE;
+    }
+
+    status_t setOverrideFrameRate(uid_t, float) {
+        return BAD_VALUE;
+    }
+
+    status_t setFrameTimelineInfo(const sp<IGraphicBufferProducer>&,
+                                  const FrameTimelineInfo&) {
+        return BAD_VALUE;
+    }
+
+    int getGPUContextPriority() {
+        return 0;
+    }
+
+    status_t getMaxAcquiredBufferCount(int*) const {
+        return BAD_VALUE;
+    }
+
+    status_t addWindowInfosListener(const sp<gui::IWindowInfosListener>&) const {
+        return BAD_VALUE;
+    }
+
+    status_t removeWindowInfosListener(const sp<gui::IWindowInfosListener>&) const {
+        return BAD_VALUE;
+    }
+};
+
+#include <binder/IPermissionController.h>
+
+class FakePermissionController : public BinderService<FakePermissionController>,
+                                 public BnPermissionController
+{
+public:
+    static char const *getServiceName() {
+        return "permission";
+    }
+
+    bool checkPermission(const String16& permission, int32_t, int32_t) {
+        if (permission == String16("android.permission.CAMERA")
+            || permission == String16("android.permission.MEDIA_RESOURCE_OVERRIDE_PID")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    int32_t noteOp(const String16&, int32_t, const String16&) {
+        return 0;
+    }
+
+    void getPackagesForUid(const uid_t, Vector<String16> &) {
+    }
+
+    bool isRuntimePermission(const String16&) {
+        return false;
+    }
+
+    int getPackageUid(const String16&, int) {
+        return 0;
+    }
+};
+
+#include <binder/AppOpsManager.h>
+#include <binder/IAppOpsService.h>
+class FakeAppOps : public BinderService<FakeAppOps>,
+           public BnAppOpsService
+{
+public:
+    static char const *getServiceName() {
+        return "appops";
+    }
+
+    int32_t checkOperation(int32_t, int32_t, const String16&) {
+        return android::AppOpsManager::MODE_ALLOWED;
+    }
+
+    int32_t noteOperation(int32_t, int32_t, const String16&,
+                          const std::optional<String16>&, bool,
+                          const String16&, bool) {
+        return android::AppOpsManager::MODE_ALLOWED;
+    }
+
+    int32_t startOperation(const sp<IBinder>&, int32_t, int32_t,
+                           const String16&, const std::optional<String16>&,
+                           bool, bool, const String16&, bool) {
+        return android::AppOpsManager::MODE_ALLOWED;
+    }
+
+    void finishOperation(const sp<IBinder>&, int32_t, int32_t,
+                         const String16&, const std::optional<String16>&) {
+        // Nothing
+    }
+
+    void startWatchingMode(int32_t, const String16&, const sp<IAppOpsCallback>&) {
+        // Nothing
+    }
+
+    void stopWatchingMode(const sp<IAppOpsCallback>&) {
+        // Nothing
+    }
+
+    sp<IBinder> getToken(const sp<IBinder>&) {
+        return NULL;
+    }
+
+    int32_t permissionToOpCode(const String16&) {
+        return 0;
+    }
+
+    int32_t checkAudioOperation(int32_t, int32_t, int32_t, const String16&) {
+        return 0;
+    }
+
+    void setCameraAudioRestriction(int32_t) {
+        // Nothing
+    }
+
+    bool shouldCollectNotes(int32_t) {
+        return false;
+    }
+
+    void startWatchingModeWithFlags(int32_t, const String16&, int32_t, const sp<IAppOpsCallback>&) {
+        // Nothing
+    }
+
+    int checkOperationForDevice(int32_t, int32_t, const String16&,
+            const std::optional<String16>&, int32_t) {
+        return 0;
+    }
+};
+
+#include <android/os/BnProcessInfoService.h>
+
+class BnProcessInfoService : public BnInterface<os::IProcessInfoService> {
+public:
+    virtual status_t    onTransact( uint32_t code,
+                                    const Parcel& data,
+                                    Parcel* reply,
+                                    uint32_t flags = 0);
+};
+
+::android::status_t BnProcessInfoService::onTransact(uint32_t _aidl_code, const ::android::Parcel& _aidl_data, ::android::Parcel* _aidl_reply, uint32_t _aidl_flags) {
+  ::android::status_t _aidl_ret_status = ::android::OK;
+  switch (_aidl_code) {
+  case os::BnProcessInfoService::TRANSACTION_getProcessStatesFromPids:
+  {
+    ::std::vector<int32_t> in_pids;
+    ::std::vector<int32_t> out_states;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    ::android::binder::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IProcessInfoService::getProcessStatesFromPids::cppServer");
+    _aidl_ret_status = _aidl_data.readInt32Vector(&in_pids);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.resizeOutVector(&out_states);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(getProcessStatesFromPids(in_pids, &out_states));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeInt32Vector(out_states);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  case os::BnProcessInfoService::TRANSACTION_getProcessStatesAndOomScoresFromPids:
+  {
+    ::std::vector<int32_t> in_pids;
+    ::std::vector<int32_t> out_states;
+    ::std::vector<int32_t> out_scores;
+    if (!(_aidl_data.checkInterface(this))) {
+      _aidl_ret_status = ::android::BAD_TYPE;
+      break;
+    }
+    ::android::binder::ScopedTrace _aidl_trace(ATRACE_TAG_AIDL, "AIDL::cpp::IProcessInfoService::getProcessStatesAndOomScoresFromPids::cppServer");
+    _aidl_ret_status = _aidl_data.readInt32Vector(&in_pids);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.resizeOutVector(&out_states);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_data.resizeOutVector(&out_scores);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (auto st = _aidl_data.enforceNoDataAvail(); !st.isOk()) {
+      _aidl_ret_status = st.writeToParcel(_aidl_reply);
+      break;
+    }
+    ::android::binder::Status _aidl_status(getProcessStatesAndOomScoresFromPids(in_pids, &out_states, &out_scores));
+    _aidl_ret_status = _aidl_status.writeToParcel(_aidl_reply);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    if (!_aidl_status.isOk()) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeInt32Vector(out_states);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+    _aidl_ret_status = _aidl_reply->writeInt32Vector(out_scores);
+    if (((_aidl_ret_status) != (::android::OK))) {
+      break;
+    }
+  }
+  break;
+  default:
+  {
+    _aidl_ret_status = ::android::BBinder::onTransact(_aidl_code, _aidl_data, _aidl_reply, _aidl_flags);
+  }
+  break;
+  }
+  if (_aidl_ret_status == ::android::UNEXPECTED_NULL) {
+    _aidl_ret_status = ::android::binder::Status::fromExceptionCode(::android::binder::Status::EX_NULL_POINTER).writeOverParcel(_aidl_reply);
+  }
+  return _aidl_ret_status;
+}
+
+class FakeProcessInfoService : public BinderService<FakeProcessInfoService>,
+                        public BnProcessInfoService
+{
+public:
+    static char const *getServiceName() {
+        return "processinfo";
+    }
+
+    ::android::binder::Status getProcessStatesFromPids(const ::std::vector<int32_t>& /*pids*/, ::std::vector<int32_t>* states) override {
+        for (unsigned int i=0; i< states->size(); i++)
+            states->at(i) = 0;
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status getProcessStatesAndOomScoresFromPids(const ::std::vector<int32_t>& /*pids*/, ::std::vector<int32_t>* states, ::std::vector<int32_t>* scores) override {
+        for (unsigned int i=0; i< states->size(); i++) {
+            states->at(i) = 0;
+            scores->at(i) = 0;
+        }
+        return ::android::binder::Status::ok();
+    }
+};
+
+#include <batterystats/IBatteryStats.h>
+
+class FakeBatteryStats : public BinderService<FakeBatteryStats>,
+                                public BnBatteryStats
+{
+public:
+    static char const *getServiceName() {
+        return "batterystats";
+    }
+    void noteStartSensor(int uid, int sensor) {  }
+    void noteStopSensor(int uid, int sensor) {  }
+    void noteStartVideo(int uid) {  }
+    void noteStopVideo(int uid) {  }
+    void noteStartAudio(int uid) {  }
+    void noteStopAudio(int uid) {  }
+    void noteResetVideo() {  }
+    void noteResetAudio() {  }
+    void noteFlashlightOn(int uid) {  }
+    void noteFlashlightOff(int uid) {  }
+    void noteStartCamera(int uid) {  }
+    void noteStopCamera(int uid) {  }
+    void noteResetCamera() {  }
+    void noteResetFlashlight() {  }
+    binder::Status noteWakeupSensorEvent(int64_t elapsedNanos, int uid, int sensor) { return binder::Status::ok(); }
+};
+
+#include <aidl/android/media/IResourceManagerService.h>
+#include <aidl/android/media/IResourceManagerClient.h>
+#include <aidl/android/media/BnResourceManagerService.h>
+#include <media/MediaResource.h>
+#include <media/MediaResourcePolicy.h>
+
+#include <android/binder_manager.h>
+//#include <android/binder_process.h>
+
+class FakeResourceManagerService : public BinderService<FakeResourceManagerService>,
+                         public aidl::android::media::BnResourceManagerService
+{
+public:
+    static char const *getServiceName() {
+        return "media.resource_manager";
+    }
+
+    static void instantiate() {
+        std::shared_ptr<FakeResourceManagerService> service =
+                ::ndk::SharedRefBase::make<FakeResourceManagerService>();
+        binder_status_t status =
+                AServiceManager_addService(service->asBinder().get(), getServiceName());
+        if (status != ::STATUS_OK) {
+            return;
+        }
+        // TODO: mediaserver main() is already starting the thread pool,
+        // move this to mediaserver main() when other services in mediaserver
+        // are converted to ndk-platform aidl.
+        //ABinderProcess_startThreadPool();
+    }
+
+    ::ndk::ScopedAStatus config(const std::vector<::aidl::android::media::MediaResourcePolicyParcel>&) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus addResource(const ::aidl::android::media::ClientInfoParcel&,
+                                     const std::shared_ptr<::aidl::android::media::IResourceManagerClient>&,
+                                     const std::vector<::aidl::android::media::MediaResourceParcel>&) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus updateResource(const ::aidl::android::media::ClientInfoParcel&,
+                                        const std::vector<::aidl::android::media::MediaResourceParcel>&) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus removeResource(const ::aidl::android::media::ClientInfoParcel&,
+                                        const std::vector<::aidl::android::media::MediaResourceParcel>&) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus removeClient(const ::aidl::android::media::ClientInfoParcel&) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus reclaimResource(const ::aidl::android::media::ClientInfoParcel&,
+                                         const std::vector<::aidl::android::media::MediaResourceParcel>&,
+                                         bool*) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus overridePid(int32_t, int32_t) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus overrideProcessInfo(const std::shared_ptr<::aidl::android::media::IResourceManagerClient>&,
+                                             int32_t, int32_t, int32_t) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus markClientForPendingRemoval(const ::aidl::android::media::ClientInfoParcel&) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus reclaimResourcesFromClientsPendingRemoval(int32_t) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus notifyClientCreated(const ::aidl::android::media::ClientInfoParcel& in_clientInfo) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus notifyClientStarted(const ::aidl::android::media::ClientConfigParcel& in_clientConfig) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus notifyClientStopped(const ::aidl::android::media::ClientConfigParcel& in_clientConfig) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus notifyClientConfigChanged(const ::aidl::android::media::ClientConfigParcel& in_clientConfig) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus getMediaResourceUsageReport(std::vector<::aidl::android::media::MediaResourceParcel>*) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus registerSystemResource(const std::vector<MediaResourceParcel>& resources) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus checkResourceAvailability(const std::vector<MediaResourceParcel>&,
+                                     bool* _aidl_return) {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+};
+
+#include <binder/IActivityManager.h>
+
+class BnFakeActivityManager : public BnInterface<IActivityManager>
+{
+public:
+    virtual status_t    onTransact( uint32_t code,
+                                    const Parcel& data,
+                                    Parcel* reply,
+                                    uint32_t flags = 0) {
+        return NO_ERROR;
+    };
+};
+
+class FakeActivityManager : public BinderService<FakeActivityManager>,
+                                public BnFakeActivityManager
+{
+public:
+    static char const *getServiceName() {
+        return "activity";
+    }
+
+    virtual int openContentUri(const String16&) {
+        return 0;
+    };
+
+    virtual status_t registerUidObserver(const sp<IUidObserver>&,
+                                         const int32_t,
+                                         const int32_t,
+                                         const String16&) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t registerUidObserverForUids(const sp<IUidObserver>& observer,
+                                                const int32_t event, const int32_t cutpoint,
+                                                const String16& callingPackage,
+                                                const int32_t uids[], size_t nUids,
+                                                /*out*/ sp<IBinder>& observerToken) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t unregisterUidObserver(const sp<IUidObserver>&) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t addUidToObserver(const sp<IBinder>& observerToken,
+                                      const String16& callingPackage, int32_t uid) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t removeUidFromObserver(const sp<IBinder>& observerToken,
+                                           const String16& callingPackage, int32_t uid) {
+        return BAD_VALUE;
+    };
+
+    virtual bool isUidActive(const uid_t, const String16&) {
+        return false;
+    };
+
+    virtual int32_t getUidProcessState(const uid_t, const String16&) {
+        return 0;
+    }
+
+    virtual status_t checkPermission(const String16&,
+                                     const pid_t,
+                                     const uid_t,
+                                     int32_t*) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t logFgsApiBegin(int32_t apiType, int32_t appUid, int32_t appPid) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t logFgsApiEnd(int32_t apiType, int32_t appUid, int32_t appPid) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t logFgsApiStateChanged(int32_t apiType, int32_t state, int32_t appUid,
+                                           int32_t appPid) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t registerProcessObserver(const sp<app::IProcessObserver>& observer) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t unregisterProcessObserver(const sp<app::IProcessObserver>& observer) {
+        return BAD_VALUE;
+    };
+
+    virtual status_t getRunningAppProcesses(::std::vector<app::RunningAppProcessInfo>* output) {
+        return BAD_VALUE;
+    };
+
+};
+
+#include <android/hardware/BnSensorPrivacyManager.h>
+
+class FakeSensorPrivacyManager : public BinderService<FakeSensorPrivacyManager>,
+                                 public hardware::BnSensorPrivacyManager
+{
+public:
+    static char const *getServiceName() {
+        return "sensor_privacy";
+    }
+
+    ::android::binder::Status supportsSensorToggle(int32_t, int32_t, bool *supported) override {
+        *supported = false;
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status addSensorPrivacyListener(const sp<hardware::ISensorPrivacyListener>&) override {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status removeSensorPrivacyListener(const sp<hardware::ISensorPrivacyListener>&) override {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status isSensorPrivacyEnabled(bool *enabled) override {
+        *enabled = false;
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status setSensorPrivacy(bool) override {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status addToggleSensorPrivacyListener(const ::android::sp<::android::hardware::ISensorPrivacyListener>&) override {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status removeToggleSensorPrivacyListener(const ::android::sp<::android::hardware::ISensorPrivacyListener>&) override {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status isCombinedToggleSensorPrivacyEnabled(int32_t, bool *enabled) override {
+        *enabled = false;
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status isToggleSensorPrivacyEnabled(int32_t, int32_t, bool *enabled) override {
+        *enabled = false;
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status setToggleSensorPrivacy(int32_t, int32_t, int32_t, bool) override {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status setToggleSensorPrivacyForProfileGroup(int32_t, int32_t, int32_t, bool) override {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status getCameraPrivacyAllowlist(::std::vector<::android::String16>*) {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status getToggleSensorPrivacyState(int32_t, int32_t, int32_t*state) {
+        *state = 2;
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status setToggleSensorPrivacyState(int32_t userId, int32_t source, int32_t sensor, int32_t state) {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status setToggleSensorPrivacyStateForProfileGroup(int32_t userId, int32_t source, int32_t sensor, int32_t state) {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status isCameraPrivacyEnabled(const ::android::String16& packageName, bool* enabled) {
+        *enabled = false;
+        return ::android::binder::Status::ok();
+    }
+};
+
+#include <android/permission/BnPermissionChecker.h>
+
+class FakePermissionChecker : public BinderService<FakePermissionChecker>,
+                        public android::permission::BnPermissionChecker
+{
+public:
+    static char const *getServiceName() {
+        return "permission_checker";
+    }
+
+    const int PERMISSION_GRANTED = 0;
+    const int PERMISSION_SOFT_DENIED = 1;
+    const int PERMISSION_HARD_DENIED = 2;
+
+    ::android::binder::Status checkPermission(const ::android::String16&permission, const ::android::content::AttributionSourceState&,
+                        const ::std::optional<::android::String16>&, bool, bool, bool, int, int32_t* ret) {
+        if (permission == String16("android.permission.CAMERA")
+            || permission == String16("android.permission.MEDIA_RESOURCE_OVERRIDE_PID")) {
+            *ret = PERMISSION_GRANTED;
+        } else {
+            *ret = PERMISSION_SOFT_DENIED;
+        }
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status finishDataDelivery(int, const ::android::content::AttributionSourceState&, bool) {
+        return ::android::binder::Status::ok();
+    }
+
+    ::android::binder::Status checkOp(int, const ::android::content::AttributionSourceState&,
+                const ::android::String16&, bool, bool, int32_t*) {
+        return ::android::binder::Status::ok();
+    }
+};
+
+#include <aidl/android/frameworks/stats/BnStats.h>
+
+class FakeStatsAidl : public BinderService<FakeStatsAidl>,
+		public aidl::android::frameworks::stats::BnStats
+{
+public:
+    static char const *getServiceName() {
+        return "android.frameworks.stats.IStats/default";
+    }
+
+    static void instantiate() {
+        std::shared_ptr<FakeStatsAidl> service = ::ndk::SharedRefBase::make<FakeStatsAidl>();
+        binder_status_t status =
+                AServiceManager_addService(service->asBinder().get(), getServiceName());
+        if (status != ::STATUS_OK) {
+            return;
+        }
+    }
+
+    ::ndk::ScopedAStatus reportVendorAtom(const ::aidl::android::frameworks::stats::VendorAtom& in_vendorAtom) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+};
+
+#include <aidl/android/frameworks/sensorservice/BnSensorManager.h>
+#include <aidl/android/frameworks/sensorservice/BnEventQueue.h>
+
+class FakeEventQueueAidl : public aidl::android::frameworks::sensorservice::BnEventQueue
+{
+public:
+    FakeEventQueueAidl() {}
+
+    ::ndk::ScopedAStatus disableSensor(int32_t in_sensorHandle) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus enableSensor(int32_t in_sensorHandle, int32_t in_samplingPeriodUs,
+                                      int64_t in_maxBatchReportLatencyUs) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+};
+
+class FakeSensorManagerAidl : public BinderService<FakeSensorManagerAidl>,
+		public aidl::android::frameworks::sensorservice::BnSensorManager
+{
+public:
+    static char const *getServiceName() {
+        return "android.frameworks.sensorservice.ISensorManager/default";
+    }
+
+    static void instantiate() {
+        std::shared_ptr<FakeSensorManagerAidl> service = ::ndk::SharedRefBase::make<FakeSensorManagerAidl>();
+        binder_status_t status =
+                AServiceManager_addService(service->asBinder().get(), getServiceName());
+        if (status != ::STATUS_OK) {
+            return;
+        }
+    }
+
+    ::ndk::ScopedAStatus createAshmemDirectChannel(const ::aidl::android::hardware::common::Ashmem& in_mem, int64_t in_size,
+				std::shared_ptr<::aidl::android::frameworks::sensorservice::IDirectReportChannel>* _aidl_return) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus createEventQueue(const std::shared_ptr<::aidl::android::frameworks::sensorservice::IEventQueueCallback>& in_callback,
+				std::shared_ptr<::aidl::android::frameworks::sensorservice::IEventQueue>* _aidl_return) override {
+        std::shared_ptr<::aidl::android::frameworks::sensorservice::IEventQueue> ptr = ::ndk::SharedRefBase::make<FakeEventQueueAidl>();
+        *_aidl_return = ptr;
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus createGrallocDirectChannel(const ::ndk::ScopedFileDescriptor& in_buffer, int64_t in_size,
+				std::shared_ptr<::aidl::android::frameworks::sensorservice::IDirectReportChannel>* _aidl_return) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus getDefaultSensor(::aidl::android::hardware::sensors::SensorType in_type, ::aidl::android::hardware::sensors::SensorInfo* _aidl_return) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+
+    ::ndk::ScopedAStatus getSensorList(std::vector<::aidl::android::hardware::sensors::SensorInfo>* _aidl_return) override {
+        return ::ndk::ScopedAStatus::ok();
+    }
+};
+
+#include <android/content/pm/BnPackageManagerNative.h>
+
+class FakePackageManagerNative : public BinderService<FakePackageManagerNative>,
+                                 public content::pm::BnPackageManagerNative {
+public:
+    static char const *getServiceName() {
+        return "package_native";
+    }
+
+    binder::Status getNamesForUids(const std::vector<int32_t>& /*uids*/,
+                                   std::vector<std::string>* _aidl_return) override {
+        _aidl_return->push_back("");
+        return binder::Status::ok();
+    }
+
+    binder::Status getPackageInfoWithSigningInfo(const String16& /*packageName*/,
+                                                 int userId,
+                                                 std::optional<content::pm::PackageInfoNative>* _aidl_return) override {
+        return binder::Status::ok();
+    }
+
+    binder::Status getPackageInfoWithSigningInfoForUid(int uid,
+                                                       std::optional<std::vector<std::optional<content::pm::PackageInfoNative>>>* _aidl_return) override {
+        return binder::Status::ok();
+    }
+
+    binder::Status getPackageUid(const ::std::string& packageName,
+                                 int64_t flags,
+                                 int32_t userId,
+                                 int32_t* _aidl_return) override {
+        *_aidl_return = -1;
+        return binder::Status::ok();
+    }
+
+    binder::Status checkPermission(const String16& /*permName*/,
+                                   const String16& /*packageName*/,
+                                   int userId,
+                                   int32_t* _aidl_return) override {
+        *_aidl_return = -1;
+        return binder::Status::ok();
+    }
+
+    binder::Status getInstallerForPackage(const String16& packageName,
+                                          std::string* _aidl_return) override {
+        *_aidl_return = "";
+        return binder::Status::ok();
+    }
+
+    binder::Status getVersionCodeForPackage(const String16& /*packageName*/,
+                                            int64_t* _aidl_return) override {
+        *_aidl_return = 1;
+        return binder::Status::ok();
+    }
+
+    binder::Status isAudioPlaybackCaptureAllowed(const std::vector<std::string>& /*packages*/,
+                                                 std::vector<bool>* _aidl_return) override {
+        _aidl_return->push_back(false);
+        return binder::Status::ok();
+    }
+
+    binder::Status getLocationFlags(const std::string& /*packageName*/,
+                                    int32_t* _aidl_return) override {
+        *_aidl_return = 0;
+        return binder::Status::ok();
+    }
+
+    binder::Status getTargetSdkVersionForPackage(const String16& /*packageName*/,
+                                                 int32_t* _aidl_return) override {
+        *_aidl_return = 35;
+        return binder::Status::ok();
+    }
+
+    binder::Status getModuleMetadataPackageName(std::string* _aidl_return) override {
+        *_aidl_return = "";
+        return binder::Status::ok();
+    }
+
+    binder::Status hasSha256SigningCertificate(const std::string& /*packageName*/,
+                                               const std::vector<uint8_t>& /*cert*/,
+                                               bool* _aidl_return) override {
+        *_aidl_return = false;
+        return binder::Status::ok();
+    }
+
+    binder::Status isPackageDebuggable(const String16& /*packageName*/,
+                                       bool* _aidl_return) override {
+        *_aidl_return = false;
+        return binder::Status::ok();
+    }
+
+    binder::Status hasSystemFeature(const String16& featureName,
+                                    int32_t /*version*/,
+                                    bool* _aidl_return) override {
+        if (featureName == String16("android.hardware.touchscreen")) {
+            *_aidl_return = true;
+        } else {
+            *_aidl_return = false;
+        }
+        return binder::Status::ok();
+    }
+
+    binder::Status registerStagedApexObserver(const sp<content::pm::IStagedApexObserver>& /*observer*/) override {
+        return binder::Status::ok();
+    }
+
+    binder::Status unregisterStagedApexObserver(const sp<content::pm::IStagedApexObserver>& /*observer*/) override {
+        return binder::Status::ok();
+    }
+
+    binder::Status getStagedApexInfos(::std::vector<content::pm::StagedApexInfo>* _aidl_return) override {
+        return binder::Status::ok();
+    }
+};
+
+#include <android/hardware/BnCameraServiceProxy.h>
+
+class FakeCameraServiceProxy : public BinderService<FakeCameraServiceProxy>,
+                               public android::hardware::BnCameraServiceProxy
+{
+public:
+    static char const *getServiceName() {
+        return "media.camera.proxy";
+    }
+
+    binder::Status pingForUserUpdate() {
+        return binder::Status::ok();
+    }
+
+    binder::Status notifyCameraState(const android::hardware::CameraSessionStats &cameraSessionStats) {
+        return binder::Status::ok();
+    }
+
+    binder::Status notifyFeatureCombinationStats(const android::hardware::CameraFeatureCombinationStats& cameraFeatureCombinationStats) {
+        return binder::Status::ok();
+    }
+
+    binder::Status getRotateAndCropOverride(const std::string &packageName, int32_t lensFacing, int32_t userId, int32_t* _aidl_return) {
+        return binder::Status::ok();
+    }
+
+    binder::Status getAutoframingOverride(const std::string& packageName, int32_t* _aidl_return) override {
+        return binder::Status::ok();
+    }
+
+    binder::Status isCameraDisabled(int32_t userId, bool* _aidl_return) {
+        *_aidl_return = false;
+        return binder::Status::ok();
+    }
+
+    binder::Status notifyWatchdog(int32_t /* pid_t */ pid, bool isNative) {
+        return binder::Status::ok();
+    }
+
+    binder::Status notifyCameraDistractionRestriction(
+            hardware::camera2::ICameraDeviceUser::AudioRestriction mode) {
+        return binder::Status::ok();
+    }
+
+};
