@@ -58,11 +58,17 @@ AsyncCodecSource::SourceReader::SourceReader(AsyncCodecSource *codec,
 
 AsyncCodecSource::SourceReader::~SourceReader()
 {
+    stop();
+}
+
+void AsyncCodecSource::SourceReader::stop()
+{
     {
         Mutex::Autolock lock(mInputIndices.lock);
         mRunning = false;
         mInputIndices.cond.signal();
     }
+    // (returns at once when called from the thread itself, or when it never ran)
     requestExitAndWait();
 }
 
@@ -70,12 +76,14 @@ size_t AsyncCodecSource::SourceReader::waitForInputBuffer()
 {
     mInputIndices.lock.lock();
 
-    while (mInputIndices.buffers.empty()) {
+    // Checked before waiting too: a stop() that came first has already
+    // signalled, and nothing would wake this wait again.
+    while (mRunning && mInputIndices.buffers.empty()) {
         mInputIndices.cond.wait(mInputIndices.lock);
-        if (!mRunning) {
-            mInputIndices.lock.unlock();
-            return std::string::npos;
-        }
+    }
+    if (!mRunning) {
+        mInputIndices.lock.unlock();
+        return std::string::npos;
     }
 
     size_t index = *mInputIndices.buffers.begin();
@@ -100,8 +108,10 @@ bool AsyncCodecSource::SourceReader::threadLoop(void)
         buffer->release();
     } else {
         mCodec->queueEOS(index);
+        Mutex::Autolock lock(mInputIndices.lock);
         mRunning = false;
     }
+    Mutex::Autolock lock(mInputIndices.lock);
     return mRunning;
 }
 
@@ -207,6 +217,19 @@ AsyncCodecSource::AsyncCodecSource(
 }
 
 AsyncCodecSource::~AsyncCodecSource() {
+    // The reader thread calls into this source: it must end first, also when
+    // stop() was never called. A started source is stopped for that, which
+    // also wakes a reader waiting for a frame.
+    bool started;
+    {
+        Mutexed<Output>::Locked me(mOutput);
+        started = mState == STARTED || mState == ERROR;
+    }
+    if (started) {
+        stop();
+    }
+    mSourceReader->stop();
+
     // Null when Create() could not allocate the codec (e.g. MediaCodec
     // without a ResourceManagerService refuses every codec).
     if (mCodec != nullptr) {
@@ -264,23 +287,34 @@ status_t AsyncCodecSource::start(MetaData *params) {
 }
 
 status_t AsyncCodecSource::stop() {
-    Mutexed<Output>::Locked me(mOutput);
-    if (mState != STARTED && mState != ERROR) {
-        return -EINVAL;
+    {
+        Mutexed<Output>::Locked me(mOutput);
+        if (mState != STARTED && mState != ERROR) {
+            return -EINVAL;
+        }
+
+        // wait for any pending reads to complete
+        mState = STOPPING;
+        me->mAvailable.signal();
+        while (me->mReading) {
+            me.waitForCondition(me->mReadCondition);
+        }
     }
 
-    // wait for any pending reads to complete
-    mState = STOPPING;
-    me->mAvailable.signal();
-    while (me->mReading) {
-        me.waitForCondition(me->mReadCondition);
-    }
-
+    // Without mOutput's lock from here: the source's stop() waits for the
+    // reader thread to hand back the frame it is queueing, and the reader
+    // takes that lock when queueing fails (setError()). STOPPING keeps
+    // read() out meanwhile.
     status_t res1 = mCodec->stop();
     if (res1 != OK) {
         mCodec->release();
     }
+    // Ends a reader waiting for a frame (it then queues EOS)...
     status_t res2 = mSource->stop();
+    // ...or for an input buffer, which a stopped codec never gives.
+    mSourceReader->stop();
+
+    Mutexed<Output>::Locked me(mOutput);
     if (res1 == OK && res2 == OK) {
         mState = STOPPED;
     } else {
@@ -304,12 +338,14 @@ status_t AsyncCodecSource::read(
                     const ReadOptions *options) {
     *buffer = nullptr;
     Mutexed<Output>::Locked me(mOutput);
-    me->mReading = true;
     status_t res = OK;
 
+    // Only a read that goes on to wait counts as reading: stop() waits for
+    // mReading to clear, and this early return would never clear it.
     if (mState != STARTED) {
         return ERROR_END_OF_STREAM;
     }
+    me->mReading = true;
 
     // flush codec on seek
     MediaSource::ReadOptions::SeekMode mode;
@@ -327,7 +363,8 @@ status_t AsyncCodecSource::read(
     }
 
     if (mState == ERROR) {
-        res = ERROR;
+        // (not ERROR itself: that is a State, and read() returns a status_t)
+        res = UNKNOWN_ERROR;
     }
     else if (!me->mBufferQueue.empty()) {
         *buffer = *me->mBufferQueue.begin();
@@ -363,11 +400,21 @@ bool AsyncCodecSource::queueInputBuffer(DroidMediaBuffer *buffer, size_t index)
 
     if (err != OK || inbuf == nullptr || inbuf->data() == nullptr) {
         ALOGE("[%s] Error: Input buffer #%zu invalid.", mComponentName.c_str(), index);
-        mState = ERROR;
+        setError();
         return false;
     }
 
-    size_t cpLen = min(buffer->range_length(), inbuf->capacity());
+    // Vorbis frames carry their sample count in 4 more bytes after the data.
+    const size_t extra = mIsVorbis ? sizeof(int32_t) : 0;
+    if (inbuf->capacity() < extra || buffer->range_length() > inbuf->capacity() - extra) {
+        // Cut short, the frame would be queued with its full length all the
+        // same, and the sample count written past the buffer.
+        ALOGE("[%s] Error: frame of %zu bytes does not fit input buffer #%zu (%zu bytes)",
+              mComponentName.c_str(), buffer->range_length(), index, inbuf->capacity());
+        setError();
+        return false;
+    }
+    size_t cpLen = buffer->range_length();
     memcpy(inbuf->base(), (uint8_t *)buffer->data() + buffer->range_offset(), cpLen);
 
     if (mIsVorbis) {
@@ -389,7 +436,7 @@ bool AsyncCodecSource::queueInputBuffer(DroidMediaBuffer *buffer, size_t index)
             timeUs, 0 /* flags */);
     if (res != OK) {
         ALOGE("[%s] failed to queue input buffer #%zu", mComponentName.c_str(), index);
-        mState = ERROR;
+        setError();
     }
     ALOGV("[%s] Queued input buffer #%zu.", mComponentName.c_str(), index);
     return true;
@@ -399,6 +446,15 @@ void AsyncCodecSource::queueEOS(size_t index)
 {
     mCodec->queueInputBuffer(index, 0, 0, 0, MediaCodec::BUFFER_FLAG_EOS);
     ALOGV("[%s] Queued EOS buffer #%zu.", mComponentName.c_str(), index);
+}
+
+void AsyncCodecSource::setError()
+{
+    Mutexed<Output>::Locked me(mOutput);
+    if (mState == STARTED || mState == INIT) {
+        mState = ERROR;
+    }
+    me->mAvailable.signal();
 }
 
 void AsyncCodecSource::flush()
@@ -425,7 +481,7 @@ void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
         status_t err = mCodec->getOutputFormat(&outputFormat);
         if (err != OK) {
             ALOGE("[%s] Error fetching output format!", mComponentName.c_str());
-            mState = ERROR;
+            setError();
             return;
         }
         sp<MetaData> meta = new MetaData;
@@ -460,7 +516,7 @@ void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
         if (res != OK) {
             ALOGE("[%s] could not get output buffer #%d",
                     mComponentName.c_str(), index);
-            mState = ERROR;
+            setError();
             mCodec->releaseOutputBuffer(index);
             return;
         }
@@ -488,17 +544,22 @@ void AsyncCodecSource::onMessageReceived(const sp<AMessage> &msg) {
     } else if (cbID == MediaCodec::CB_ERROR) {
         status_t err;
         CHECK(msg->findInt32("err", &err));
-        ALOGE("Codec (%s) reported error : 0x%d",
+        ALOGE("Codec (%s) reported error : %d",
                         mComponentName.c_str(), err);
-        mState = ERROR;
+        setError();
     } else {
-        ALOGE("Codec (%s) unhandled callback id : 0x%d",  mComponentName.c_str(), cbID);
+        ALOGE("Codec (%s) unhandled callback id : %d",  mComponentName.c_str(), cbID);
     }
 }
 
 status_t AsyncCodecSource::setParameters(const sp<AMessage> &params)
 {
-    if (mState == STARTED && mCodec.get()) {
+    bool started;
+    {
+        Mutexed<Output>::Locked me(mOutput);
+        started = mState == STARTED;
+    }
+    if (started && mCodec.get()) {
         return mCodec->setParameters(params);
     }
     return android::DEAD_OBJECT;
