@@ -172,9 +172,11 @@ void _DroidMediaBufferQueue::frameAvailable() {
     return;
   }
 
+  const int index = slotIndex(item);
+
   m_lock.lock();
 
-  DroidMediaBufferSlot &slot = m_slots[slotIndex(item)];
+  DroidMediaBufferSlot &slot = m_slots[index];
 
   if (item.mGraphicBuffer != NULL) {
     static_cast<DroidMediaBufferItem &>(slot) = item;
@@ -220,18 +222,30 @@ void _DroidMediaBufferQueue::frameAvailable() {
 
     ALOGE("Client wasn't able to handle a received frame.");
 
-    releaseMediaBuffer(slotIndex(slot), 0, 0);
+    // (the index from the item: the slot is not ours once the lock is let go)
+    releaseMediaBuffer(index, 0, 0);
   }
 }
 
 void _DroidMediaBufferQueue::buffersReleased() {
+  // The slots are filled under m_lock by frameAvailable() on the queue's own
+  // thread, and this runs both there (onBuffersReleased) and from
+  // droid_media_codec_stop(): emptied without the lock, a slot's sp<> could
+  // be cleared on one thread while it was assigned on the other.
+  //
+  // The buffers are dropped only after the lock is let go: each holds a
+  // reference to this queue, and the last one going takes the queue - and
+  // the lock - with it.
+  android::sp<DroidMediaBuffer> dropped[android::BufferQueue::NUM_BUFFER_SLOTS];
+
+  android::AutoMutex locker(&m_lock);
+
   for (int i = 0; i < android::BufferQueue::NUM_BUFFER_SLOTS; ++i) {
     DroidMediaBufferSlot &slot = m_slots[i];
+    dropped[i] = slot.droidBuffer;
     slot.droidBuffer.clear();
     slot.mGraphicBuffer = 0;
   }
-
-  android::AutoMutex locker(&m_lock);
 
   if (m_data) {
     m_cb.buffers_released(m_data);
