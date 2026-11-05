@@ -75,6 +75,9 @@ public:
   void attachToCameraVideo(android::sp<android::Camera>& camera);
   ANativeWindow *window();
 
+  void setDefaultBufferSize(uint32_t width, uint32_t height);
+  void setDefaultBufferFormat(int32_t format);
+
   void releaseMediaBuffer(DroidMediaBuffer *buffer, EGLDisplay dpy, EGLSyncKHR fence);
 
   void setCallbacks(DroidMediaBufferQueueCallbacks *cb, void *data);

@@ -153,6 +153,14 @@ ANativeWindow *_DroidMediaBufferQueue::window() {
 #endif
 }
 
+void _DroidMediaBufferQueue::setDefaultBufferSize(uint32_t width, uint32_t height) {
+  m_queue->setDefaultBufferSize(width, height);
+}
+
+void _DroidMediaBufferQueue::setDefaultBufferFormat(int32_t format) {
+  m_queue->setDefaultBufferFormat(format);
+}
+
 void _DroidMediaBufferQueue::frameAvailable() {
   DroidMediaBufferItem item;
 
