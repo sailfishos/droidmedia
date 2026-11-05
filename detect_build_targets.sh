@@ -29,4 +29,4 @@ if [ "$RPM_ARCH" != "aarch64" ] && [ "$ANDROID_ARCH" = "arm64" ]; then
     LIB_TARGET=_32
 fi
 
-echo libdroidmedia$LIB_TARGET minimediaservice minisfservice libminisf$LIB_TARGET
+echo libdroidmedia$LIB_TARGET minimediaservice minisfservice libminisf$LIB_TARGET screencap_surface_capture_test

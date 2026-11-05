@@ -81,6 +81,11 @@ ifeq ($(shell test $(ANDROID_MAJOR) -ge 7 && echo true),true)
 LOCAL_SRC_FILES += AsyncCodecSource.cpp
 endif
 
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
+LOCAL_SRC_FILES += droidmediascreencapture.cpp \
+                   screen_capture_service.cpp
+endif
+
 LOCAL_SHARED_LIBRARIES := libc \
                           libdl \
                           libutils \
@@ -143,6 +148,16 @@ LOCAL_C_INCLUDES += frameworks/av/media/libmediaextractor/include
 endif
 
 include $(BUILD_SHARED_LIBRARY)
+
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := tools/screencap_surface_capture_test.cpp
+LOCAL_SHARED_LIBRARIES := libdroidmedia
+LOCAL_MODULE_TAGS := optional
+LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter
+LOCAL_MODULE := screencap_surface_capture_test
+include $(BUILD_EXECUTABLE)
+endif
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minimedia.cpp
@@ -360,6 +375,9 @@ include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := minisf.cpp allocator.cpp
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
+LOCAL_SRC_FILES += screen_capture_service.cpp
+endif
 LOCAL_SHARED_LIBRARIES := libutils \
                           libbinder \
                           libmedia \
@@ -425,6 +443,10 @@ include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := libminisf.cpp allocator.cpp
+ifeq ($(shell test $(ANDROID_MAJOR) -ge 8 && echo true),true)
+LOCAL_SRC_FILES += minisf_screen_capture.cpp \
+                   screen_capture_service.cpp
+endif
 LOCAL_SHARED_LIBRARIES := libutils \
                           libbinder \
                           libmedia \

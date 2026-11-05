@@ -93,6 +93,9 @@ cp out/target/product/*/system/bin/minimediaservice \
 cp out/target/product/*/system/bin/minisfservice \
    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 
+cp out/target/product/*/system/bin/screencap_surface_capture_test \
+   $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
+
 cp external/droidmedia/init/*.rc \
    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/etc/init/
 
@@ -108,4 +111,5 @@ echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libminisf.so >> %{LIBDMSOLOC}
 %defattr(-,root,root,-)
 %{_libexecdir}/droid-hybris/system/bin/minimediaservice
 %{_libexecdir}/droid-hybris/system/bin/minisfservice
+%{_libexecdir}/droid-hybris/system/bin/screencap_surface_capture_test
 %{_libexecdir}/droid-hybris/system/etc/init/*

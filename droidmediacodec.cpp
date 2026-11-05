@@ -370,6 +370,38 @@ private:
     DroidMediaCodec *m_codec;
 };
 
+#if (ANDROID_MAJOR == 8 && ANDROID_MINOR >= 1) || ANDROID_MAJOR >= 9
+static_assert((int)DROID_MEDIA_CODEC_H264_PROFILE_BASELINE == (int)OMX_VIDEO_AVCProfileBaseline &&
+              (int)DROID_MEDIA_CODEC_H264_PROFILE_MAIN == (int)OMX_VIDEO_AVCProfileMain &&
+              (int)DROID_MEDIA_CODEC_H264_PROFILE_HIGH == (int)OMX_VIDEO_AVCProfileHigh &&
+              (int)DROID_MEDIA_CODEC_H264_PROFILE_CONSTRAINED_BASELINE ==
+                (int)OMX_VIDEO_AVCProfileConstrainedBaseline,
+              "H.264 profiles must be the OMX values");
+static_assert((int)DROID_MEDIA_CODEC_H264_LEVEL_1_0 == (int)OMX_VIDEO_AVCLevel1 &&
+              (int)DROID_MEDIA_CODEC_H264_LEVEL_3_1 == (int)OMX_VIDEO_AVCLevel31 &&
+              (int)DROID_MEDIA_CODEC_H264_LEVEL_5_2 == (int)OMX_VIDEO_AVCLevel52,
+              "H.264 levels must be the OMX values");
+#endif
+
+#if ANDROID_MAJOR >= 5
+void droid_media_codec_set_h264_profile_level(android::AMessage *format, int32_t profile,
+                                              int32_t level, int32_t width, int32_t height,
+                                              int32_t fps, int32_t bitrate)
+{
+  if (!level) {
+    level = android::ACodec::getAVCLevelFor(width, height, fps, bitrate,
+#if (ANDROID_MAJOR == 8 && ANDROID_MINOR >= 1) || ANDROID_MAJOR >= 9
+                                            (OMX_VIDEO_AVCPROFILEEXTTYPE)profile);
+#else
+                                            (OMX_VIDEO_AVCPROFILETYPE)profile);
+#endif
+  }
+
+  format->setInt32("profile", profile);
+  format->setInt32("level", level);
+}
+#endif
+
 class DroidMediaCodecBuilder {
 public:
   DroidMediaCodecBuilder(DroidMediaCodecEncoderMetaData *meta) :
@@ -454,23 +486,14 @@ public:
 
       if (!strcmp (mime, android::MEDIA_MIMETYPE_VIDEO_AVC)) {
         int32_t profile = m_enc->codec_specific.h264.profile;
-        int32_t level = m_enc->codec_specific.h264.level;
 
         if (!profile) {
           profile = OMX_VIDEO_AVCProfileBaseline;
         }
 
-        if (!level) {
-          level = android::ACodec::getAVCLevelFor(width, height, frames, bitrate,
-#if (ANDROID_MAJOR == 8 && ANDROID_MINOR >= 1) || ANDROID_MAJOR >= 9
-                                                  (OMX_VIDEO_AVCPROFILEEXTTYPE)profile);
-#else
-                                                  (OMX_VIDEO_AVCPROFILETYPE)profile);
-#endif
-        }
-
-        format->setInt32("profile", profile);
-        format->setInt32("level", level);
+        droid_media_codec_set_h264_profile_level(format.get(), profile,
+                                                 m_enc->codec_specific.h264.level,
+                                                 width, height, frames, bitrate);
 
         if (m_enc->codec_specific.h264.prepend_header_to_sync_frames) {
           format->setInt32("prepend-sps-pps-to-idr-frames", 1);
