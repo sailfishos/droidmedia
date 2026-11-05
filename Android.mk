@@ -68,14 +68,24 @@ endif
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := droidmedia.cpp \
-                   droidmediacamera.cpp \
                    droidmediaconstants.cpp \
                    droidmediacodec.cpp \
                    droidmediaconvert.cpp \
-                   droidmediarecorder.cpp \
                    allocator.cpp \
                    droidmediabuffer.cpp \
                    private.cpp
+
+# DROIDMEDIA_CAMERA2 := 1 in env.mk selects the Camera2 NDK camera backend
+ifeq ($(DROIDMEDIA_CAMERA2),1)
+ifeq ($(shell test $(ANDROID_MAJOR) -lt 8 && echo true),true)
+$(error *** DROIDMEDIA_CAMERA2 requires Android 8 or newer)
+endif
+LOCAL_SRC_FILES += droidmediacamera2.cpp \
+                   droidmediarecorder2.cpp
+else
+LOCAL_SRC_FILES += droidmediacamera.cpp \
+                   droidmediarecorder.cpp
+endif
 
 ifeq ($(shell test $(ANDROID_MAJOR) -ge 7 && echo true),true)
 LOCAL_SRC_FILES += AsyncCodecSource.cpp
@@ -144,6 +154,13 @@ endif
 
 ifeq ($(ANDROID_MAJOR),$(filter $(ANDROID_MAJOR),9))
 LOCAL_C_INCLUDES += frameworks/av/media/libmediaextractor/include
+endif
+
+ifeq ($(DROIDMEDIA_CAMERA2),1)
+LOCAL_CPPFLAGS += -DDROIDMEDIA_CAMERA2
+LOCAL_C_INCLUDES += frameworks/av/camera/ndk/include
+LOCAL_SHARED_LIBRARIES += libcamera2ndk \
+                          libnativewindow
 endif
 
 include $(BUILD_SHARED_LIBRARY)
