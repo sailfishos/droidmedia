@@ -16,6 +16,7 @@
  * Authored by: Mohammed Hassan <mohammed.hassan@jolla.com>
  */
 
+#include <atomic>
 #include <utils/Condition.h>
 #include <media/stagefright/CameraSource.h>
 #include <media/stagefright/MetaData.h>
@@ -49,7 +50,9 @@ namespace android {
 struct _DroidMediaRecorder {
   _DroidMediaRecorder() :
     m_cb_data(0),
-    m_running(false) {
+    m_running(false),
+    m_codec_started(false),
+    m_thread_started(false) {
     memset(&m_cb, 0x0, sizeof(m_cb));
   }
 
@@ -137,7 +140,10 @@ struct _DroidMediaRecorder {
 #if ANDROID_MAJOR >= 5
   android::sp<android::ALooper> m_looper = NULL;
 #endif
-  bool m_running;
+  // Read by the recorder thread while the caller's thread clears it.
+  std::atomic<bool> m_running;
+  bool m_codec_started;
+  bool m_thread_started;
   pthread_t m_thread;
 };
 
@@ -202,6 +208,12 @@ DroidMediaRecorder *droid_media_recorder_create(DroidMediaCamera *camera, DroidM
 }
 
 void droid_media_recorder_destroy(DroidMediaRecorder *recorder) {
+  // The recorder thread reads from the codec and hands the data to the
+  // callbacks: it must be gone before any of that is freed. A caller that
+  // destroys a running recorder (switching camera while recording) gets the
+  // stop it skipped.
+  droid_media_recorder_stop(recorder);
+
   recorder->m_codec.clear();
   recorder->m_src.clear();
 #if ANDROID_MAJOR >= 5
@@ -212,31 +224,55 @@ void droid_media_recorder_destroy(DroidMediaRecorder *recorder) {
 
 bool droid_media_recorder_start(DroidMediaRecorder *recorder) {
 
-  recorder->m_running = true;
+  if (recorder->m_thread_started) {
+    ALOGE("recorder already started");
+    return false;
+  }
+
   int err = recorder->m_codec->start();
 
   if (err != android::OK) {
     ALOGE("error 0x%x starting codec", -err);
     return false;
   }
+  recorder->m_codec_started = true;
+  recorder->m_running = true;
 
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-  pthread_create(&recorder->m_thread, &attr, DroidMediaRecorder::ThreadWrapper, recorder);
+  err = pthread_create(&recorder->m_thread, &attr, DroidMediaRecorder::ThreadWrapper, recorder);
   pthread_attr_destroy(&attr);
+
+  if (err != 0) {
+    ALOGE("cannot create the recorder thread: %d", err);
+    recorder->m_running = false;
+    droid_media_recorder_stop(recorder);
+    return false;
+  }
+  recorder->m_thread_started = true;
 
   return true;
 }
 
 void droid_media_recorder_stop(DroidMediaRecorder *recorder) {
   recorder->m_running = false;
-  void *dummy;
-  pthread_join(recorder->m_thread, &dummy);
 
-  int err = recorder->m_codec->stop();
-  if (err != android::OK) {
+  // Stop the codec before joining, as MPEG4Writer does with its sources: the
+  // thread may be blocked in read() waiting for the next encoded buffer, and
+  // stopping the codec is what makes that read() return.
+  if (recorder->m_codec_started) {
+    recorder->m_codec_started = false;
+    int err = recorder->m_codec->stop();
+    if (err != android::OK) {
       ALOGE("error 0x%x stopping codec", -err);
+    }
+  }
+
+  if (recorder->m_thread_started) {
+    recorder->m_thread_started = false;
+    void *dummy;
+    pthread_join(recorder->m_thread, &dummy);
   }
 }
 
