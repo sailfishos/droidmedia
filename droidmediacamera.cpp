@@ -103,49 +103,119 @@ struct _DroidMediaCamera
     }
 
     android::sp<android::Camera> m_camera;
+    android::sp<android::CameraListener> m_listener;
     android::sp<DroidMediaBufferQueue> m_queue;
     android::sp<DroidMediaBufferQueue> m_recording_queue;
     DroidMediaCameraCallbacks m_cb;
     void *m_cb_data;
 };
 
+class CameraListener;
+
+/* The listener in the callback on this thread, so that a disconnect from
+ * inside a callback does not wait for itself. */
+static thread_local CameraListener *t_listener_in_callback = NULL;
+
+/* The camera service keeps its listener after disconnect() and calls it from
+ * binder threads, also for messages it sent before the disconnect. Each
+ * callback runs in a scope that counts it, and detach() waits for the count
+ * to drop before droid_media_camera_disconnect() frees the camera; a callback
+ * that starts after detach() sees no camera and does nothing. */
 class CameraListener : public android::CameraListener {
 public:
     CameraListener(DroidMediaCamera *cam) :
-        m_cam(cam) {
+        m_cam(cam),
+        m_busy(0) {
 
     }
 
+    void detach()
+    {
+        android::Mutex::Autolock lock(m_lock);
+        int self = t_listener_in_callback == this ? 1 : 0;
+
+        m_cam = NULL;
+        if (self) {
+            ALOGW("camera disconnected from inside one of its callbacks");
+        }
+        while (m_busy > self) {
+            if (m_idle.waitRelative(m_lock, 5000000000LL) == android::TIMED_OUT) {
+                ALOGE("%d camera callback(s) still running after 5 s; disconnecting anyway",
+                      m_busy - self);
+                break;
+            }
+        }
+    }
+
+private:
+    class Scope {
+    public:
+        explicit Scope(CameraListener *listener) :
+            m_listener(listener),
+            m_prev(t_listener_in_callback) {
+            android::Mutex::Autolock lock(m_listener->m_lock);
+            cam = m_listener->m_cam;
+            if (cam) {
+                ++m_listener->m_busy;
+            }
+            t_listener_in_callback = m_listener;
+        }
+
+        ~Scope() {
+            t_listener_in_callback = m_prev;
+            if (cam) {
+                android::Mutex::Autolock lock(m_listener->m_lock);
+                if (--m_listener->m_busy == 0) {
+                    m_listener->m_idle.broadcast();
+                }
+            }
+        }
+
+        DroidMediaCamera *cam;
+
+    private:
+        CameraListener *m_listener;
+        CameraListener *m_prev;
+    };
+
+public:
+
     void notify(int32_t msgType, int32_t ext1, int32_t ext2)
     {
+        Scope scope(this);
+        DroidMediaCamera *cam = scope.cam;
+        if (!cam) {
+            return;
+        }
+
         switch (msgType) {
             case CAMERA_MSG_SHUTTER:
-                if (m_cam->m_cb.shutter_cb) {
-                    m_cam->m_cb.shutter_cb(m_cam->m_cb_data);
+                if (cam->m_cb.shutter_cb) {
+                    cam->m_cb.shutter_cb(cam->m_cb_data);
                 }
                 break;
 
             case CAMERA_MSG_FOCUS:
-                if (m_cam->m_cb.focus_cb) {
-                    m_cam->m_cb.focus_cb(m_cam->m_cb_data, ext1);
+                if (cam->m_cb.focus_cb) {
+                    cam->m_cb.focus_cb(cam->m_cb_data, ext1);
                 }
                 break;
 
             case CAMERA_MSG_FOCUS_MOVE:
-                if (m_cam->m_cb.focus_move_cb) {
-                    m_cam->m_cb.focus_move_cb(m_cam->m_cb_data, ext1);
+                if (cam->m_cb.focus_move_cb) {
+                    cam->m_cb.focus_move_cb(cam->m_cb_data, ext1);
                 }
                 break;
 
             case CAMERA_MSG_ERROR:
-                if (m_cam->m_cb.error_cb) {
-                    m_cam->m_cb.error_cb(m_cam->m_cb_data, ext1);
+                if (cam->m_cb.error_cb) {
+                    cam->m_cb.error_cb(cam->m_cb_data, ext1);
                 }
                 break;
 
             case CAMERA_MSG_ZOOM:
-                if (m_cam->m_cb.zoom_cb) {
-                    m_cam->m_cb.zoom_cb(m_cam->m_cb_data, ext1, ext2);
+                if (cam->m_cb.zoom_cb) {
+                    cam->m_cb.zoom_cb(cam->m_cb_data, ext1, ext2);
                 }
                 break;
             default:
@@ -157,6 +227,12 @@ public:
     void postData(int32_t msgType, const android::sp<android::IMemory>& dataPtr,
                   camera_frame_metadata_t *metadata)
     {
+        Scope scope(this);
+        DroidMediaCamera *cam = scope.cam;
+        if (!cam) {
+            return;
+        }
+
         int32_t dataMsgType = msgType & ~CAMERA_MSG_PREVIEW_METADATA;
         DroidMediaData mem;
 
@@ -169,8 +245,8 @@ public:
                 mem.data = dataPtr->pointer();
 #endif
 
-                if (m_cam->m_cb.raw_image_cb) {
-                    m_cam->m_cb.raw_image_cb(m_cam->m_cb_data, &mem);
+                if (cam->m_cb.raw_image_cb) {
+                    cam->m_cb.raw_image_cb(cam->m_cb_data, &mem);
                 }
                 break;
 
@@ -182,8 +258,8 @@ public:
                 mem.data = dataPtr->pointer();
 #endif
 
-                if (m_cam->m_cb.compressed_image_cb) {
-                    m_cam->m_cb.compressed_image_cb(m_cam->m_cb_data, &mem);
+                if (cam->m_cb.compressed_image_cb) {
+                    cam->m_cb.compressed_image_cb(cam->m_cb_data, &mem);
                 }
                 break;
 
@@ -194,14 +270,14 @@ public:
 #else
                 mem.data = dataPtr->pointer();
 #endif
-                if (m_cam->m_cb.postview_frame_cb) {
-                    m_cam->m_cb.postview_frame_cb(m_cam->m_cb_data, &mem);
+                if (cam->m_cb.postview_frame_cb) {
+                    cam->m_cb.postview_frame_cb(cam->m_cb_data, &mem);
                 }
                 break;
 
             case CAMERA_MSG_RAW_IMAGE_NOTIFY:
-                if (m_cam->m_cb.raw_image_notify_cb) {
-                    m_cam->m_cb.raw_image_notify_cb(m_cam->m_cb_data);
+                if (cam->m_cb.raw_image_notify_cb) {
+                    cam->m_cb.raw_image_notify_cb(cam->m_cb_data);
                 }
                 break;
 
@@ -212,8 +288,8 @@ public:
 #else
                 mem.data = dataPtr->pointer();
 #endif
-                if (m_cam->m_cb.preview_frame_cb) {
-                    m_cam->m_cb.preview_frame_cb(m_cam->m_cb_data, &mem);
+                if (cam->m_cb.preview_frame_cb) {
+                    cam->m_cb.preview_frame_cb(cam->m_cb_data, &mem);
                 }
                 break;
 
@@ -227,23 +303,29 @@ public:
         }
 
         if (metadata && (msgType & CAMERA_MSG_PREVIEW_METADATA)
-            && m_cam->m_cb.preview_metadata_cb) {
-            sendPreviewMetadata(metadata);
+            && cam->m_cb.preview_metadata_cb) {
+            sendPreviewMetadata(cam, metadata);
         }
     }
 
     void postDataTimestamp(nsecs_t timestamp, int32_t msgType, const android::sp<android::IMemory>& dataPtr)
     {
+        Scope scope(this);
+        DroidMediaCamera *cam = scope.cam;
+        if (!cam) {
+            return;
+        }
+
         switch (msgType) {
             case CAMERA_MSG_VIDEO_FRAME:
-                if (m_cam->m_cb.video_frame_cb) {
+                if (cam->m_cb.video_frame_cb) {
                     // TODO: revisit this data structure
                     DroidMediaCameraRecordingData *data = new DroidMediaCameraRecordingData;
                     data->mem = dataPtr;
                     data->ts = timestamp;
-                    m_cam->m_cb.video_frame_cb(m_cam->m_cb_data, data);
+                    cam->m_cb.video_frame_cb(cam->m_cb_data, data);
                 } else {
-                    m_cam->m_camera->releaseRecordingFrame(dataPtr);
+                    cam->m_camera->releaseRecordingFrame(dataPtr);
                 }
 
                 break;
@@ -268,7 +350,7 @@ public:
     }
 #endif
 
-    void sendPreviewMetadata(camera_frame_metadata_t *metadata)
+    void sendPreviewMetadata(DroidMediaCamera *cam, camera_frame_metadata_t *metadata)
     {
         android::Vector<DroidMediaCameraFace> faces;
 
@@ -290,11 +372,14 @@ public:
             faces.push_back(face);
         }
 
-        m_cam->m_cb.preview_metadata_cb(m_cam->m_cb_data, faces.array(), faces.size());
+        cam->m_cb.preview_metadata_cb(cam->m_cb_data, faces.array(), faces.size());
     }
 
 private:
+    android::Mutex m_lock;
+    android::Condition m_idle;
     DroidMediaCamera *m_cam;
+    int m_busy;
 };
 
 DroidMediaBufferQueue *droid_media_camera_get_buffer_queue (DroidMediaCamera *camera)
@@ -566,7 +651,8 @@ DroidMediaCamera *droid_media_camera_connect(int camera_number)
     }
 #endif
 
-    cam->m_camera->setListener(new CameraListener(cam));
+    cam->m_listener = new CameraListener(cam);
+    cam->m_camera->setListener(cam->m_listener);
 
     return cam;
 }
@@ -577,7 +663,16 @@ bool droid_media_camera_reconnect(DroidMediaCamera *camera) {
 
 void droid_media_camera_disconnect(DroidMediaCamera *camera)
 {
+    camera->m_camera->setListener(NULL);
     camera->m_camera->disconnect();
+
+    /* Callbacks already on their way still hold the listener: wait for them,
+     * since the camera and the caller's callback data go away now. The caller
+     * must not hold a lock its callbacks take. */
+    if (camera->m_listener.get()) {
+        static_cast<CameraListener *>(camera->m_listener.get())->detach();
+        camera->m_listener.clear();
+    }
 
     camera->m_queue->setCallbacks(0, 0);
 
