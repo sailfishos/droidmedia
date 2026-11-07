@@ -20,6 +20,10 @@
 #include <media/stagefright/CameraSource.h>
 #include <media/stagefright/MetaData.h>
 #include "droidmediarecorder.h"
+#if ANDROID_MAJOR >= 13
+#include <media/stagefright/MediaCodecSource.h>
+#include <media/stagefright/MediaDefs.h>
+#endif
 #include "private.h"
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR < 4)
 #include <gui/Surface.h>
@@ -244,6 +248,54 @@ void droid_media_recorder_set_data_callbacks(DroidMediaRecorder *recorder,
 					     DroidMediaCodecDataCallbacks *cb, void *data) {
   memcpy(&recorder->m_cb, cb, sizeof(recorder->m_cb));
   recorder->m_cb_data = data;
+}
+
+#if ANDROID_MAJOR >= 13
+/* The recorder's encoder comes from droid_media_codec_create_encoder_raw(),
+ * and for a raw camera source AsyncCodecSource::Create() hands back a
+ * MediaCodecSource, not an AsyncCodecSource. Check for that same case
+ * before casting, since there is no RTTI to ask. */
+static android::MediaCodecSource *recorder_codec(DroidMediaRecorder *recorder)
+{
+  const char *mime = NULL;
+
+  if (!recorder || !recorder->m_codec.get() || !recorder->m_src.get()) {
+    return NULL;
+  }
+
+  android::sp<android::MetaData> format = recorder->m_src->getFormat();
+  if (!format.get() || !format->findCString(android::kKeyMIMEType, &mime)
+      || strcmp(mime, android::MEDIA_MIMETYPE_VIDEO_RAW)) {
+    return NULL;
+  }
+
+  return static_cast<android::MediaCodecSource *>(recorder->m_codec.get());
+}
+#endif
+
+/* Both need MediaCodecSource::requestIDRFrame() and setEncodingBitrate(),
+ * which Android 13 has and Android 11 does not. */
+bool droid_media_recorder_request_sync_frame(DroidMediaRecorder *recorder)
+{
+#if ANDROID_MAJOR >= 13
+  android::MediaCodecSource *codec = recorder_codec(recorder);
+  return codec && codec->requestIDRFrame() == android::OK;
+#else
+  (void)recorder;
+  return false;
+#endif
+}
+
+bool droid_media_recorder_set_video_bitrate(DroidMediaRecorder *recorder, int32_t bitrate)
+{
+#if ANDROID_MAJOR >= 13
+  android::MediaCodecSource *codec = recorder_codec(recorder);
+  return codec && bitrate > 0 && codec->setEncodingBitrate(bitrate) == android::OK;
+#else
+  (void)recorder;
+  (void)bitrate;
+  return false;
+#endif
 }
 
 };
