@@ -93,13 +93,16 @@ private:
     public:
         explicit SourceReader(AsyncCodecSource *codec, const sp<MediaSource> source);
         void inputBufferAvailable(size_t index);
+        // Ends the thread and waits for it: it uses the AsyncCodecSource,
+        // which must not go before it.
+        void stop();
 
     private:
         ~SourceReader();
         bool threadLoop() override;
         size_t waitForInputBuffer();
 
-        volatile bool mRunning;
+        bool mRunning;  // under mInputIndices.lock
         AsyncCodecSource *mCodec;
         sp<MediaSource> mSource;
         Buffers<size_t> mInputIndices;
@@ -112,6 +115,11 @@ private:
 
     bool queueInputBuffer(DroidMediaBuffer *buffer, size_t inputBufferIndex);
     void queueEOS(size_t index);
+
+    // Puts the source in ERROR and wakes a read() waiting for output, which
+    // would otherwise wait for a buffer the failed codec never sends. A
+    // source that is stopping or stopped stays so.
+    void setError();
 
     AString mComponentName;
     sp<MediaCodec> mCodec;
@@ -132,7 +140,7 @@ private:
         STOPPED,
         ERROR,
     };
-    State mState = INIT;
+    State mState = INIT;  // under mOutput's lock
 
     struct Output {
         Output();

@@ -284,6 +284,7 @@ public:
 struct _DroidMediaCodec : public android::MediaBufferObserver
 {
     _DroidMediaCodec() :
+        m_useExternalLoop(false),
         m_cb_data(0),
         m_data_cb_data(0) {
         memset(&m_cb, 0x0, sizeof(m_cb));
@@ -780,6 +781,11 @@ unsigned int droid_media_codec_get_supported_color_formats(DroidMediaCodecMetaDa
 #else
     const android::MediaCodecList *list = android::MediaCodecList::getInstance();
 #endif
+    // (null when the media codec list service cannot be reached)
+    if (list == NULL) {
+        ALOGE("No media codec list");
+        return 0;
+    }
 
 #if ANDROID_MAJOR == 4 && ANDROID_MINOR < 2
     android::Vector<android::String8> matchingCodecs;
@@ -809,6 +815,10 @@ unsigned int droid_media_codec_get_supported_color_formats(DroidMediaCodecMetaDa
         matchName = matchingCodecs.itemAt(0).c_str();
 #endif
         ssize_t matchIndex = list->findCodecByName(matchName);
+        if (matchIndex < 0) {
+            ALOGE("Codec %s is not in the codec list", matchName);
+            return 0;
+        }
 #if ANDROID_MAJOR >= 5
         const android::sp<android::MediaCodecInfo> info = list->getCodecInfo(matchIndex);
         if (info != NULL) {
@@ -817,7 +827,7 @@ unsigned int droid_media_codec_get_supported_color_formats(DroidMediaCodecMetaDa
                 android::Vector<uint32_t> colorFormats;
                 caps->getSupportedColorFormats(&colorFormats);
                 if (maxFormats > colorFormats.size()) {
-                    maxFormats = colorFormats.size();
+                    maxFormats = static_cast<unsigned int>(colorFormats.size());
                 }
                 for (unsigned int i = 0; i < maxFormats; i++) {
                     formats[i] = colorFormats.itemAt(i);
@@ -910,10 +920,10 @@ void droid_media_codec_stop(DroidMediaCodec *codec)
     }
 
     if (codec->m_thread != NULL) {
-        int err = codec->m_thread->requestExitAndWait();
+        int thread_err = codec->m_thread->requestExitAndWait();
 
-        if (err != android::NO_ERROR) {
-            ALOGE("Error 0x%x stopping thread", -err);
+        if (thread_err != android::NO_ERROR) {
+            ALOGE("Error 0x%x stopping thread", -thread_err);
         }
 
         codec->m_thread.clear();
@@ -1105,13 +1115,13 @@ DroidMediaCodecLoopReturn droid_media_codec_loop(DroidMediaCodec *codec)
             native_window_set_buffers_timestamp(codec->m_window.get(), timestamp * 1000);
         }
 
-        int err = codec->m_window->queueBuffer(codec->m_window.get(), buff.get()
+        int queue_err = codec->m_window->queueBuffer(codec->m_window.get(), buff.get()
 #if (ANDROID_MAJOR == 4 && ANDROID_MINOR >= 2) || ANDROID_MAJOR >= 5
 				     , -1 /* TODO: Where do we get the fence from? */
 #endif
 );
-        if (err != android::NO_ERROR) {
-            ALOGE("queueBuffer failed with error 0x%d", -err);
+        if (queue_err != android::NO_ERROR) {
+            ALOGE("queueBuffer failed with error 0x%x", -queue_err);
         } else {
 #if ANDROID_MAJOR >= 9
             buffer->meta_data().setInt32(android::kKeyRendered, 1);
