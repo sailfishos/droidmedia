@@ -271,6 +271,34 @@ HYBRIS_WRAPPER_1_1(bool,DroidMediaRecorder*,droid_media_recorder_start);
 HYBRIS_WRAPPER_0_1(DroidMediaRecorder*,droid_media_recorder_stop);
 HYBRIS_WRAPPER_0_3(DroidMediaRecorder*,DroidMediaCodecDataCallbacks*,void*,droid_media_recorder_set_data_callbacks);
 
+/* Resolved on first use rather than through HYBRIS_WRAPPER, so that an
+ * older libdroidmedia without them reports false instead of aborting. */
+bool droid_media_recorder_request_sync_frame(DroidMediaRecorder *recorder)
+{
+  static bool (* _sym)(DroidMediaRecorder *) = NULL;
+  static bool attempted = false;
+
+  if (!attempted) {
+    _sym = __try_resolve_sym("droid_media_recorder_request_sync_frame");
+    attempted = true;
+  }
+
+  return _sym ? _sym(recorder) : false;
+}
+
+bool droid_media_recorder_set_video_bitrate(DroidMediaRecorder *recorder, int32_t bitrate)
+{
+  static bool (* _sym)(DroidMediaRecorder *, int32_t) = NULL;
+  static bool attempted = false;
+
+  if (!attempted) {
+    _sym = __try_resolve_sym("droid_media_recorder_set_video_bitrate");
+    attempted = true;
+  }
+
+  return _sym ? _sym(recorder, bitrate) : false;
+}
+
 bool droid_media_camera_set_torch_mode(bool enabled)
 {
   static bool (* _sym)(bool) = NULL;
