@@ -112,4 +112,16 @@ android::sp<android::MediaSource> droid_media_codec_create_encoder_raw(DroidMedi
 #endif
 							      android::sp<android::MediaSource> src);
  
+#if ANDROID_MAJOR >= 5
+namespace android {
+struct AMessage;
+}
+
+/* Sets the encoder "profile" and "level" keys. A level of 0 becomes the
+ * lowest level that fits size, fps and bitrate. */
+void droid_media_codec_set_h264_profile_level(android::AMessage *format, int32_t profile,
+                                              int32_t level, int32_t width, int32_t height,
+                                              int32_t fps, int32_t bitrate);
+#endif
+
 #endif /* DROID_MEDIA_PRIVATE_H */

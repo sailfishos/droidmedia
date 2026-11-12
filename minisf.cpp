@@ -25,6 +25,9 @@
 #include "allocator.h"
 #endif
 #include "services/services.h"
+#if ANDROID_MAJOR >= 8
+#include "screen_capture_service.h"
+#endif
 
 using namespace android;
 
@@ -37,6 +40,9 @@ main(int, char**)
     ProcessState::self()->startThreadPool();
 
     MiniSurfaceFlinger::instantiate();
+#if ANDROID_MAJOR >= 8
+    sailfish::ScreenCaptureService::instantiate();
+#endif
 
 // Android 4 will not allow system services to be run from minimediaservice. So keep them here instead.
 
