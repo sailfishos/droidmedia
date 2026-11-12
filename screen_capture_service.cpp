@@ -44,7 +44,8 @@ enum {
 
 bool screenCaptureTargetValid(int width, int height, int target, const DroidMediaRect& rect)
 {
-  if (target != SCREEN_CAPTURE_TARGET_DISPLAY && target != SCREEN_CAPTURE_TARGET_VIRTUAL) {
+  if (target != DROID_MEDIA_SCREEN_CAPTURE_TARGET_DISPLAY &&
+      target != DROID_MEDIA_SCREEN_CAPTURE_TARGET_VIRTUAL) {
     return false;
   }
   if (rect.left == 0 && rect.top == 0 && rect.right == 0 && rect.bottom == 0) {
@@ -259,7 +260,7 @@ ScreenCaptureService::ScreenCaptureService() :
 sp<IGraphicBufferProducer> ScreenCaptureService::getProducer(ScreenCaptureSession *session)
 {
   Mutex::Autolock lock(m_lock);
-  *session = sessionLocked();
+  *session = m_session;
   return m_producer;
 }
 
@@ -288,8 +289,7 @@ int64_t ScreenCaptureService::registerProducer(const sp<IGraphicBufferProducer>&
 
   m_producer = producer;
   m_session = session;
-  m_session.generation = 0;
-  m_generation++;
+  m_session.generation = ++m_generation;
   ALOGI("Session %" PRId64 " started: %dx%d @%d fps, target %d, content %d,%d-%d,%d",
         m_generation, session.width, session.height, session.fps, session.target,
         session.content_rect.left, session.content_rect.top, session.content_rect.right,
@@ -324,7 +324,7 @@ status_t ScreenCaptureService::registerListener(const sp<IScreenCaptureSessionLi
   }
 
   m_listeners.push_back(listener);
-  *session = sessionLocked();
+  *session = m_session;
   ALOGI("Listener added, %zu in total", m_listeners.size());
   return NO_ERROR;
 }
@@ -361,19 +361,11 @@ void ScreenCaptureService::binderDied(const wp<IBinder>& who)
   }
 }
 
-ScreenCaptureSession ScreenCaptureService::sessionLocked() const
-{
-  ScreenCaptureSession session = m_session;
-  session.generation = m_producer != NULL ? m_generation : 0;
-  return session;
-}
-
 // Under m_lock, so oneway listener calls arrive in generation order.
 void ScreenCaptureService::notifyLocked()
 {
-  const ScreenCaptureSession session = sessionLocked();
   for (const auto& listener : m_listeners) {
-    listener->sessionChanged(session);
+    listener->sessionChanged(m_session);
   }
 }
 

@@ -1,8 +1,6 @@
 project(
-  'droidmedia',
-  ['c', 'cpp'],
+  'droidmedia', ['c', 'cpp'],
   default_options : ['warning_level=1', 'buildtype=debugoptimized'],
-version : 'hwenc.gate4+hwenc.20261017205322.e957a3b'
 )
 
 droidmedia_version = meson.project_version()

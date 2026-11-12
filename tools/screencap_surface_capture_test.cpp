@@ -36,7 +36,7 @@ struct RecordingState {
   int frames;
   size_t bytes;
   int64_t last_ts;
-  int error;
+  bool error;
   bool eos;
 };
 
@@ -46,7 +46,7 @@ static void on_data(void *data, DroidMediaCodecData *encoded)
 
   if (write(state->fd, encoded->data.data, encoded->data.size) != encoded->data.size) {
     fprintf(stderr, "write failed: %s\n", strerror(errno));
-    state->error = errno;
+    state->error = true;
     return;
   }
   state->bytes += encoded->data.size;

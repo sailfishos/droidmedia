@@ -42,11 +42,6 @@ enum {
 
 typedef void (*MinisfScreenCaptureCallback)(void *user, int event);
 
-struct MinisfScreenCaptureTarget {
-  sp<Surface> surface;
-  uint64_t generation;
-};
-
 // While the service is missing, look it up at most this often.
 #define CONNECT_RETRY_MS 250
 
@@ -182,7 +177,9 @@ void minisf_screen_capture_set_callback(MinisfScreenCaptureCallback callback, vo
   s_callbackUser = user;
 }
 
-void *minisf_screen_capture_target_acquire_generation(uint64_t generation)
+/* Returns the ANativeWindow of the given session with a reference held, or NULL if the
+ * session is no longer current. */
+void *minisf_screen_capture_window_acquire(uint64_t generation)
 {
   sp<IScreenCaptureService> service;
   {
@@ -199,31 +196,20 @@ void *minisf_screen_capture_target_acquire_generation(uint64_t generation)
     return NULL;
   }
 
-  MinisfScreenCaptureTarget *target = new MinisfScreenCaptureTarget;
-  target->surface = new Surface(producer, true);
-  target->generation = generation;
-  ALOGI("Attached to session %" PRIu64, generation);
-  return target;
-}
-
-void *minisf_screen_capture_target_native_window(void *target)
-{
-  if (!target) {
-    return NULL;
-  }
-
+  sp<Surface> surface = new Surface(producer, true);
   // RefBase, not ANativeWindow, is Surface's primary base: convert to the
   // ANativeWindow subobject before the pointer loses its type.
-  ANativeWindow *window = static_cast<MinisfScreenCaptureTarget *>(target)->surface.get();
+  ANativeWindow *window = surface.get();
+  window->common.incRef(&window->common);
+  ALOGI("Attached to session %" PRIu64, generation);
   return window;
 }
 
-void minisf_screen_capture_target_release(void *target)
+void minisf_screen_capture_window_release(void *window)
 {
-  MinisfScreenCaptureTarget *t = static_cast<MinisfScreenCaptureTarget *>(target);
-  if (t) {
-    ALOGI("Detached from session %" PRIu64, t->generation);
-    delete t;
+  ANativeWindow *w = static_cast<ANativeWindow *>(window);
+  if (w) {
+    w->common.decRef(&w->common);
   }
 }
 

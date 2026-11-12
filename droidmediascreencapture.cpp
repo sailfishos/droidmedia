@@ -220,13 +220,15 @@ struct _DroidMediaScreenCapture {
     m_service.clear();
   }
 
-  // Only the thread that moved the state to STOPPING calls this.
-  void teardown() {
+  // Only the thread that moved the state to STOPPING calls this. Returns whether the stream
+  // ended; once it returns, stop() may return and the object be destroyed.
+  bool teardown() {
     stopCodec();
 
     android::Mutex::Autolock lock(m_lock);
     m_state = STOPPED;
     m_cond.broadcast();
+    return m_eos;
   }
 
   void reportError(int err) {
@@ -281,9 +283,7 @@ struct _DroidMediaScreenCapture {
         if (m_codec->getOutputFormat(&format) == android::OK) {
           ALOGI("Output format %s", format->debugString().c_str());
         }
-      } else if (err == -EAGAIN || err == android::INFO_OUTPUT_BUFFERS_CHANGED) {
-        continue;
-      } else if (m_running) {
+      } else if (err != -EAGAIN && err != android::INFO_OUTPUT_BUFFERS_CHANGED && m_running) {
         ALOGE("Error 0x%x dequeueing output", -err);
         reportError(err);
         break;
@@ -413,14 +413,11 @@ bool droid_media_screen_capture_finish(DroidMediaScreenCapture *capture, int tim
     }
   }
 
-  capture->teardown();
-
-  // The output thread has been joined; m_eos is final.
-  android::Mutex::Autolock lock(capture->m_lock);
-  if (!capture->m_eos) {
+  bool eos = capture->teardown();
+  if (!eos) {
     ALOGW("Stopped before the end of the stream");
   }
-  return capture->m_eos;
+  return eos;
 }
 
 bool droid_media_screen_capture_request_sync_frame(DroidMediaScreenCapture *capture)

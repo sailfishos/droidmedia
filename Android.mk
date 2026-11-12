@@ -154,7 +154,6 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := tools/screencap_surface_capture_test.cpp
 LOCAL_SHARED_LIBRARIES := libdroidmedia
 LOCAL_MODULE_TAGS := optional
-LOCAL_CPPFLAGS := -DANDROID_MAJOR=$(ANDROID_MAJOR) -DANDROID_MINOR=$(ANDROID_MINOR) -DANDROID_MICRO=$(ANDROID_MICRO) -Wno-unused-parameter
 LOCAL_MODULE := screencap_surface_capture_test
 include $(BUILD_EXECUTABLE)
 endif

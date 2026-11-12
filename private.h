@@ -111,7 +111,7 @@ android::sp<android::MediaSource> droid_media_codec_create_encoder_raw(DroidMedi
 							      android::sp<android::ALooper> looper,
 #endif
 							      android::sp<android::MediaSource> src);
-
+ 
 #if ANDROID_MAJOR >= 5
 namespace android {
 struct AMessage;

@@ -45,16 +45,18 @@ typedef enum {
  * Must return promptly and must not call finish(), stop() or destroy().
  */
 typedef struct {
-  /* One access unit, or the SPS/PPS when codec_config is set. ts is the
-   * presentation time the compositor gave the frame, in CLOCK_MONOTONIC ns */
+  /* One access unit, or the SPS/PPS when codec_config is set; every sync frame
+   * also starts with the SPS/PPS. ts is the presentation time the compositor
+   * gave the frame, in CLOCK_MONOTONIC ns */
   void (* data_available)(void *data, DroidMediaCodecData *encoded);
   void (* error)(void *data, int err);
   /* Called once, after the last access unit, if finish() reaches end of stream */
   void (* signal_eos)(void *data);
 } DroidMediaScreenCaptureCallbacks;
 
-/* Uses meta's parent.width, height and fps, bitrate and codec_specific.h264 (profile 0:
- * the encoder's). NULL if no hardware AVC encoder accepts them, or on Android < 8. */
+/* Uses meta's parent.width, height and fps, bitrate, and codec_specific.h264.profile and
+ * level; profile 0 leaves both to the encoder. NULL if no hardware AVC encoder accepts them,
+ * or on Android < 8. */
 DroidMediaScreenCapture *droid_media_screen_capture_new(DroidMediaCodecEncoderMetaData *meta,
                                                         DroidMediaScreenCaptureCallbacks *cb,
                                                         void *data);

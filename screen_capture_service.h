@@ -24,16 +24,9 @@
 
 #include <vector>
 
-#include "droidmedia.h"
+#include "droidmediascreencapture.h"
 
 namespace sailfish {
-
-/* Who renders into a session. The values are droidmedia's
- * DroidMediaScreenCaptureTarget and libminisf's session target. */
-enum ScreenCaptureTarget {
-  SCREEN_CAPTURE_TARGET_DISPLAY = 0,  // the compositor mirrors the display
-  SCREEN_CAPTURE_TARGET_VIRTUAL = 1,  // a renderer of its own, not the display
-};
 
 /* qt5-qpa-hwcomposer-plugin declares the same layout; keep them in sync. */
 struct ScreenCaptureSession {
@@ -41,7 +34,7 @@ struct ScreenCaptureSession {
   int width;
   int height;
   int fps;
-  int target;          // ScreenCaptureTarget
+  int target;          // DroidMediaScreenCaptureTarget
   // Where the picture goes in the frame, top-left origin; all 0: the whole frame.
   DroidMediaRect content_rect;
 };
@@ -124,14 +117,13 @@ public:
 
 private:
   // *Locked() methods require m_lock.
-  ScreenCaptureSession sessionLocked() const;
   void clearLocked();
   void notifyLocked();
 
   // m_lock guards the members below.
   android::Mutex m_lock;
   android::sp<android::IGraphicBufferProducer> m_producer;
-  ScreenCaptureSession m_session;  // its generation is unused
+  ScreenCaptureSession m_session;
   int64_t m_generation;
   std::vector<android::sp<IScreenCaptureSessionListener>> m_listeners;
 };
